@@ -301,6 +301,9 @@ export const translations: Translations = {
   "Progress": {
     English: "Progress", Spanish: "Progreso", French: "Progrès", German: "Fortschritt", Chinese: "进度", Japanese: "進捗", Hindi: "प्रगति", Arabic: "التقدم", Portuguese: "Progresso", Russian: "Прогресс"
   },
+  "Please ensure this domain is added to Firebase Authorized Domains:": {
+    English: "Please ensure this domain is added to Firebase Authorized Domains:", Spanish: "Asegúrese de que este dominio esté agregado a los dominios autorizados de Firebase:", French: "Veuillez vous assurer que ce domaine est ajouté aux domaines autorisés Firebase :", German: "Bitte stellen Sie sicher, dass diese Domain zu den autorisierten Firebase-Domains hinzugefügt wurde:", Chinese: "请确保此域名已添加到 Firebase 授权域名中：", Japanese: "このドメインが Firebase の承認済みドメインに追加されていることを確認してください:", Hindi: "कृपया सुनिश्चित करें कि यह डोमेन Firebase अधिकृत डोमेन में जोड़ा गया है:", Arabic: "يرجى التأكد من إضافة هذا النطاق إلى نطاقات Firebase المعتمدة:", Portuguese: "Certifique-se de que este domínio foi adicionado aos Domínios Autorizados do Firebase:", Russian: "Убедитесь, что этот домен добавлен в список разрешенных доменов Firebase:"
+  },
   "Sending...": {
     English: "Sending...", Spanish: "Enviando...", French: "Envoi en cours...", German: "Wird gesendet...", Chinese: "正在发送...", Japanese: "送信中...", Hindi: "भेजा जा रहा है...", Arabic: "جاري الإرسال...", Portuguese: "Enviando...", Russian: "Отправка..."
   }

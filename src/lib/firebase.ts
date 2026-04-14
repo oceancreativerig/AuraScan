@@ -11,12 +11,8 @@ export const googleProvider = new GoogleAuthProvider();
 
 export const loginWithGoogle = async () => {
   try {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      await signInWithRedirect(auth, googleProvider);
-    } else {
-      await signInWithPopup(auth, googleProvider);
-    }
+    // Always use signInWithPopup in AI Studio environment for better reliability
+    await signInWithPopup(auth, googleProvider);
   } catch (error) {
     console.error("Error signing in with Google", error);
     throw error;

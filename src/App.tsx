@@ -37,7 +37,8 @@ export default function App() {
     // Handle potential errors from mobile redirect login
     getRedirectResult(auth).catch((err) => {
       console.error("Redirect login error:", err);
-      setError(t("Login failed. Please ensure your domain is added to Firebase Authorized Domains."));
+      const domain = window.location.hostname;
+      setError(`${t("Login failed.")} ${t("Please ensure this domain is added to Firebase Authorized Domains:")} ${domain}`);
       setState('ERROR');
     });
 
