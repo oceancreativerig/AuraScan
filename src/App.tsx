@@ -1,16 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Scanner } from './components/Scanner';
 import { Results } from './components/Results';
+import { History } from './components/History';
 import { analyzeFaceHealth, HealthAnalysis } from './services/geminiService';
-import { Shield, Sparkles, Activity } from 'lucide-react';
+import { Shield, Sparkles, Activity, LogIn, LogOut, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { auth, db, loginWithGoogle, logout } from './lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
-type AppState = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'ERROR';
+type AppState = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'ERROR' | 'HISTORY';
 
 export default function App() {
   const [state, setState] = useState<AppState>('IDLE');
   const [analysis, setAnalysis] = useState<HealthAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      setAuthReady(true);
+      
+      if (currentUser) {
+        // Ensure user profile exists in Firestore
+        try {
+          await setDoc(doc(db, 'users', currentUser.uid), {
+            uid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName,
+            photoURL: currentUser.photoURL,
+            createdAt: serverTimestamp()
+          }, { merge: true });
+        } catch (err) {
+          console.error("Error creating user profile:", err);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleCapture = async (base64Image: string) => {
     setState('ANALYZING');
@@ -18,9 +47,21 @@ export default function App() {
       const result = await analyzeFaceHealth(base64Image);
       setAnalysis(result);
       setState('RESULTS');
+
+      // Save to Firebase if logged in
+      if (user) {
+        try {
+          await addDoc(collection(db, 'users', user.uid, 'scans'), {
+            ...result,
+            createdAt: serverTimestamp()
+          });
+        } catch (err) {
+          console.error("Error saving scan to history:", err);
+        }
+      }
     } catch (err) {
       console.error(err);
-      setError("Analysis failed. Please try again in better lighting.");
+      setError(err instanceof Error ? err.message : "Analysis failed. Please try again.");
       setState('ERROR');
     }
   };
@@ -41,8 +82,46 @@ export default function App() {
       </div>
 
       <main className="relative z-10 container mx-auto px-4 py-12 flex flex-col items-center min-h-screen">
+        {/* Top Navigation */}
+        <nav className="w-full flex justify-end mb-8">
+          {authReady && (
+            user ? (
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setState('HISTORY')}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-sm font-medium"
+                >
+                  <Clock className="w-4 h-4" />
+                  History
+                </button>
+                <div className="flex items-center gap-3 pl-4 border-l border-white/10">
+                  {user.photoURL && (
+                    <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-white/20" referrerPolicy="no-referrer" />
+                  )}
+                  <button
+                    onClick={logout}
+                    className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={loginWithGoogle}
+                className="flex items-center gap-2 px-5 py-2 rounded-full bg-white text-black font-medium hover:bg-zinc-200 transition-colors text-sm"
+              >
+                <LogIn className="w-4 h-4" />
+                Sign in to Save Scans
+              </button>
+            )
+          )}
+        </nav>
+
         {/* Header */}
-        <header className="text-center mb-16 mt-8">
+        {state !== 'HISTORY' && (
+          <header className="text-center mb-16 mt-4">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -68,6 +147,7 @@ export default function App() {
             Advanced facial analysis for full-body wellness insights and personalized health recommendations.
           </motion.p>
         </header>
+        )}
 
         <AnimatePresence mode="wait">
           {state === 'IDLE' && (
@@ -143,6 +223,16 @@ export default function App() {
                 </button>
               </div>
             </motion.div>
+          )}
+
+          {state === 'HISTORY' && user && (
+            <History 
+              onBack={() => setState('IDLE')} 
+              onViewScan={(scan) => {
+                setAnalysis(scan);
+                setState('RESULTS');
+              }} 
+            />
           )}
 
           {state === 'RESULTS' && analysis && (

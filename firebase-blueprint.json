@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user profile in the application.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The user's unique ID." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "photoURL": { "type": "string", "description": "The user's profile photo URL." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user profile was created." }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "Scan": {
+      "title": "Scan",
+      "description": "A health scan result.",
+      "type": "object",
+      "properties": {
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the scan was performed." },
+        "overall_score": { "type": "number", "description": "The overall health score (0-100)." },
+        "summary": { "type": "string", "description": "A summary of the scan results." },
+        "indicators": {
+          "type": "array",
+          "description": "Detailed indicators.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "status": { "type": "string", "enum": ["optimal", "fair", "attention_needed"] },
+              "score": { "type": "number" },
+              "facial_signs": { "type": "array", "items": { "type": "string" } },
+              "systemic_implication": { "type": "string" }
+            }
+          }
+        },
+        "recommendations": {
+          "type": "array",
+          "description": "Personalized recommendations.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "category": { "type": "string" },
+              "tip": { "type": "string" }
+            }
+          }
+        }
+      },
+      "required": ["createdAt", "overall_score", "summary", "indicators", "recommendations"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user profiles."
+    },
+    "/users/{userId}/scans/{scanId}": {
+      "schema": { "$ref": "#/entities/Scan" },
+      "description": "Stores individual health scans for a user."
+    }
+  }
+}
