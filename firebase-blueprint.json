@@ -48,9 +48,27 @@
             }
           }
         },
-        "disclaimer": { "type": "string", "description": "Medical disclaimer." }
+        "disclaimer": { "type": "string", "description": "Medical disclaimer." },
+        "language": { "type": "string", "description": "The language the scan was performed in." },
+        "challenge": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "days": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "day": { "type": "number" },
+                  "task": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
       },
-      "required": ["createdAt", "overall_score", "summary", "indicators", "recommendations"]
+      "required": ["createdAt", "overall_score", "summary", "indicators", "recommendations", "language", "challenge"]
     }
   },
   "firestore": {

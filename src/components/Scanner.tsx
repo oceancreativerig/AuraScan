@@ -3,6 +3,7 @@ import { Camera, RefreshCw, ShieldAlert, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { cn } from '../lib/utils';
+import { useLanguage } from '../lib/i18n';
 
 interface ScannerProps {
   onCapture: (image: string) => void;
@@ -18,6 +19,8 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const [brightness, setBrightness] = useState<number>(255);
+  const { t } = useLanguage();
 
   // Initialize MediaPipe Face Landmarker
   useEffect(() => {
@@ -42,7 +45,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
         }
       } catch (err) {
         console.error("Failed to load face landmarker", err);
-        if (isMounted) setError("Failed to load AI models. Please refresh.");
+        if (isMounted) setError(t("Failed to load AI models. Please refresh."));
       }
     };
     initModel();
@@ -52,7 +55,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
         faceLandmarkerRef.current.close();
       }
     };
-  }, []);
+  }, [t]);
 
   const startCamera = async () => {
     try {
@@ -67,7 +70,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
       setError(null);
     } catch (err) {
       console.error("Camera access error:", err);
-      setError("Unable to access camera. Please ensure permissions are granted.");
+      setError(t("Unable to access camera. Please ensure permissions are granted."));
     }
   };
 
@@ -78,12 +81,13 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [t]);
 
-  // Animation Loop for Face Tracking
+  // Animation Loop for Face Tracking and Brightness Check
   useEffect(() => {
     let animationFrameId: number;
     let lastVideoTime = -1;
+    let brightnessCheckCounter = 0;
 
     const renderLoop = () => {
       if (
@@ -104,6 +108,26 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
           if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
+          }
+
+          // Periodic Brightness Check (every 30 frames)
+          brightnessCheckCounter++;
+          if (brightnessCheckCounter >= 30) {
+            brightnessCheckCounter = 0;
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 40;
+            tempCanvas.height = 40;
+            const tempCtx = tempCanvas.getContext('2d');
+            if (tempCtx) {
+              tempCtx.drawImage(video, 0, 0, 40, 40);
+              const imageData = tempCtx.getImageData(0, 0, 40, 40).data;
+              let totalLuminance = 0;
+              for (let i = 0; i < imageData.length; i += 4) {
+                // Standard luminance formula
+                totalLuminance += (0.299 * imageData[i] + 0.587 * imageData[i + 1] + 0.114 * imageData[i + 2]);
+              }
+              setBrightness(totalLuminance / (40 * 40));
+            }
           }
 
           const results = faceLandmarkerRef.current.detectForVideo(video, performance.now());
@@ -234,11 +258,33 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
         )}
       />
 
+      {/* Lighting Tip Overlay */}
+      {!isAnalyzing && !error && isModelLoaded && (
+        <div className="absolute top-12 left-0 right-0 flex justify-center z-30 px-4">
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={cn(
+              "px-4 py-2 rounded-full backdrop-blur-md border text-[10px] font-mono uppercase tracking-widest flex items-center gap-2",
+              brightness < 70 
+                ? "bg-rose-500/20 border-rose-500/50 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.3)]" 
+                : "bg-cyan-500/10 border-cyan-500/30 text-cyan-400"
+            )}
+          >
+            <div className={cn(
+              "w-2 h-2 rounded-full animate-pulse",
+              brightness < 70 ? "bg-rose-500" : "bg-cyan-400"
+            )} />
+            {brightness < 70 ? t("Warning: Environment too dark") : t("Lighting: Optimal for analysis")}
+          </motion.div>
+        </div>
+      )}
+
       {/* Loading Model State */}
       {!isModelLoaded && !error && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-20">
           <Loader2 className="w-10 h-10 text-cyan-400 animate-spin mb-4" />
-          <p className="text-cyan-400 font-mono text-sm tracking-widest animate-pulse">LOADING AI MODELS...</p>
+          <p className="text-cyan-400 font-mono text-sm tracking-widest animate-pulse">{t('LOADING AI MODELS...')}</p>
         </div>
       )}
 
@@ -283,7 +329,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
               </div>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <p className="text-cyan-400 font-mono text-lg tracking-widest animate-pulse">DECODING BIOMETRICS</p>
+              <p className="text-cyan-400 font-mono text-lg tracking-widest animate-pulse">{t('DECODING BIOMETRICS')}</p>
               <div className="flex gap-1">
                 {[...Array(3)].map((_, i) => (
                   <motion.div
@@ -309,20 +355,36 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
             className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-full transition-colors flex items-center gap-2"
           >
             <RefreshCw className="w-4 h-4" />
-            Retry Camera
+            {t('Retry Camera')}
           </button>
         </div>
       )}
 
       {/* Controls */}
       {!isAnalyzing && !error && isModelLoaded && (
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center z-30">
+        <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center gap-4 z-30">
+          {brightness < 70 && (
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-rose-400 text-[10px] font-mono uppercase tracking-widest bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full border border-rose-500/30"
+            >
+              {t('Too dark for accurate scan')}
+            </motion.p>
+          )}
           <button
             onClick={captureFrame}
-            className="group relative flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-xl hover:scale-110 active:scale-95 transition-all"
+            className={cn(
+              "group relative flex items-center justify-center w-16 h-16 rounded-full shadow-xl transition-all",
+              brightness < 70 ? "bg-zinc-800 cursor-not-allowed" : "bg-white hover:scale-110 active:scale-95"
+            )}
+            disabled={brightness < 70}
           >
-            <div className="absolute inset-0 rounded-full border-4 border-cyan-400/30 group-hover:border-cyan-400/60 animate-ping" />
-            <Camera className="w-8 h-8 text-black" />
+            <div className={cn(
+              "absolute inset-0 rounded-full border-4 animate-ping",
+              brightness < 70 ? "border-rose-500/10" : "border-cyan-400/30 group-hover:border-cyan-400/60"
+            )} />
+            <Camera className={cn("w-8 h-8", brightness < 70 ? "text-zinc-600" : "text-black")} />
           </button>
         </div>
       )}

@@ -7,7 +7,8 @@ import { Shield, Sparkles, Activity, LogIn, LogOut, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, loginWithGoogle, logout } from './lib/firebase';
 import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
-import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, collection, addDoc, serverTimestamp, query, orderBy, limit, onSnapshot, getDoc } from 'firebase/firestore';
+import { useLanguage, languages } from './lib/i18n';
 
 type AppState = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'ERROR' | 'HISTORY';
 
@@ -17,12 +18,14 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
+  const [latestScan, setLatestScan] = useState<HealthAnalysis | null>(null);
 
   useEffect(() => {
     // Handle potential errors from mobile redirect login
     getRedirectResult(auth).catch((err) => {
       console.error("Redirect login error:", err);
-      setError("Login failed. Please ensure your domain is added to Firebase Authorized Domains.");
+      setError(t("Login failed. Please ensure your domain is added to Firebase Authorized Domains."));
       setState('ERROR');
     });
 
@@ -33,13 +36,32 @@ export default function App() {
       if (currentUser) {
         // Ensure user profile exists in Firestore
         try {
-          await setDoc(doc(db, 'users', currentUser.uid), {
-            uid: currentUser.uid,
-            email: currentUser.email,
-            displayName: currentUser.displayName,
-            photoURL: currentUser.photoURL,
-            createdAt: serverTimestamp()
-          }, { merge: true });
+          const userRef = doc(db, 'users', currentUser.uid);
+          const userSnap = await getDoc(userRef);
+          
+          if (!userSnap.exists()) {
+            const userData: any = {
+              uid: currentUser.uid,
+              email: currentUser.email || '',
+              createdAt: serverTimestamp()
+            };
+            if (currentUser.displayName) userData.displayName = currentUser.displayName;
+            if (currentUser.photoURL) userData.photoURL = currentUser.photoURL;
+            
+            await setDoc(userRef, userData);
+          }
+
+          // Fetch latest scan for the daily insight
+          const q = query(
+            collection(db, 'users', currentUser.uid, 'scans'),
+            orderBy('createdAt', 'desc'),
+            limit(1)
+          );
+          onSnapshot(q, (snapshot) => {
+            if (!snapshot.empty) {
+              setLatestScan(snapshot.docs[0].data() as HealthAnalysis);
+            }
+          });
         } catch (err) {
           console.error("Error creating user profile:", err);
         }
@@ -50,16 +72,19 @@ export default function App() {
 
   const handleCapture = async (base64Image: string) => {
     setState('ANALYZING');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     try {
-      const result = await analyzeFaceHealth(base64Image);
+      const result = await analyzeFaceHealth(base64Image, language);
       setAnalysis(result);
       setState('RESULTS');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // Save to Firebase if logged in
       if (user) {
         try {
           await addDoc(collection(db, 'users', user.uid, 'scans'), {
             ...result,
+            language,
             createdAt: serverTimestamp()
           });
         } catch (err) {
@@ -68,7 +93,7 @@ export default function App() {
       }
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : "Analysis failed. Please try again.");
+      setError(err instanceof Error ? err.message : t("Analysis failed. Please try again."));
       setState('ERROR');
     }
   };
@@ -90,7 +115,27 @@ export default function App() {
 
       <main className="relative z-10 container mx-auto px-4 py-12 flex flex-col items-center min-h-screen">
         {/* Top Navigation */}
-        <nav className="w-full flex justify-end mb-8">
+        <nav className="w-full flex justify-between items-center mb-8">
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 ml-1">{t('Language')}</span>
+              <div className="relative group">
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="appearance-none bg-white/5 border border-white/10 rounded-full px-4 py-2 pr-8 text-sm font-medium hover:bg-white/10 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                >
+                  {languages.map(lang => (
+                    <option key={lang} value={lang} className="bg-zinc-900 text-white">{lang}</option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {authReady && (
             user ? (
               <div className="flex items-center gap-4">
@@ -99,7 +144,7 @@ export default function App() {
                   className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-sm font-medium"
                 >
                   <Clock className="w-4 h-4" />
-                  History
+                  {t('History')}
                 </button>
                 <div className="flex items-center gap-3 pl-4 border-l border-white/10">
                   {user.photoURL && (
@@ -110,7 +155,7 @@ export default function App() {
                     className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm"
                   >
                     <LogOut className="w-4 h-4" />
-                    Logout
+                    {t('Logout')}
                   </button>
                 </div>
               </div>
@@ -120,7 +165,7 @@ export default function App() {
                 className="flex items-center gap-2 px-5 py-2 rounded-full bg-white text-black font-medium hover:bg-zinc-200 transition-colors text-sm"
               >
                 <LogIn className="w-4 h-4" />
-                Sign in to Save Scans
+                {t('Sign in to Save Scans')}
               </button>
             )
           )}
@@ -135,7 +180,7 @@ export default function App() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-mono tracking-widest uppercase mb-6 shadow-[0_0_15px_rgba(34,211,238,0.2)]"
           >
             <Sparkles className="w-4 h-4" />
-            AI-Powered Biometrics
+            {t('AI-Powered Biometrics')}
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, scale: 0.9 }}
@@ -151,7 +196,7 @@ export default function App() {
             transition={{ delay: 0.2 }}
             className="text-zinc-400 max-w-xl mx-auto text-lg md:text-xl font-light leading-relaxed"
           >
-            Advanced facial analysis for full-body wellness insights and personalized health recommendations.
+            {t('Advanced facial analysis for full-body wellness insights and personalized health recommendations.')}
           </motion.p>
         </header>
         )}
@@ -165,37 +210,39 @@ export default function App() {
               exit={{ opacity: 0, scale: 1.05 }}
               className="flex flex-col items-center gap-8 py-12"
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full">
-                <FeatureCard
-                  icon={<Shield className="w-8 h-8 text-cyan-400" />}
-                  title="Secure Analysis"
-                  description="Your biometric data is processed securely and never stored on our servers."
-                  delay={0.3}
-                />
-                <FeatureCard
-                  icon={<Activity className="w-8 h-8 text-emerald-400" />}
-                  title="Real-time Insights"
-                  description="Get instant feedback on hydration, stress, and vitality markers."
-                  delay={0.4}
-                />
-                <FeatureCard
-                  icon={<Sparkles className="w-8 h-8 text-purple-400" />}
-                  title="AI Wellness"
-                  description="Personalized recommendations powered by advanced machine learning."
-                  delay={0.5}
-                />
-              </div>
-              
+              {/* Daily Insight Card */}
+              {latestScan && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="max-w-md w-full glass-panel p-6 rounded-[2rem] border-cyan-500/20 relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[40px] rounded-full" />
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-cyan-500/20 rounded-lg">
+                      <Sparkles className="w-4 h-4 text-cyan-400" />
+                    </div>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">{t('Daily Wellness Insight')}</span>
+                  </div>
+                  <p className="text-white text-sm leading-relaxed mb-4">
+                    {t('Based on your last scan, focus on')} <span className="text-cyan-400 font-bold">{latestScan.indicators.sort((a, b) => a.score - b.score)[0].label}</span> {t('today.')}
+                  </p>
+                  <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                    <p className="text-zinc-400 text-xs italic">"{latestScan.recommendations[0].tip}"</p>
+                  </div>
+                </motion.div>
+              )}
+
               <motion.button
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
+                transition={{ delay: 0.3 }}
                 onClick={() => setState('SCANNING')}
-                className="group relative px-12 py-5 mt-8 bg-white text-black font-bold text-lg rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_60px_rgba(34,211,238,0.4)]"
+                className="group relative px-12 py-5 bg-white text-black font-bold text-lg rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_60_px_rgba(34,211,238,0.4)]"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <span className="relative z-10 flex items-center gap-3 group-hover:text-white transition-colors duration-300">
-                  Start Health Scan
+                  {t('Start Health Scan')}
                   <Activity className="w-6 h-6 group-hover:animate-pulse" />
                 </span>
               </motion.button>
@@ -203,12 +250,56 @@ export default function App() {
               <motion.p 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-                className="text-zinc-500 text-sm flex items-center gap-2 mt-4"
+                transition={{ delay: 0.4 }}
+                className="text-zinc-500 text-sm flex items-center gap-2"
               >
                 <Shield className="w-4 h-4" />
-                Requires camera access for facial analysis
+                {t('Requires camera access for facial analysis')}
               </motion.p>
+
+              {/* Lighting Guide */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="max-w-md w-full p-6 rounded-3xl bg-white/5 border border-white/10 mt-4"
+              >
+                <h4 className="text-xs font-mono uppercase tracking-widest text-cyan-400 mb-4 flex items-center gap-2">
+                  <Sparkles className="w-3 h-3" />
+                  {t('Accuracy Tip: Perfect Lighting')}
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-white text-sm font-medium">{t('Face the Light')}</span>
+                    <span className="text-zinc-500 text-xs">{t('Position yourself towards a window or lamp.')}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-white text-sm font-medium">{t('No Shadows')}</span>
+                    <span className="text-zinc-500 text-xs">{t('Ensure even lighting across your entire face.')}</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full mt-12">
+                <FeatureCard
+                  icon={<Shield className="w-8 h-8 text-cyan-400" />}
+                  title={t('Secure Analysis')}
+                  description={t('Your biometric data is processed securely and never stored on our servers.')}
+                  delay={0.5}
+                />
+                <FeatureCard
+                  icon={<Activity className="w-8 h-8 text-emerald-400" />}
+                  title={t('Real-time Insights')}
+                  description={t('Get instant feedback on hydration, stress, and vitality markers.')}
+                  delay={0.6}
+                />
+                <FeatureCard
+                  icon={<Sparkles className="w-8 h-8 text-purple-400" />}
+                  title={t('AI Wellness')}
+                  description={t('Personalized recommendations powered by advanced machine learning.')}
+                  delay={0.7}
+                />
+              </div>
             </motion.div>
           )}
 
@@ -226,7 +317,7 @@ export default function App() {
                   onClick={() => setState('IDLE')}
                   className="text-zinc-500 hover:text-zinc-300 text-sm font-medium transition-colors"
                 >
-                  Cancel Scan
+                  {t('Cancel Scan')}
                 </button>
               </div>
             </motion.div>
@@ -256,13 +347,13 @@ export default function App() {
               <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Shield className="w-8 h-8 text-rose-500" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Analysis Failed</h2>
+              <h2 className="text-2xl font-bold mb-2">{t('Analysis Failed')}</h2>
               <p className="text-zinc-400 mb-8">{error}</p>
               <button
                 onClick={reset}
                 className="px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-zinc-200 transition-colors"
               >
-                Try Again
+                {t('Try Again')}
               </button>
             </motion.div>
           )}
@@ -270,7 +361,7 @@ export default function App() {
 
         {/* Footer */}
         <footer className="mt-auto pt-20 pb-8 text-center text-zinc-600 text-xs uppercase tracking-[0.2em]">
-          © 2026 AuraScan Biometrics • For Informational Purposes Only
+          {t('© 2026 AuraScan Biometrics • For Informational Purposes Only')}
         </footer>
       </main>
     </div>

@@ -18,52 +18,119 @@ export interface HealthAnalysis {
     category: string;
     tip: string;
   }[];
+  challenge: {
+    title: string;
+    description: string;
+    days: { day: number; task: string }[];
+  };
   disclaimer: string;
 }
 
-export async function analyzeFaceHealth(base64Image: string): Promise<HealthAnalysis> {
+export async function analyzeFaceHealth(base64Image: string, language: string = 'English'): Promise<HealthAnalysis> {
   const model = "gemini-3-flash-preview";
   
   const prompt = `
-    You are a highly advanced AI Biometric Health Analyst. Analyze this facial image with clinical precision to identify physiological markers that correlate with systemic health.
+    You are a world-class AI Biometric Health Analyst specializing in non-invasive physiological assessment via facial mapping. Your task is to analyze the provided high-resolution facial image to detect subtle biometric markers that correlate with systemic health.
 
-    Your analysis must be data-driven and focus on:
-    1. Colorimetry: Detect subtle jaundice (yellowing), pallor (anemia/circulation), cyanosis (oxygenation), or malar flush.
-    2. Texture & Hydration: Analyze skin turgor, fine lines, and oil distribution.
-    3. Periorbital Analysis: Examine dark circles (sleep/kidneys), puffiness (hydration/allergies), and sclera color.
-    4. Structural Symmetry: Check for inflammation or localized swelling.
+    ### LANGUAGE REQUIREMENT:
+    You MUST return all text fields (summary, label, facial_signs, systemic_implication, tip, disclaimer, challenge title/description/task) in the following language: ${language}.
 
-    Focus on correlating visible facial cues with internal body systems:
-    - Cardiovascular & Circulation (skin tone, lip color, visible capillaries)
-    - Digestive & Gut Health (complexion, specific blemish locations like forehead/cheeks)
-    - Hormonal Balance (jawline/chin breakouts, hair distribution, skin oiliness)
-    - Liver & Kidney Function (sclera color, under-eye puffiness, dark circles)
-    - Immune System & Inflammation (chronic redness, swollen lymph nodes if visible, overall puffiness)
-    - Hydration & Skin Barrier (dryness, flaking, elasticity)
-    - Fatigue & Nervous System (eye area, tension lines, asymmetry)
+    ### METHODOLOGY:
+    Use a combination of modern clinical dermatology and traditional face mapping (Traditional Chinese Medicine/Ayurvedic correlations) to identify potential internal imbalances.
 
-    IMPORTANT: This is strictly a visual wellness assessment, NOT a medical diagnosis. Provide observations based on visual cues only.
-    
-    Return the analysis in JSON format with the following structure:
+    ### ANALYSIS FOCUS (EXTENDED PARAMETERS):
+    1. **Colorimetry & Vascularity:**
+       - **Pallor:** Anemia, low circulation (check lips, inner eyelids).
+       - **Malar Flush:** Mitral stenosis, high blood pressure, or systemic lupus (butterfly rash).
+       - **Cyanosis:** Oxygenation issues (check lip/nail bed hue).
+       - **Jaundice:** Liver/Gallbladder (check sclera and skin undertone).
+       - **Xanthelasma:** Yellow deposits around eyes (high cholesterol).
+
+    2. **Texture & Hydration:**
+       - **Turgor:** Skin elasticity (hydration levels).
+       - **Sebum Distribution:** T-zone oiliness vs. cheek dryness (hormonal/metabolic).
+       - **Deep Furrows:** Chronic stress or specific organ strain (e.g., vertical line between brows for Liver).
+
+    3. **Periorbital (Eye) Region:**
+       - **Dark Circles:** Kidney strain, chronic fatigue, or allergies (allergic shiners).
+       - **Puffiness:** Fluid retention, high sodium, or thyroid function.
+       - **Arcus Senilis:** White ring around cornea (lipid metabolism).
+
+    4. **Dermatological & Metabolic Markers:**
+       - **Angular Cheilitis:** Cracks at mouth corners (B12/Iron deficiency).
+       - **Acne Mapping:** Jawline (Hormonal), Forehead (Digestive), Cheeks (Respiratory/Stomach).
+       - **Acanthosis Nigricans:** Darkening of skin folds (Insulin resistance/Metabolic health).
+       - **Skin Tags:** Often correlated with metabolic syndrome.
+
+    5. **Respiratory & Oxygenation:**
+       - **Nasal Flare/Redness:** Respiratory strain or chronic inflammation.
+       - **Lip Hue:** Oxygen saturation levels.
+
+    6. **Micronutrient Status:**
+       - **Zinc Markers:** White spots or specific texture changes.
+       - **Vitamin C:** Redness or easy bruising markers.
+
+    ### 7-DAY CHALLENGE:
+    Based on the most critical finding (the indicator with the lowest score), generate a personalized 7-day wellness challenge. Each day should have a small, actionable task that helps improve that specific health marker.
+
+    ### FEW-SHOT EXAMPLE (English):
+    If you see: "Deep horizontal forehead lines, dry skin, and slight puffiness under eyes."
+    Your indicator should be:
     {
-      "summary": "A comprehensive summary of potential full-body health insights based on the facial scan.",
-      "overall_score": 85, // A number between 0 and 100 representing overall wellness
+      "label": "Digestive & Kidney Function",
+      "status": "fair",
+      "score": 65,
+      "confidence": 0.88,
+      "facial_signs": ["Deep forehead furrows", "Periorbital edema"],
+      "affected_regions": ["forehead", "eyes"],
+      "systemic_implication": "Forehead lines often correlate with digestive stress or high sugar intake, while under-eye puffiness suggests the kidneys are working harder to manage fluid balance.",
+      "challenge": {
+        "title": "7-Day Hydration & Gut Reset",
+        "description": "Improve your digestive efficiency and kidney filtration with these daily habits.",
+        "days": [
+          { "day": 1, "task": "Drink 500ml of warm lemon water upon waking." },
+          { "day": 2, "task": "Avoid processed sugars and focus on fiber-rich greens." }
+        ]
+      }
+    }
+
+    ### RESPONSE REQUIREMENTS:
+    - Return ONLY valid JSON.
+    - Be clinically objective but maintain a wellness-focused tone.
+    - If the image is unclear, lower the 'confidence' score accordingly.
+    
+    ### JSON STRUCTURE:
+    {
+      "summary": "A detailed clinical summary of the biometric findings.",
+      "overall_score": number (0-100),
       "indicators": [
         { 
-          "label": "Cardiovascular Health", 
+          "label": "System Name", 
           "status": "optimal|fair|attention_needed", 
-          "score": 90, // A number between 0 and 100
-          "confidence": 0.95, // A number between 0 and 1 representing AI certainty
-          "facial_signs": ["even skin tone", "normal lip color"], // Specific things seen on the face
-          "affected_regions": ["skin_overall", "mouth"], // Choose from: forehead, eyes, cheeks, nose, mouth, jawline, skin_overall
-          "systemic_implication": "Detailed explanation of what this means for the body." 
+          "score": number,
+          "confidence": number (0.0-1.0),
+          "facial_signs": ["sign 1", "sign 2"],
+          "affected_regions": ["forehead", "eyes", "cheeks", "nose", "mouth", "jawline", "skin_overall"],
+          "systemic_implication": "Detailed correlation text." 
         }
       ],
       "recommendations": [
-        { "category": "DIET", "tip": "Specific actionable advice" },
-        { "category": "LIFESTYLE", "tip": "Specific actionable advice" }
+        { "category": "DIET|LIFESTYLE|SKINCARE|SUPPLEMENTS", "tip": "Actionable advice" }
       ],
-      "disclaimer": "A strong medical disclaimer"
+      "challenge": {
+        "title": "Challenge Title",
+        "description": "Challenge description",
+        "days": [
+          { "day": 1, "task": "Task description" },
+          { "day": 2, "task": "Task description" },
+          { "day": 3, "task": "Task description" },
+          { "day": 4, "task": "Task description" },
+          { "day": 5, "task": "Task description" },
+          { "day": 6, "task": "Task description" },
+          { "day": 7, "task": "Task description" }
+        ]
+      },
+      "disclaimer": "This analysis is for informational purposes only and is not a medical diagnosis."
     }
   `;
 

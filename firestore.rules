@@ -76,13 +76,15 @@ service cloud.firestore {
 
     function isValidScan() {
       let data = request.resource.data;
-      return hasOnlyAllowedFields(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations', 'disclaimer']) &&
-             hasRequiredFields(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations']) &&
+      return hasOnlyAllowedFields(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations', 'disclaimer', 'language', 'challenge']) &&
+             hasRequiredFields(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations', 'language', 'challenge']) &&
              data.createdAt is timestamp &&
              data.overall_score is number && data.overall_score >= 0 && data.overall_score <= 100 &&
              data.summary is string && data.summary.size() > 0 && data.summary.size() <= 2000 &&
              data.indicators is list && data.indicators.size() <= 20 &&
-             data.recommendations is list && data.recommendations.size() <= 20;
+             data.recommendations is list && data.recommendations.size() <= 20 &&
+             data.language is string && data.language.size() <= 50 &&
+             data.challenge is map;
     }
 
     // ===============================================================
