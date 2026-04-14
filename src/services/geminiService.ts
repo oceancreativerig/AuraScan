@@ -4,12 +4,18 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export interface HealthAnalysis {
   summary: string;
+  overall_score: number;
   indicators: {
     label: string;
-    status: 'good' | 'fair' | 'concerning';
-    observation: string;
+    status: 'optimal' | 'fair' | 'attention_needed';
+    score: number;
+    facial_signs: string[];
+    systemic_implication: string;
   }[];
-  recommendations: string[];
+  recommendations: {
+    category: string;
+    tip: string;
+  }[];
   disclaimer: string;
 }
 
@@ -32,16 +38,21 @@ export async function analyzeFaceHealth(base64Image: string): Promise<HealthAnal
     Return the analysis in JSON format with the following structure:
     {
       "summary": "A comprehensive summary of potential full-body health insights based on the facial scan.",
+      "overall_score": 85, // A number between 0 and 100 representing overall wellness
       "indicators": [
-        { "label": "Cardiovascular Health", "status": "good|fair|concerning", "observation": "description" },
-        { "label": "Digestive & Gut Health", "status": "good|fair|concerning", "observation": "description" },
-        { "label": "Hormonal Balance", "status": "good|fair|concerning", "observation": "description" },
-        { "label": "Liver & Kidney Indicators", "status": "good|fair|concerning", "observation": "description" },
-        { "label": "Immune & Inflammation", "status": "good|fair|concerning", "observation": "description" },
-        { "label": "Hydration & Skin", "status": "good|fair|concerning", "observation": "description" },
-        { "label": "Fatigue & Nervous System", "status": "good|fair|concerning", "observation": "description" }
+        { 
+          "label": "Cardiovascular Health", 
+          "status": "optimal|fair|attention_needed", 
+          "score": 90, // A number between 0 and 100
+          "facial_signs": ["even skin tone", "normal lip color"], // Specific things seen on the face
+          "systemic_implication": "Detailed explanation of what this means for the body." 
+        },
+        // ... repeat for Digestive & Gut Health, Hormonal Balance, Liver & Kidney Indicators, Immune & Inflammation, Hydration & Skin, Fatigue & Nervous System
       ],
-      "recommendations": ["list of 3-5 personalized full-body wellness tips"],
+      "recommendations": [
+        { "category": "Diet", "tip": "Specific actionable advice" },
+        { "category": "Lifestyle", "tip": "Specific actionable advice" }
+      ],
       "disclaimer": "A strong medical disclaimer"
     }
   `;

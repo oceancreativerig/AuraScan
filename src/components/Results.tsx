@@ -33,27 +33,18 @@ interface ResultsProps {
 export const Results: React.FC<ResultsProps> = ({ analysis, onReset }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'good': return 'text-emerald-400 bg-emerald-400/5 border-emerald-400/20 shadow-[inset_0_0_20px_rgba(52,211,153,0.05)]';
+      case 'optimal': return 'text-emerald-400 bg-emerald-400/5 border-emerald-400/20 shadow-[inset_0_0_20px_rgba(52,211,153,0.05)]';
       case 'fair': return 'text-amber-400 bg-amber-400/5 border-amber-400/20 shadow-[inset_0_0_20px_rgba(251,191,36,0.05)]';
-      case 'concerning': return 'text-rose-400 bg-rose-400/5 border-rose-400/20 shadow-[inset_0_0_20px_rgba(244,63,94,0.05)]';
+      case 'attention_needed': return 'text-rose-400 bg-rose-400/5 border-rose-400/20 shadow-[inset_0_0_20px_rgba(244,63,94,0.05)]';
       default: return 'text-zinc-400 bg-zinc-400/5 border-zinc-400/20';
-    }
-  };
-
-  const getStatusPercentage = (status: string) => {
-    switch (status) {
-      case 'good': return 90;
-      case 'fair': return 50;
-      case 'concerning': return 20;
-      default: return 0;
     }
   };
 
   const getProgressBarColor = (status: string) => {
     switch (status) {
-      case 'good': return 'bg-emerald-400';
+      case 'optimal': return 'bg-emerald-400';
       case 'fair': return 'bg-amber-400';
-      case 'concerning': return 'bg-rose-400';
+      case 'attention_needed': return 'bg-rose-400';
       default: return 'bg-zinc-400';
     }
   };
@@ -69,9 +60,9 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset }) => {
     if (lowerLabel.includes('fatigue') || lowerLabel.includes('nervous')) return <Moon className="w-5 h-5" />;
     
     switch (status) {
-      case 'good': return <CheckCircle2 className="w-5 h-5" />;
+      case 'optimal': return <CheckCircle2 className="w-5 h-5" />;
       case 'fair': return <Info className="w-5 h-5" />;
-      case 'concerning': return <AlertCircle className="w-5 h-5" />;
+      case 'attention_needed': return <AlertCircle className="w-5 h-5" />;
       default: return <Info className="w-5 h-5" />;
     }
   };
@@ -85,18 +76,46 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset }) => {
       {/* Header Summary */}
       <div className="glass-panel rounded-3xl p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 blur-[80px] rounded-full pointer-events-none" />
-        <div className="flex items-center gap-4 mb-6 relative z-10">
-          <div className="p-4 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl border border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
-            <HeartPulse className="w-8 h-8 text-cyan-400" />
+        <div className="flex flex-col md:flex-row gap-8 items-start md:items-center relative z-10">
+          
+          {/* Overall Score Circular Gauge */}
+          <div className="relative w-32 h-32 flex-shrink-0 flex items-center justify-center">
+            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" className="text-white/10" />
+              <motion.circle 
+                cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" 
+                strokeDasharray="283"
+                initial={{ strokeDashoffset: 283 }}
+                animate={{ strokeDashoffset: 283 - (283 * (analysis.overall_score || 0)) / 100 }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                className={cn(
+                  "drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]",
+                  analysis.overall_score >= 80 ? "text-emerald-400" : analysis.overall_score >= 50 ? "text-amber-400" : "text-rose-400"
+                )}
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-3xl font-bold text-white tracking-tighter">{analysis.overall_score}</span>
+              <span className="text-[10px] uppercase tracking-widest text-zinc-400">Score</span>
+            </div>
           </div>
-          <div>
-            <h2 className="text-3xl font-bold text-white tracking-tight">Analysis Complete</h2>
-            <p className="text-cyan-400/80 text-sm font-mono uppercase tracking-widest mt-1">AuraScan Biometric Report</p>
+
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl border border-cyan-500/30">
+                <HeartPulse className="w-6 h-6 text-cyan-400" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white tracking-tight">Analysis Complete</h2>
+                <p className="text-cyan-400/80 text-xs font-mono uppercase tracking-widest">AuraScan Biometric Report</p>
+              </div>
+            </div>
+            <p className="text-zinc-300 text-base leading-relaxed italic font-light border-l-2 border-cyan-500/50 pl-4 py-1">
+              "{analysis.summary}"
+            </p>
           </div>
         </div>
-        <p className="text-zinc-200 text-lg leading-relaxed italic relative z-10 font-light border-l-2 border-cyan-500/50 pl-6 py-2">
-          "{analysis.summary}"
-        </p>
       </div>
 
       {/* Indicators Grid */}
@@ -119,21 +138,31 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset }) => {
                   {getIndicatorIcon(indicator.label, indicator.status)}
                 </div>
               </div>
+              
+              {/* Facial Signs Badges */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {indicator.facial_signs?.map((sign, i) => (
+                  <span key={i} className="px-2 py-1 text-[10px] uppercase tracking-wider font-mono bg-black/30 text-zinc-300 rounded-md border border-white/5">
+                    {sign}
+                  </span>
+                ))}
+              </div>
+
               <p className="text-sm text-zinc-300 leading-relaxed mb-6 font-light">
-                {indicator.observation}
+                {indicator.systemic_implication}
               </p>
             </div>
             
             {/* Progress Bar */}
             <div className="mt-auto pt-4 border-t border-current/10">
               <div className="flex justify-between text-xs font-mono uppercase tracking-wider mb-2 opacity-70">
-                <span>Status</span>
-                <span>{indicator.status}</span>
+                <span>{indicator.status.replace('_', ' ')}</span>
+                <span>{indicator.score}/100</span>
               </div>
               <div className="h-1.5 w-full bg-black/20 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${getStatusPercentage(indicator.status)}%` }}
+                  animate={{ width: `${indicator.score}%` }}
                   transition={{ duration: 1, delay: 0.5 + idx * 0.1, ease: "easeOut" }}
                   className={cn("h-full rounded-full", getProgressBarColor(indicator.status))}
                 />
@@ -164,7 +193,10 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset }) => {
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_0_10px_rgba(34,211,238,0.1)]">
                 <span className="text-cyan-400 text-sm font-bold">{idx + 1}</span>
               </div>
-              <p className="text-zinc-300 leading-relaxed font-light pt-1">{rec}</p>
+              <div className="flex flex-col">
+                <span className="text-cyan-400 text-xs font-mono uppercase tracking-wider mb-1">{rec.category}</span>
+                <p className="text-zinc-300 leading-relaxed font-light">{rec.tip}</p>
+              </div>
             </motion.div>
           ))}
         </div>
