@@ -76,7 +76,7 @@ service cloud.firestore {
 
     function isValidScan() {
       let data = request.resource.data;
-      return hasOnlyAllowedFields(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations']) &&
+      return hasOnlyAllowedFields(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations', 'disclaimer']) &&
              hasRequiredFields(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations']) &&
              data.createdAt is timestamp &&
              data.overall_score is number && data.overall_score >= 0 && data.overall_score <= 100 &&

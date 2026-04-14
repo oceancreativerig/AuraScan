@@ -30,6 +30,58 @@ interface ResultsProps {
   onReset: () => void;
 }
 
+const FaceVisualization: React.FC<{ affectedRegions: string[] }> = ({ affectedRegions }) => {
+  const regions = {
+    forehead: "M 30 25 Q 50 15 70 25 L 70 35 Q 50 25 30 35 Z",
+    eyes: "M 25 45 Q 35 40 45 45 Q 35 50 25 45 M 55 45 Q 65 40 75 45 Q 65 50 55 45",
+    nose: "M 45 50 Q 50 45 55 50 L 52 65 Q 50 70 48 65 Z",
+    cheeks: "M 20 55 Q 15 70 30 80 M 80 55 Q 85 70 70 80",
+    mouth: "M 40 75 Q 50 85 60 75 Q 50 80 40 75",
+    jawline: "M 15 50 Q 15 95 50 98 Q 85 95 85 50",
+  };
+
+  const isHighlighted = (region: string) => affectedRegions.includes(region);
+
+  return (
+    <div className="relative w-48 h-48 mx-auto mb-8">
+      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+        {/* Face Outline */}
+        <path
+          d="M 15 40 Q 15 95 50 100 Q 85 95 85 40 Q 85 10 50 5 Q 15 10 15 40"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className={cn(
+            "transition-colors duration-500",
+            affectedRegions.includes('skin_overall') ? "text-cyan-400" : "text-zinc-700"
+          )}
+        />
+        
+        {/* Forehead */}
+        <path d={regions.forehead} fill={isHighlighted('forehead') ? "rgba(34,211,238,0.3)" : "none"} stroke={isHighlighted('forehead') ? "#22d3ee" : "rgba(255,255,255,0.1)"} strokeWidth="1" className="transition-all duration-500" />
+        
+        {/* Eyes */}
+        <path d={regions.eyes} fill={isHighlighted('eyes') ? "rgba(34,211,238,0.3)" : "none"} stroke={isHighlighted('eyes') ? "#22d3ee" : "rgba(255,255,255,0.1)"} strokeWidth="1" className="transition-all duration-500" />
+        
+        {/* Nose */}
+        <path d={regions.nose} fill={isHighlighted('nose') ? "rgba(34,211,238,0.3)" : "none"} stroke={isHighlighted('nose') ? "#22d3ee" : "rgba(255,255,255,0.1)"} strokeWidth="1" className="transition-all duration-500" />
+        
+        {/* Cheeks */}
+        <path d={regions.cheeks} fill="none" stroke={isHighlighted('cheeks') ? "#22d3ee" : "rgba(255,255,255,0.1)"} strokeWidth="1" className="transition-all duration-500" />
+        
+        {/* Mouth */}
+        <path d={regions.mouth} fill={isHighlighted('mouth') ? "rgba(34,211,238,0.3)" : "none"} stroke={isHighlighted('mouth') ? "#22d3ee" : "rgba(255,255,255,0.1)"} strokeWidth="1" className="transition-all duration-500" />
+        
+        {/* Jawline */}
+        <path d={regions.jawline} fill="none" stroke={isHighlighted('jawline') ? "#22d3ee" : "rgba(255,255,255,0.1)"} strokeWidth="1" className="transition-all duration-500" />
+      </svg>
+      
+      {/* Scanning Ring Effect */}
+      <div className="absolute inset-0 border-2 border-cyan-500/20 rounded-full animate-pulse pointer-events-none" />
+    </div>
+  );
+};
+
 export const Results: React.FC<ResultsProps> = ({ analysis, onReset }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -76,28 +128,32 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset }) => {
       {/* Header Summary */}
       <div className="glass-panel rounded-3xl p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 blur-[80px] rounded-full pointer-events-none" />
-        <div className="flex flex-col md:flex-row gap-8 items-start md:items-center relative z-10">
+        <div className="flex flex-col md:flex-row gap-12 items-center relative z-10">
           
-          {/* Overall Score Circular Gauge */}
-          <div className="relative w-32 h-32 flex-shrink-0 flex items-center justify-center">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" className="text-white/10" />
-              <motion.circle 
-                cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" 
-                strokeDasharray="283"
-                initial={{ strokeDashoffset: 283 }}
-                animate={{ strokeDashoffset: 283 - (283 * (analysis.overall_score || 0)) / 100 }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-                className={cn(
-                  "drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]",
-                  analysis.overall_score >= 80 ? "text-emerald-400" : analysis.overall_score >= 50 ? "text-amber-400" : "text-rose-400"
-                )}
-                strokeLinecap="round"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-bold text-white tracking-tighter">{analysis.overall_score}</span>
-              <span className="text-[10px] uppercase tracking-widest text-zinc-400">Score</span>
+          <div className="flex flex-col items-center">
+            <FaceVisualization affectedRegions={analysis.indicators.flatMap(i => i.affected_regions || [])} />
+            
+            {/* Overall Score Circular Gauge */}
+            <div className="relative w-32 h-32 flex-shrink-0 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" className="text-white/10" />
+                <motion.circle 
+                  cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" 
+                  strokeDasharray="283"
+                  initial={{ strokeDashoffset: 283 }}
+                  animate={{ strokeDashoffset: 283 - (283 * (analysis.overall_score || 0)) / 100 }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className={cn(
+                    "drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]",
+                    analysis.overall_score >= 80 ? "text-emerald-400" : analysis.overall_score >= 50 ? "text-amber-400" : "text-rose-400"
+                  )}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-3xl font-bold text-white tracking-tighter">{analysis.overall_score}</span>
+                <span className="text-[10px] uppercase tracking-widest text-zinc-400">Score</span>
+              </div>
             </div>
           </div>
 
@@ -134,8 +190,14 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset }) => {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <span className="font-bold text-lg tracking-tight text-white">{indicator.label}</span>
-                <div className="p-2 rounded-xl bg-black/20 backdrop-blur-sm">
-                  {getIndicatorIcon(indicator.label, indicator.status)}
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col items-end">
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-widest">Confidence</span>
+                    <span className="text-xs font-mono text-cyan-400">{Math.round(indicator.confidence * 100)}%</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-black/20 backdrop-blur-sm">
+                    {getIndicatorIcon(indicator.label, indicator.status)}
+                  </div>
                 </div>
               </div>
               

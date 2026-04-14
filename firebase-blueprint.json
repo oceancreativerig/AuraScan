@@ -30,7 +30,9 @@
               "label": { "type": "string" },
               "status": { "type": "string", "enum": ["optimal", "fair", "attention_needed"] },
               "score": { "type": "number" },
+              "confidence": { "type": "number" },
               "facial_signs": { "type": "array", "items": { "type": "string" } },
+              "affected_regions": { "type": "array", "items": { "type": "string" } },
               "systemic_implication": { "type": "string" }
             }
           }
@@ -45,7 +47,8 @@
               "tip": { "type": "string" }
             }
           }
-        }
+        },
+        "disclaimer": { "type": "string", "description": "Medical disclaimer." }
       },
       "required": ["createdAt", "overall_score", "summary", "indicators", "recommendations"]
     }
