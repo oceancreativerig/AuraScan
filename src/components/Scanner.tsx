@@ -57,7 +57,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 1280 } },
         audio: false,
       });
       setStream(mediaStream);
@@ -211,7 +211,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
   };
 
   return (
-    <div className="relative w-full max-w-2xl mx-auto aspect-video bg-black rounded-2xl overflow-hidden border-2 border-zinc-800 shadow-2xl">
+    <div className="relative w-full max-w-sm mx-auto aspect-[9/16] bg-black rounded-[2.5rem] overflow-hidden border-[6px] border-zinc-800 shadow-2xl">
       <video
         ref={videoRef}
         autoPlay
