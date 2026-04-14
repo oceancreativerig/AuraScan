@@ -6,7 +6,7 @@ import { analyzeFaceHealth, HealthAnalysis } from './services/geminiService';
 import { Shield, Sparkles, Activity, LogIn, LogOut, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, loginWithGoogle, logout } from './lib/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
 import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 type AppState = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'ERROR' | 'HISTORY';
@@ -19,6 +19,13 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
+    // Handle potential errors from mobile redirect login
+    getRedirectResult(auth).catch((err) => {
+      console.error("Redirect login error:", err);
+      setError("Login failed. Please ensure your domain is added to Firebase Authorized Domains.");
+      setState('ERROR');
+    });
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setAuthReady(true);
