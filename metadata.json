@@ -1,0 +1,12 @@
+{
+  "name": "AuraScan: AI Face Health Analysis",
+  "description": "Advanced facial analysis for health insights and personalized wellness recommendations using AI.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "Computer Vision",
+    "Health Analysis",
+    "AI Recommendations"
+  ]
+}
