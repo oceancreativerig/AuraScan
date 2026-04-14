@@ -35,9 +35,10 @@ import { useLanguage } from '../lib/i18n';
 interface ResultsProps {
   analysis: HealthAnalysis;
   onReset: () => void;
+  onUpdateChallenge?: (dayIndex: number, completed: boolean) => void;
 }
 
-export const Results: React.FC<ResultsProps> = ({ analysis, onReset }) => {
+export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateChallenge }) => {
   const { t } = useLanguage();
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -233,7 +234,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset }) => {
         <div className="medical-card p-6 md:p-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 blur-[80px] rounded-full pointer-events-none" />
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
-            <div>
+            <div className="flex-1">
               <h3 className="text-xl md:text-2xl font-serif font-medium text-slate-900 flex items-center gap-3 tracking-tight">
                 <div className="p-2 bg-teal-50 rounded-xl border border-teal-100">
                   <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-teal-600" />
@@ -242,8 +243,26 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset }) => {
               </h3>
               <p className="text-slate-500 text-sm mt-2 max-w-xl font-light">{analysis.challenge.description}</p>
             </div>
-            <div className="px-4 py-1 rounded-full bg-teal-50 border border-teal-100 text-teal-600 text-[10px] font-mono uppercase tracking-widest self-start md:self-auto">
-              {t('Action Plan')}
+            
+            {/* Progress Tracker */}
+            <div className="flex flex-col items-end gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-100 w-full md:w-auto">
+              <div className="flex justify-between w-full items-center gap-4">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500">{t('Progress')}</span>
+                <span className="text-sm font-bold text-teal-600">
+                  {analysis.challenge.days.filter(d => d.completed).length} / 7
+                </span>
+              </div>
+              <div className="flex gap-1">
+                {analysis.challenge.days.map((day, idx) => (
+                  <div 
+                    key={idx} 
+                    className={cn(
+                      "h-1.5 w-4 rounded-full transition-colors",
+                      day.completed ? "bg-teal-500" : "bg-slate-200"
+                    )}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
@@ -254,15 +273,43 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset }) => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.6 + idx * 0.05 }}
-                className="p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-teal-200 transition-all group"
+                onClick={() => onUpdateChallenge && onUpdateChallenge(idx, !day.completed)}
+                className={cn(
+                  "p-4 rounded-2xl border transition-all group cursor-pointer relative overflow-hidden",
+                  day.completed 
+                    ? "bg-teal-50 border-teal-200 shadow-sm" 
+                    : "bg-slate-50 border-slate-100 hover:border-teal-200"
+                )}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-mono text-teal-600/60 group-hover:text-teal-600 transition-colors">{t('DAY')} {day.day}</span>
-                  <div className="w-5 h-5 rounded-full border border-slate-200 flex items-center justify-center group-hover:border-teal-300 transition-colors">
-                    <div className="w-2 h-2 rounded-full bg-transparent group-hover:bg-teal-400 transition-colors" />
+                {day.completed && (
+                  <div className="absolute -right-4 -top-4 w-16 h-16 bg-teal-500/10 rounded-full blur-xl pointer-events-none" />
+                )}
+                <div className="flex items-center justify-between mb-3 relative z-10">
+                  <span className={cn(
+                    "text-xs font-mono transition-colors",
+                    day.completed ? "text-teal-700 font-bold" : "text-teal-600/60 group-hover:text-teal-600"
+                  )}>
+                    {t('DAY')} {day.day}
+                  </span>
+                  <div className={cn(
+                    "w-6 h-6 rounded-full border flex items-center justify-center transition-all",
+                    day.completed 
+                      ? "bg-teal-500 border-teal-500 text-white" 
+                      : "border-slate-300 group-hover:border-teal-400 bg-white"
+                  )}>
+                    {day.completed ? (
+                      <CheckCircle2 className="w-4 h-4" />
+                    ) : (
+                      <div className="w-2 h-2 rounded-full bg-transparent group-hover:bg-teal-400 transition-colors" />
+                    )}
                   </div>
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed font-light group-hover:text-slate-900 transition-colors">{day.task}</p>
+                <p className={cn(
+                  "text-sm leading-relaxed transition-colors relative z-10",
+                  day.completed ? "text-teal-900 font-medium" : "text-slate-600 font-light group-hover:text-slate-900"
+                )}>
+                  {day.task}
+                </p>
               </motion.div>
             ))}
           </div>

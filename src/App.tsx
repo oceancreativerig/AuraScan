@@ -16,11 +16,12 @@ type AppState = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'ERROR' | 'HISTO
 export default function App() {
   const [state, setState] = useState<AppState>('IDLE');
   const [analysis, setAnalysis] = useState<HealthAnalysis | null>(null);
+  const [currentScanId, setCurrentScanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const { language, setLanguage, t } = useLanguage();
-  const [latestScan, setLatestScan] = useState<HealthAnalysis | null>(null);
+  const [latestScan, setLatestScan] = useState<(HealthAnalysis & { id: string }) | null>(null);
   const [focusArea, setFocusArea] = useState<string>('General Wellness');
 
   const focusAreas = [
@@ -77,7 +78,8 @@ export default function App() {
           );
           unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
             if (!snapshot.empty) {
-              setLatestScan(snapshot.docs[0].data() as HealthAnalysis);
+              const doc = snapshot.docs[0];
+              setLatestScan({ ...doc.data(), id: doc.id } as HealthAnalysis & { id: string });
             }
           }, (error) => {
             console.error("Snapshot error:", error);
@@ -111,7 +113,7 @@ export default function App() {
       if (latestScan && state === 'IDLE' && latestScan.language !== language) {
         try {
           const translated = await translateAnalysis(latestScan, language);
-          setLatestScan({ ...translated, language });
+          setLatestScan({ ...translated, language, id: latestScan.id });
         } catch (err) {
           console.error("Failed to translate latest scan:", err);
         }
@@ -132,15 +134,18 @@ export default function App() {
       // Save to Firebase if logged in
       if (user) {
         try {
-          await addDoc(collection(db, 'users', user.uid, 'scans'), {
+          const docRef = await addDoc(collection(db, 'users', user.uid, 'scans'), {
             ...result,
             language,
             focusArea,
             createdAt: serverTimestamp()
           });
+          setCurrentScanId(docRef.id);
         } catch (err) {
           console.error("Error saving scan to history:", err);
         }
+      } else {
+        setCurrentScanId(null);
       }
     } catch (err) {
       console.error(err);
@@ -149,8 +154,26 @@ export default function App() {
     }
   };
 
+  const handleUpdateChallenge = async (dayIndex: number, completed: boolean) => {
+    if (!analysis) return;
+    
+    const updatedAnalysis = { ...analysis };
+    updatedAnalysis.challenge.days[dayIndex].completed = completed;
+    setAnalysis(updatedAnalysis);
+
+    if (user && currentScanId) {
+      try {
+        const scanRef = doc(db, 'users', user.uid, 'scans', currentScanId);
+        await setDoc(scanRef, { challenge: updatedAnalysis.challenge }, { merge: true });
+      } catch (err) {
+        console.error("Error updating challenge progress:", err);
+      }
+    }
+  };
+
   const reset = () => {
     setAnalysis(null);
+    setCurrentScanId(null);
     setError(null);
     setState('SCANNING');
   };
@@ -403,13 +426,19 @@ export default function App() {
               onBack={() => setState('IDLE')} 
               onViewScan={(scan) => {
                 setAnalysis(scan);
+                setCurrentScanId(scan.id || null);
                 setState('RESULTS');
               }} 
             />
           )}
 
           {state === 'RESULTS' && analysis && (
-            <Results key="results" analysis={analysis} onReset={reset} />
+            <Results 
+              key="results" 
+              analysis={analysis} 
+              onReset={reset} 
+              onUpdateChallenge={handleUpdateChallenge}
+            />
           )}
 
           {state === 'ERROR' && (

@@ -86,7 +86,7 @@ service cloud.firestore {
 
     function isValidScan() {
       let data = request.resource.data;
-      return hasOnlyAllowedFields(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations', 'disclaimer', 'language', 'challenge']) &&
+      return hasOnlyAllowedFields(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations', 'disclaimer', 'language', 'challenge', 'focusArea']) &&
              hasRequiredFields(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations', 'language', 'challenge']) &&
              data.createdAt is timestamp &&
              data.overall_score is number && data.overall_score >= 0 && data.overall_score <= 100 &&
@@ -94,6 +94,7 @@ service cloud.firestore {
              data.indicators is list && data.indicators.size() <= 20 &&
              data.recommendations is list && data.recommendations.size() <= 20 &&
              data.language is string && data.language.size() <= 50 &&
+             (!('focusArea' in data) || (data.focusArea is string && data.focusArea.size() <= 100)) &&
              data.challenge is map;
     }
 
@@ -119,9 +120,9 @@ service cloud.firestore {
       
       match /scans/{scanId} {
         allow read: if isOwner(userId);
-        // Scans are immutable history records
         allow create: if isOwner(userId) && isValidScan();
-        allow update: if false; 
+        // Allow updates ONLY to the challenge field
+        allow update: if isOwner(userId) && isValidScan() && areImmutableFieldsUnchanged(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations', 'language', 'focusArea', 'disclaimer']); 
         allow delete: if isOwner(userId);
       }
     }

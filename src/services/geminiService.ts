@@ -22,7 +22,7 @@ export interface HealthAnalysis {
   challenge: {
     title: string;
     description: string;
-    days: { day: number; task: string }[];
+    days: { day: number; task: string; completed?: boolean }[];
   };
   disclaimer: string;
 }
@@ -111,7 +111,10 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
        - **Vitamin C:** Redness or easy bruising markers.
 
     ### 7-DAY CHALLENGE:
-    Based on the most critical finding (the indicator with the lowest score) or the requested focus area (${focusArea}), generate a personalized 7-day wellness challenge. Each day should have a small, actionable task that helps improve that specific health marker.
+    Identify the most critical finding (the indicator with the lowest score). Generate a personalized 7-day wellness challenge that is DIRECTLY linked to improving this specific indicator.
+    - The 'title' should explicitly mention the area being improved.
+    - The 'description' should explain how these tasks address the critical finding.
+    - Each day should have a small, actionable task that helps improve that specific health marker.
 
     ### FEW-SHOT EXAMPLE (English):
     If you see: "Deep horizontal forehead lines, dry skin, and slight puffiness under eyes."

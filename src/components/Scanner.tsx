@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, RefreshCw, ShieldAlert, Loader2 } from 'lucide-react';
+import { Camera, RefreshCw, ShieldAlert, Loader2, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { cn } from '../lib/utils';
@@ -21,6 +21,19 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const [brightness, setBrightness] = useState<number>(255);
   const { t } = useLanguage();
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        const base64 = base64String.split(',')[1];
+        onCapture(base64);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Initialize MediaPipe Face Landmarker
   useEffect(() => {
@@ -349,14 +362,29 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
       {error && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 p-8 text-center z-30">
           <ShieldAlert className="w-12 h-12 text-rose-500 mb-4" />
-          <p className="text-white font-medium mb-4">{error}</p>
-          <button
-            onClick={startCamera}
-            className="px-6 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-full transition-colors flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            {t('Retry Camera')}
-          </button>
+          <p className="text-white font-medium mb-6 text-sm">{error}</p>
+          <div className="flex flex-col gap-3 w-full max-w-[200px]">
+            <button
+              onClick={startCamera}
+              className="w-full px-4 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <RefreshCw className="w-4 h-4" />
+              {t('Retry Camera')}
+            </button>
+            
+            <div className="relative w-full">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+              <button className="w-full px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-colors flex items-center justify-center gap-2 border border-slate-700 text-sm font-medium">
+                <Upload className="w-4 h-4" />
+                {t('Upload Photo Instead')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

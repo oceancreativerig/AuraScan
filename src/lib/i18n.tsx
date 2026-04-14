@@ -295,6 +295,12 @@ export const translations: Translations = {
   "Immune System": {
     English: "Immune System", Spanish: "Sistema inmunológico", French: "Système immunitaire", German: "Immunsystem", Chinese: "免疫系统", Japanese: "免疫システム", Hindi: "प्रतिरक्षा प्रणाली", Arabic: "جهاز المناعة", Portuguese: "Sistema Imunológico", Russian: "Иммунная система"
   },
+  "Upload Photo Instead": {
+    English: "Upload Photo Instead", Spanish: "Subir foto en su lugar", French: "Télécharger une photo à la place", German: "Stattdessen Foto hochladen", Chinese: "改为上传照片", Japanese: "代わりに写真をアップロード", Hindi: "इसके बजाय फ़ोटो अपलोड करें", Arabic: "تحميل صورة بدلاً من ذلك", Portuguese: "Enviar foto em vez disso", Russian: "Загрузить фото вместо этого"
+  },
+  "Progress": {
+    English: "Progress", Spanish: "Progreso", French: "Progrès", German: "Fortschritt", Chinese: "进度", Japanese: "進捗", Hindi: "प्रगति", Arabic: "التقدم", Portuguese: "Progresso", Russian: "Прогресс"
+  },
   "Sending...": {
     English: "Sending...", Spanish: "Enviando...", French: "Envoi en cours...", German: "Wird gesendet...", Chinese: "正在发送...", Japanese: "送信中...", Hindi: "भेजा जा रहा है...", Arabic: "جاري الإرسال...", Portuguese: "Enviando...", Russian: "Отправка..."
   }

@@ -10,7 +10,7 @@ import { useLanguage } from '../lib/i18n';
 
 interface HistoryProps {
   onBack: () => void;
-  onViewScan: (scan: HealthAnalysis) => void;
+  onViewScan: (scan: HealthAnalysis & { id: string }) => void;
 }
 
 interface SavedScan extends HealthAnalysis {
