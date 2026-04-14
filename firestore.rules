@@ -25,6 +25,16 @@ service cloud.firestore {
     //   - indicators: list (required, max 20 items)
     //   - recommendations: list (required, max 20 items)
     //
+    // Collection: feedback
+    // Document ID: {feedbackId}
+    // Fields:
+    //   - text: string (required, max 5000 chars)
+    //   - userId: string (required)
+    //   - userEmail: string (required)
+    //   - createdAt: timestamp (required, immutable)
+    //   - userAgent: string (optional)
+    //   - platform: string (optional)
+    //
     // ===============================================================
 
     // ===============================================================
@@ -66,11 +76,11 @@ service cloud.firestore {
     function isValidUser() {
       let data = request.resource.data;
       return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'createdAt']) &&
-             hasRequiredFields(['uid', 'email', 'createdAt']) &&
+             hasRequiredFields(['uid', 'createdAt']) &&
              data.uid == request.auth.uid &&
-             isValidEmail(data.email) &&
+             (!('email' in data) || isValidEmail(data.email)) &&
              (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
-             (!('photoURL' in data) || (isValidUrl(data.photoURL) && data.photoURL.size() <= 1000)) &&
+             (!('photoURL' in data) || (isValidUrl(data.photoURL) && data.photoURL.size() <= 2000)) &&
              data.createdAt is timestamp;
     }
 
@@ -85,6 +95,16 @@ service cloud.firestore {
              data.recommendations is list && data.recommendations.size() <= 20 &&
              data.language is string && data.language.size() <= 50 &&
              data.challenge is map;
+    }
+
+    function isValidFeedback() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['text', 'userId', 'userEmail', 'createdAt', 'userAgent', 'platform']) &&
+             hasRequiredFields(['text', 'userId', 'userEmail', 'createdAt']) &&
+             data.text is string && data.text.size() > 0 && data.text.size() <= 5000 &&
+             data.userId is string &&
+             data.userEmail is string &&
+             data.createdAt is timestamp;
     }
 
     // ===============================================================
@@ -104,6 +124,11 @@ service cloud.firestore {
         allow update: if false; 
         allow delete: if isOwner(userId);
       }
+    }
+
+    match /feedback/{feedbackId} {
+      allow create: if isValidFeedback();
+      allow read, update, delete: if false; // Admin only via console
     }
   }
 }

@@ -94,11 +94,23 @@ export const translations: Translations = {
   "LOADING AI MODELS...": {
     English: "LOADING AI MODELS...", Spanish: "CARGANDO MODELOS DE IA...", French: "CHARGEMENT DES MODÈLES IA...", German: "LADE KI-MODELLE...", Chinese: "正在加载AI模型...", Japanese: "AIモデルを読み込み中...", Hindi: "एआई मॉडल लोड हो रहे हैं...", Arabic: "جاري تحميل نماذج الذكاء الاصطناعي...", Portuguese: "CARREGANDO MODELOS DE IA...", Russian: "ЗАГРУЗКА ИИ-МОДЕЛЕЙ..."
   },
+  "INITIALIZING BIOMETRIC ENGINE...": {
+    English: "INITIALIZING BIOMETRIC ENGINE...", Spanish: "INICIALIZANDO MOTOR BIOMÉTRICO...", French: "INITIALISATION DU MOTEUR BIOMÉTRIQUE...", German: "INITIALISIERE BIOMETRIE-ENGINE...", Chinese: "正在初始化生物识别引擎...", Japanese: "バイオメトリックエンジンを初期化中...", Hindi: "बायोमेट्रिक इंजन प्रारंभ हो रहा है...", Arabic: "جاري تهيئة محرك القياسات الحيوية...", Portuguese: "INICIALIZANDO MOTOR BIOMÉTRICO...", Russian: "ИНИЦИАЛИЗАЦИЯ БИОМЕТРИЧЕСКОГО ДВИЖКА..."
+  },
   "DECODING BIOMETRICS": {
     English: "DECODING BIOMETRICS", Spanish: "DECODIFICANDO BIOMETRÍA", French: "DÉCODAGE DE LA BIOMÉTRIE", German: "DEKODIERE BIOMETRIE", Chinese: "解码生物特征", Japanese: "バイオメトリクスをデコード中", Hindi: "बायोमेट्रिक्स डिकोड कर रहा है", Arabic: "فك تشفير القياسات الحيوية", Portuguese: "DECODIFICANDO BIOMETRIA", Russian: "ДЕКОДИРОВАНИЕ БИОМЕТРИИ"
   },
-  "Unable to access camera. Please ensure permissions are granted.": {
-    English: "Unable to access camera. Please ensure permissions are granted.", Spanish: "No se puede acceder a la cámara. Asegúrate de otorgar permisos.", French: "Impossible d'accéder à la caméra. Veuillez vérifier les autorisations.", German: "Kamerazugriff nicht möglich. Bitte Berechtigungen prüfen.", Chinese: "无法访问相机。请确保已授予权限。", Japanese: "カメラにアクセスできません。権限が許可されているか確認してください。", Hindi: "कैमरे तक पहुंचने में असमर्थ। कृपया सुनिश्चित करें कि अनुमतियां दी गई हैं।", Arabic: "تعذر الوصول إلى الكاميرا. يرجى التأكد من منح الأذونات.", Portuguese: "Não foi possível acessar a câmera. Verifique as permissões.", Russian: "Не удалось получить доступ к камере. Убедитесь, что разрешения предоставлены."
+  "Camera access denied. Please allow camera access in your browser settings/address bar and try again.": {
+    English: "Camera access denied. Please allow camera access in your browser settings/address bar and try again.",
+    Spanish: "Acceso a la cámara denegado. Permita el acceso en la configuración de su navegador y vuelva a intentarlo.",
+    French: "Accès à la caméra refusé. Veuillez autoriser l'accès dans les paramètres de votre navigateur et réessayer.",
+    German: "Kamerazugriff verweigert. Bitte erlauben Sie den Zugriff in Ihren Browsereinstellungen und versuchen Sie es erneut.",
+    Chinese: "无法访问相机。请在浏览器设置中允许访问相机，然后重试。",
+    Japanese: "カメラへのアクセスが拒否されました。ブラウザの設定でカメラへのアクセスを許可し、もう一度お試しください。",
+    Hindi: "कैमरा एक्सेस अस्वीकृत। कृपया अपनी ब्राउज़र सेटिंग में कैमरा एक्सेस की अनुमति दें और पुनः प्रयास करें।",
+    Arabic: "تم رفض الوصول إلى الكاميرا. يرجى السماح بالوصول إلى الكاميرا في إعدادات المتصفح والمحاولة مرة أخرى.",
+    Portuguese: "Acesso à câmera negado. Permita o acesso na configuração do seu navegador e tente novamente.",
+    Russian: "Доступ к камере запрещен. Пожалуйста, разрешите доступ к камере в настройках вашего браузера и повторите попытку."
   },
   "Failed to load AI models. Please refresh.": {
     English: "Failed to load AI models. Please refresh.", Spanish: "Error al cargar modelos de IA. Por favor, actualiza.", French: "Échec du chargement des modèles IA. Veuillez rafraîchir.", German: "Fehler beim Laden der KI-Modelle. Bitte aktualisieren.", Chinese: "加载AI模型失败。请刷新。", Japanese: "AIモデルの読み込みに失敗しました。更新してください。", Hindi: "एआई मॉडल लोड करने में विफल। कृपया रीफ्रेश करें।", Arabic: "فشل تحميل نماذج الذكاء الاصطناعي. يرجى التحديث.", Portuguese: "Falha ao carregar modelos de IA. Atualize a página.", Russian: "Не удалось загрузить ИИ-модели. Пожалуйста, обновите страницу."
@@ -240,6 +252,51 @@ export const translations: Translations = {
     Arabic: "© 2026 AuraScan Biometrics • للأغراض الإعلامية فقط",
     Portuguese: "© 2026 AuraScan Biometrics • Apenas para fins informativos",
     Russian: "© 2026 AuraScan Biometrics • Только для информационных целей"
+  },
+  "Feedback": {
+    English: "Feedback", Spanish: "Comentarios", French: "Commentaires", German: "Feedback", Chinese: "反馈", Japanese: "フィードバック", Hindi: "प्रतिक्रिया", Arabic: "التعليقات", Portuguese: "Feedback", Russian: "Обратная связь"
+  },
+  "Help us improve AuraScan": {
+    English: "Help us improve AuraScan", Spanish: "Ayúdanos a mejorar AuraScan", French: "Aidez-nous à améliorer AuraScan", German: "Helfen Sie uns, AuraScan zu verbessern", Chinese: "帮助我们改进AuraScan", Japanese: "AuraScanの改善にご協力ください", Hindi: "AuraScan को बेहतर बनाने में हमारी मदद करें", Arabic: "ساعدنا في تحسين AuraScan", Portuguese: "Ajude-nos a melhorar o AuraScan", Russian: "Помогите нам улучшить AuraScan"
+  },
+  "Your feedback": {
+    English: "Your feedback", Spanish: "Tus comentarios", French: "Vos commentaires", German: "Ihr Feedback", Chinese: "您的反馈", Japanese: "あなたのフィードバック", Hindi: "आपकी प्रतिक्रिया", Arabic: "رأيك", Portuguese: "Seu feedback", Russian: "Ваш отзыв"
+  },
+  "Tell us what you think or report an issue...": {
+    English: "Tell us what you think or report an issue...", Spanish: "Cuéntanos qué piensas o informa un problema...", French: "Dites-nous ce que vous en pensez ou signalez un problème...", German: "Sagen Sie uns Ihre Meinung oder melden Sie ein Problem...", Chinese: "告诉我们您的想法或报告问题...", Japanese: "ご意見をお聞かせいただくか、問題を報告してください...", Hindi: "हमें बताएं कि आप क्या सोचते हैं या किसी समस्या की रिपोर्ट करें...", Arabic: "أخبرنا برأيك أو أبلغ عن مشكلة...", Portuguese: "Diga-nos o que você acha ou relate um problema...", Russian: "Расскажите нам, что вы думаете, или сообщите о проблеме..."
+  },
+  "Submit Feedback": {
+    English: "Submit Feedback", Spanish: "Enviar comentarios", French: "Envoyer les commentaires", German: "Feedback absenden", Chinese: "提交反馈", Japanese: "フィードバックを送信", Hindi: "प्रतिक्रिया सबमिट करें", Arabic: "إرسال التعليقات", Portuguese: "Enviar Feedback", Russian: "Отправить отзыв"
+  },
+  "Cancel": {
+    English: "Cancel", Spanish: "Cancelar", French: "Annuler", German: "Abbrechen", Chinese: "取消", Japanese: "キャンセル", Hindi: "रद्द करें", Arabic: "إلغاء", Portuguese: "Cancelar", Russian: "Отмена"
+  },
+  "Thank you for your feedback!": {
+    English: "Thank you for your feedback!", Spanish: "¡Gracias por tus comentarios!", French: "Merci pour vos commentaires !", German: "Vielen Dank für Ihr Feedback!", Chinese: "感谢您的反馈！", Japanese: "フィードバックをありがとうございました！", Hindi: "आपकी प्रतिक्रिया के लिए धन्यवाद!", Arabic: "شكرا لك على ملاحظاتك!", Portuguese: "Obrigado pelo seu feedback!", Russian: "Спасибо за ваш отзыв!"
+  },
+  "Select Focus Area": {
+    English: "Select Focus Area", Spanish: "Seleccionar área de enfoque", French: "Sélectionner la zone de concentration", German: "Fokusbereich auswählen", Chinese: "选择重点区域", Japanese: "重点領域を選択", Hindi: "फोकस क्षेत्र चुनें", Arabic: "حدد منطقة التركيز", Portuguese: "Selecionar Área de Foco", Russian: "Выберите область внимания"
+  },
+  "General Wellness": {
+    English: "General Wellness", Spanish: "Bienestar general", French: "Bien-être général", German: "Allgemeines Wohlbefinden", Chinese: "一般健康", Japanese: "一般的なウェルネス", Hindi: "सामान्य कल्याण", Arabic: "العافية العامة", Portuguese: "Bem-estar Geral", Russian: "Общее самочувствие"
+  },
+  "Skin & Aging": {
+    English: "Skin & Aging", Spanish: "Piel y envejecimiento", French: "Peau et vieillissement", German: "Haut & Alterung", Chinese: "皮肤与抗衰老", Japanese: "肌とエイジング", Hindi: "त्वचा और उम्र बढ़ना", Arabic: "البشرة والشيخوخة", Portuguese: "Pele e Envelhecimento", Russian: "Кожа и старение"
+  },
+  "Cardiovascular Health": {
+    English: "Cardiovascular Health", Spanish: "Salud cardiovascular", French: "Santé cardiovasculaire", German: "Herz-Kreislauf-Gesundheit", Chinese: "心血管健康", Japanese: "心血管の健康", Hindi: "हृदय स्वास्थ्य", Arabic: "صحة القلب والأوعية الدموية", Portuguese: "Saúde Cardiovascular", Russian: "Сердечно-сосудистое здоровье"
+  },
+  "Stress & Fatigue": {
+    English: "Stress & Fatigue", Spanish: "Estrés y fatiga", French: "Stress et fatigue", German: "Stress & Müdigkeit", Chinese: "压力与疲劳", Japanese: "ストレスと疲労", Hindi: "तनाव और थकान", Arabic: "التوتر والإرهاق", Portuguese: "Estresse e Fadiga", Russian: "Стресс и усталость"
+  },
+  "Digestive Health": {
+    English: "Digestive Health", Spanish: "Salud digestiva", French: "Santé digestive", German: "Verdauungsgesundheit", Chinese: "消化健康", Japanese: "消化器系の健康", Hindi: "पाचन स्वास्थ्य", Arabic: "صحة الجهاز الهضمي", Portuguese: "Saúde Digestiva", Russian: "Пищеварительное здоровье"
+  },
+  "Immune System": {
+    English: "Immune System", Spanish: "Sistema inmunológico", French: "Système immunitaire", German: "Immunsystem", Chinese: "免疫系统", Japanese: "免疫システム", Hindi: "प्रतिरक्षा प्रणाली", Arabic: "جهاز المناعة", Portuguese: "Sistema Imunológico", Russian: "Иммунная система"
+  },
+  "Sending...": {
+    English: "Sending...", Spanish: "Enviando...", French: "Envoi en cours...", German: "Wird gesendet...", Chinese: "正在发送...", Japanese: "送信中...", Hindi: "भेजा जा रहा है...", Arabic: "جاري الإرسال...", Portuguese: "Enviando...", Russian: "Отправка..."
   }
 };
 

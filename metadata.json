@@ -1,6 +1,6 @@
 {
-  "name": "AuraScan: AI Face Health Analysis",
-  "description": "Advanced facial analysis for health insights and personalized wellness recommendations using AI.",
+  "name": "AuraScan: Biometric Wellness Analyst",
+  "description": "Professional-grade facial biometric analysis for systemic health insights and evidence-based wellness recommendations.",
   "requestFramePermissions": [
     "camera"
   ],

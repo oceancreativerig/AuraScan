@@ -5,6 +5,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 export interface HealthAnalysis {
   summary: string;
   overall_score: number;
+  language?: string;
   indicators: {
     label: string;
     status: 'optimal' | 'fair' | 'attention_needed';
@@ -26,7 +27,42 @@ export interface HealthAnalysis {
   disclaimer: string;
 }
 
-export async function analyzeFaceHealth(base64Image: string, language: string = 'English'): Promise<HealthAnalysis> {
+export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage: string): Promise<HealthAnalysis> {
+  const model = "gemini-3-flash-preview";
+  
+  const prompt = `
+    You are an expert medical translator. Translate the following JSON object representing a biometric health analysis into ${targetLanguage}.
+    
+    CRITICAL INSTRUCTIONS:
+    1. Maintain the exact JSON structure and keys.
+    2. Only translate the string values for: summary, label, facial_signs (array items), systemic_implication, tip, disclaimer, and challenge title/description/task.
+    3. Do NOT translate the 'status' values ('optimal', 'fair', 'attention_needed').
+    4. Do NOT translate the 'affected_regions' values.
+    5. Do NOT change any numbers or scores.
+    6. Return ONLY valid JSON.
+
+    JSON to translate:
+    ${JSON.stringify(analysis, null, 2)}
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      }
+    });
+
+    const result = JSON.parse(response.text || "{}");
+    return { ...result, language: targetLanguage } as HealthAnalysis;
+  } catch (error: any) {
+    console.error("Gemini Translation Error:", error);
+    throw new Error("Failed to translate results.");
+  }
+}
+
+export async function analyzeFaceHealth(base64Image: string, language: string = 'English', focusArea: string = 'General Wellness'): Promise<HealthAnalysis> {
   const model = "gemini-3-flash-preview";
   
   const prompt = `
@@ -34,6 +70,10 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
 
     ### LANGUAGE REQUIREMENT:
     You MUST return all text fields (summary, label, facial_signs, systemic_implication, tip, disclaimer, challenge title/description/task) in the following language: ${language}.
+
+    ### FOCUS AREA:
+    The user has requested a specific focus on: **${focusArea}**.
+    Ensure that your analysis heavily weights this area. Provide exactly 5 key health indicators. At least 2 or 3 of these indicators MUST directly address the requested focus area based on facial markers.
 
     ### METHODOLOGY:
     Use a combination of modern clinical dermatology and traditional face mapping (Traditional Chinese Medicine/Ayurvedic correlations) to identify potential internal imbalances.
@@ -71,7 +111,7 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
        - **Vitamin C:** Redness or easy bruising markers.
 
     ### 7-DAY CHALLENGE:
-    Based on the most critical finding (the indicator with the lowest score), generate a personalized 7-day wellness challenge. Each day should have a small, actionable task that helps improve that specific health marker.
+    Based on the most critical finding (the indicator with the lowest score) or the requested focus area (${focusArea}), generate a personalized 7-day wellness challenge. Each day should have a small, actionable task that helps improve that specific health marker.
 
     ### FEW-SHOT EXAMPLE (English):
     If you see: "Deep horizontal forehead lines, dry skin, and slight puffiness under eyes."
@@ -83,19 +123,12 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
       "confidence": 0.88,
       "facial_signs": ["Deep forehead furrows", "Periorbital edema"],
       "affected_regions": ["forehead", "eyes"],
-      "systemic_implication": "Forehead lines often correlate with digestive stress or high sugar intake, while under-eye puffiness suggests the kidneys are working harder to manage fluid balance.",
-      "challenge": {
-        "title": "7-Day Hydration & Gut Reset",
-        "description": "Improve your digestive efficiency and kidney filtration with these daily habits.",
-        "days": [
-          { "day": 1, "task": "Drink 500ml of warm lemon water upon waking." },
-          { "day": 2, "task": "Avoid processed sugars and focus on fiber-rich greens." }
-        ]
-      }
+      "systemic_implication": "Forehead lines often correlate with digestive stress or high sugar intake, while under-eye puffiness suggests the kidneys are working harder to manage fluid balance."
     }
 
     ### RESPONSE REQUIREMENTS:
     - Return ONLY valid JSON.
+    - Provide exactly 5 indicators in the 'indicators' array.
     - Be clinically objective but maintain a wellness-focused tone.
     - If the image is unclear, lower the 'confidence' score accordingly.
     
@@ -151,7 +184,7 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
     });
 
     const result = JSON.parse(response.text || "{}");
-    return result as HealthAnalysis;
+    return { ...result, language } as HealthAnalysis;
   } catch (error: any) {
     console.error("Gemini Analysis Error:", error);
     

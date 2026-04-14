@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Scanner } from './components/Scanner';
 import { Results } from './components/Results';
 import { History } from './components/History';
-import { analyzeFaceHealth, HealthAnalysis } from './services/geminiService';
+import { FeedbackModal } from './components/FeedbackModal';
+import { analyzeFaceHealth, translateAnalysis, HealthAnalysis } from './services/geminiService';
 import { Shield, Sparkles, Activity, LogIn, LogOut, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, loginWithGoogle, logout } from './lib/firebase';
@@ -20,6 +21,16 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
   const { language, setLanguage, t } = useLanguage();
   const [latestScan, setLatestScan] = useState<HealthAnalysis | null>(null);
+  const [focusArea, setFocusArea] = useState<string>('General Wellness');
+
+  const focusAreas = [
+    'General Wellness',
+    'Skin & Aging',
+    'Cardiovascular Health',
+    'Stress & Fatigue',
+    'Digestive Health',
+    'Immune System'
+  ];
 
   useEffect(() => {
     // Handle potential errors from mobile redirect login
@@ -29,10 +40,17 @@ export default function App() {
       setState('ERROR');
     });
 
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    let unsubscribeSnapshot: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setAuthReady(true);
       
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+        unsubscribeSnapshot = null;
+      }
+
       if (currentUser) {
         // Ensure user profile exists in Firestore
         try {
@@ -42,9 +60,9 @@ export default function App() {
           if (!userSnap.exists()) {
             const userData: any = {
               uid: currentUser.uid,
-              email: currentUser.email || '',
               createdAt: serverTimestamp()
             };
+            if (currentUser.email) userData.email = currentUser.email;
             if (currentUser.displayName) userData.displayName = currentUser.displayName;
             if (currentUser.photoURL) userData.photoURL = currentUser.photoURL;
             
@@ -57,24 +75,56 @@ export default function App() {
             orderBy('createdAt', 'desc'),
             limit(1)
           );
-          onSnapshot(q, (snapshot) => {
+          unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
             if (!snapshot.empty) {
               setLatestScan(snapshot.docs[0].data() as HealthAnalysis);
             }
+          }, (error) => {
+            console.error("Snapshot error:", error);
           });
         } catch (err) {
           console.error("Error creating user profile:", err);
         }
+      } else {
+        setLatestScan(null);
       }
     });
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+      }
+    };
   }, []);
+
+  // Translate analysis when language changes or when viewing a past scan
+  useEffect(() => {
+    const updateTranslations = async () => {
+      if (analysis && state === 'RESULTS' && analysis.language !== language) {
+        try {
+          const translated = await translateAnalysis(analysis, language);
+          setAnalysis({ ...translated, language });
+        } catch (err) {
+          console.error("Failed to translate analysis:", err);
+        }
+      }
+      if (latestScan && state === 'IDLE' && latestScan.language !== language) {
+        try {
+          const translated = await translateAnalysis(latestScan, language);
+          setLatestScan({ ...translated, language });
+        } catch (err) {
+          console.error("Failed to translate latest scan:", err);
+        }
+      }
+    };
+    updateTranslations();
+  }, [language, analysis, latestScan, state]);
 
   const handleCapture = async (base64Image: string) => {
     setState('ANALYZING');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     try {
-      const result = await analyzeFaceHealth(base64Image, language);
+      const result = await analyzeFaceHealth(base64Image, language, focusArea);
       setAnalysis(result);
       setState('RESULTS');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -85,6 +135,7 @@ export default function App() {
           await addDoc(collection(db, 'users', user.uid, 'scans'), {
             ...result,
             language,
+            focusArea,
             createdAt: serverTimestamp()
           });
         } catch (err) {
@@ -105,31 +156,30 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-zinc-100 font-sans selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-teal-500/30">
       {/* Background Atmosphere */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
-        <div className="absolute w-[800px] h-[800px] bg-cyan-500/20 blur-[120px] rounded-full mix-blend-screen animate-blob opacity-50" />
-        <div className="absolute w-[600px] h-[600px] bg-purple-500/20 blur-[120px] rounded-full mix-blend-screen animate-blob animation-delay-2000 opacity-50" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+        <div className="absolute w-[800px] h-[800px] bg-teal-500/5 blur-[120px] rounded-full animate-blob opacity-50" />
+        <div className="absolute w-[600px] h-[600px] bg-sky-500/5 blur-[120px] rounded-full animate-blob animation-delay-2000 opacity-50" />
       </div>
 
-      <main className="relative z-10 container mx-auto px-4 py-12 flex flex-col items-center min-h-screen">
+      <main className="relative z-10 container mx-auto px-4 py-6 md:py-12 flex flex-col items-center min-h-screen">
         {/* Top Navigation */}
-        <nav className="w-full flex justify-between items-center mb-8">
-          <div className="flex items-center gap-4">
+        <nav className="w-full flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 md:mb-12">
+          <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 ml-1">{t('Language')}</span>
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500 ml-1">{t('Language')}</span>
               <div className="relative group">
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="appearance-none bg-white/5 border border-white/10 rounded-full px-4 py-2 pr-8 text-sm font-medium hover:bg-white/10 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                  className="appearance-none bg-white border border-slate-200 rounded-full px-4 py-2 pr-8 text-sm font-medium hover:border-slate-300 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 >
                   {languages.map(lang => (
-                    <option key={lang} value={lang} className="bg-zinc-900 text-white">{lang}</option>
+                    <option key={lang} value={lang} className="bg-white text-slate-900">{lang}</option>
                   ))}
                 </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                 </div>
               </div>
@@ -138,21 +188,21 @@ export default function App() {
 
           {authReady && (
             user ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
                 <button
                   onClick={() => setState('HISTORY')}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-sm font-medium"
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 transition-colors text-sm font-medium shadow-sm"
                 >
                   <Clock className="w-4 h-4" />
                   {t('History')}
                 </button>
-                <div className="flex items-center gap-3 pl-4 border-l border-white/10">
+                <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                   {user.photoURL && (
-                    <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-white/20" referrerPolicy="no-referrer" />
+                    <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-slate-200 shadow-sm" referrerPolicy="no-referrer" />
                   )}
                   <button
                     onClick={logout}
-                    className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm"
+                    className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors text-sm"
                   >
                     <LogOut className="w-4 h-4" />
                     {t('Logout')}
@@ -162,7 +212,7 @@ export default function App() {
             ) : (
               <button
                 onClick={loginWithGoogle}
-                className="flex items-center gap-2 px-5 py-2 rounded-full bg-white text-black font-medium hover:bg-zinc-200 transition-colors text-sm"
+                className="flex items-center gap-2 px-6 py-2 rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-all text-sm font-bold shadow-lg shadow-slate-900/10 w-full sm:w-auto justify-center"
               >
                 <LogIn className="w-4 h-4" />
                 {t('Sign in to Save Scans')}
@@ -173,11 +223,11 @@ export default function App() {
 
         {/* Header */}
         {state !== 'HISTORY' && (
-          <header className="text-center mb-16 mt-4">
+          <header className="text-center mb-10 md:mb-16 mt-2 md:mt-4">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-mono tracking-widest uppercase mb-6 shadow-[0_0_15px_rgba(34,211,238,0.2)]"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-700 text-xs font-mono tracking-widest uppercase mb-6"
           >
             <Sparkles className="w-4 h-4" />
             {t('AI-Powered Biometrics')}
@@ -186,7 +236,7 @@ export default function App() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 20 }}
-            className="text-6xl md:text-8xl font-bold tracking-tighter mb-6 bg-gradient-to-br from-white via-zinc-200 to-zinc-600 bg-clip-text text-transparent drop-shadow-sm"
+            className="text-5xl md:text-8xl font-serif font-medium tracking-tight mb-4 md:mb-6 text-slate-900"
           >
             AuraScan
           </motion.h1>
@@ -194,7 +244,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-zinc-400 max-w-xl mx-auto text-lg md:text-xl font-light leading-relaxed"
+            className="text-slate-500 max-w-xl mx-auto text-base md:text-xl font-light leading-relaxed px-4"
           >
             {t('Advanced facial analysis for full-body wellness insights and personalized health recommendations.')}
           </motion.p>
@@ -215,86 +265,111 @@ export default function App() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="max-w-md w-full glass-panel p-6 rounded-[2rem] border-cyan-500/20 relative overflow-hidden"
+                  className="max-w-md w-full medical-card p-6 relative overflow-hidden cursor-pointer group"
+                  onClick={() => {
+                    setAnalysis(latestScan);
+                    setState('RESULTS');
+                  }}
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[40px] rounded-full" />
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 blur-[40px] rounded-full" />
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-cyan-500/20 rounded-lg">
-                      <Sparkles className="w-4 h-4 text-cyan-400" />
+                    <div className="p-2 bg-teal-500/10 rounded-lg">
+                      <Sparkles className="w-4 h-4 text-teal-600" />
                     </div>
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">{t('Daily Wellness Insight')}</span>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-teal-600">{t('Daily Wellness Insight')}</span>
                   </div>
-                  <p className="text-white text-sm leading-relaxed mb-4">
-                    {t('Based on your last scan, focus on')} <span className="text-cyan-400 font-bold">{latestScan.indicators.sort((a, b) => a.score - b.score)[0].label}</span> {t('today.')}
+                  <p className="text-slate-700 text-sm leading-relaxed mb-4">
+                    {t('Based on your last scan, focus on')} <span className="text-teal-600 font-bold">{latestScan.indicators.sort((a, b) => a.score - b.score)[0].label}</span> {t('today.')}
                   </p>
-                  <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                    <p className="text-zinc-400 text-xs italic">"{latestScan.recommendations[0].tip}"</p>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <p className="text-slate-500 text-xs italic">"{latestScan.recommendations[0].tip}"</p>
                   </div>
                 </motion.div>
               )}
 
-              <motion.button
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                onClick={() => setState('SCANNING')}
-                className="group relative px-12 py-5 bg-white text-black font-bold text-lg rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_60_px_rgba(34,211,238,0.4)]"
+                className="flex flex-col items-center gap-4 w-full max-w-md"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <span className="relative z-10 flex items-center gap-3 group-hover:text-white transition-colors duration-300">
-                  {t('Start Health Scan')}
-                  <Activity className="w-6 h-6 group-hover:animate-pulse" />
-                </span>
-              </motion.button>
+                <div className="w-full flex flex-col gap-2">
+                  <label className="text-sm font-medium text-slate-700 ml-1">{t('Select Focus Area')}</label>
+                  <div className="relative group">
+                    <select
+                      value={focusArea}
+                      onChange={(e) => setFocusArea(e.target.value)}
+                      className="w-full appearance-none bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 pr-12 text-base font-medium text-slate-900 hover:border-teal-500/50 transition-colors cursor-pointer focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 shadow-sm"
+                    >
+                      {focusAreas.map(area => (
+                        <option key={area} value={area} className="bg-white text-slate-900">{t(area)}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-teal-500 transition-colors">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setState('SCANNING')}
+                  className="group relative w-full px-12 py-5 bg-slate-900 text-white font-bold text-lg rounded-full overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-slate-900/20"
+                >
+                  <span className="relative z-10 flex items-center justify-center gap-3">
+                    {t('Start Health Scan')}
+                    <Activity className="w-6 h-6 group-hover:animate-pulse" />
+                  </span>
+                </button>
+              </motion.div>
 
               <motion.p 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-zinc-500 text-sm flex items-center gap-2"
+                className="text-slate-400 text-sm flex items-center gap-2"
               >
                 <Shield className="w-4 h-4" />
                 {t('Requires camera access for facial analysis')}
               </motion.p>
 
-              {/* Lighting Guide */}
+              {/* Accuracy Guide */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="max-w-md w-full p-6 rounded-3xl bg-white/5 border border-white/10 mt-4"
+                className="max-w-md w-full p-6 medical-card mt-4"
               >
-                <h4 className="text-xs font-mono uppercase tracking-widest text-cyan-400 mb-4 flex items-center gap-2">
+                <h4 className="text-xs font-mono uppercase tracking-widest text-teal-600 mb-4 flex items-center gap-2">
                   <Sparkles className="w-3 h-3" />
                   {t('Accuracy Tip: Perfect Lighting')}
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
-                    <span className="text-white text-sm font-medium">{t('Face the Light')}</span>
-                    <span className="text-zinc-500 text-xs">{t('Position yourself towards a window or lamp.')}</span>
+                    <span className="text-slate-900 text-sm font-medium">{t('Face the Light')}</span>
+                    <span className="text-slate-500 text-xs">{t('Position yourself towards a window or lamp.')}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-white text-sm font-medium">{t('No Shadows')}</span>
-                    <span className="text-zinc-500 text-xs">{t('Ensure even lighting across your entire face.')}</span>
+                    <span className="text-slate-900 text-sm font-medium">{t('No Shadows')}</span>
+                    <span className="text-slate-500 text-xs">{t('Ensure even lighting across your entire face.')}</span>
                   </div>
                 </div>
               </motion.div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full mt-12">
                 <FeatureCard
-                  icon={<Shield className="w-8 h-8 text-cyan-400" />}
+                  icon={<Shield className="w-8 h-8 text-teal-600" />}
                   title={t('Secure Analysis')}
                   description={t('Your biometric data is processed securely and never stored on our servers.')}
                   delay={0.5}
                 />
                 <FeatureCard
-                  icon={<Activity className="w-8 h-8 text-emerald-400" />}
+                  icon={<Activity className="w-8 h-8 text-sky-600" />}
                   title={t('Real-time Insights')}
                   description={t('Get instant feedback on hydration, stress, and vitality markers.')}
                   delay={0.6}
                 />
                 <FeatureCard
-                  icon={<Sparkles className="w-8 h-8 text-purple-400" />}
+                  icon={<Sparkles className="w-8 h-8 text-indigo-600" />}
                   title={t('AI Wellness')}
                   description={t('Personalized recommendations powered by advanced machine learning.')}
                   delay={0.7}
@@ -345,13 +420,13 @@ export default function App() {
               className="text-center py-20"
             >
               <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Shield className="w-8 h-8 text-rose-500" />
+                <Shield className="w-8 h-8 text-rose-600" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">{t('Analysis Failed')}</h2>
-              <p className="text-zinc-400 mb-8">{error}</p>
+              <h2 className="text-2xl font-serif font-medium mb-2">{t('Analysis Failed')}</h2>
+              <p className="text-slate-500 mb-8">{error}</p>
               <button
                 onClick={reset}
-                className="px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-zinc-200 transition-colors"
+                className="px-8 py-3 bg-slate-900 text-white font-bold rounded-full hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10"
               >
                 {t('Try Again')}
               </button>
@@ -360,10 +435,12 @@ export default function App() {
         </AnimatePresence>
 
         {/* Footer */}
-        <footer className="mt-auto pt-20 pb-8 text-center text-zinc-600 text-xs uppercase tracking-[0.2em]">
+        <footer className="mt-auto pt-10 md:pt-20 pb-8 text-center text-slate-400 text-xs uppercase tracking-[0.2em] px-4 font-mono">
           {t('© 2026 AuraScan Biometrics • For Informational Purposes Only')}
         </footer>
       </main>
+
+      <FeedbackModal />
     </div>
   );
 }
@@ -374,14 +451,14 @@ function FeatureCard({ icon, title, description, delay = 0 }: { icon: React.Reac
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
-      whileHover={{ y: -5, scale: 1.02 }}
-      className="p-8 rounded-3xl glass-panel group cursor-pointer"
+      whileHover={{ y: -5 }}
+      className="p-8 medical-card group cursor-pointer"
     >
-      <div className="mb-6 p-4 bg-white/5 rounded-2xl inline-block group-hover:bg-white/10 transition-colors">
+      <div className="mb-6 p-4 bg-slate-50 rounded-2xl inline-block group-hover:bg-white transition-colors border border-slate-100">
         {icon}
       </div>
-      <h3 className="text-xl font-bold text-white mb-3 tracking-tight">{title}</h3>
-      <p className="text-zinc-400 text-sm leading-relaxed">{description}</p>
+      <h3 className="text-xl font-serif font-medium text-slate-900 mb-3 tracking-tight">{title}</h3>
+      <p className="text-slate-500 text-sm leading-relaxed font-light">{description}</p>
     </motion.div>
   );
 }
