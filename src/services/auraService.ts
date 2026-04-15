@@ -88,7 +88,25 @@ export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage
     const result = JSON.parse(response.text || "{}");
     return { ...result, language: targetLanguage } as HealthAnalysis;
   } catch (error: any) {
-    console.error("Gemini Translation Error:", error);
+    console.error("Aura Translation Error:", error);
+    const errorMessage = (error?.message || "").toLowerCase();
+    const errorString = JSON.stringify(error).toLowerCase();
+    
+    if (
+      errorMessage.includes("429") || 
+      errorMessage.includes("quota") || 
+      errorMessage.includes("resource_exhausted") ||
+      errorMessage.includes("api key") ||
+      errorMessage.includes("api_key_invalid") ||
+      errorMessage.includes("invalid") ||
+      errorString.includes("429") ||
+      errorString.includes("quota") ||
+      errorString.includes("api_key_invalid") ||
+      errorString.includes("api key not valid") ||
+      errorString.includes("invalid_argument")
+    ) {
+      throw new Error("Free Quota Finish for Today. Please Try again tomorrow !");
+    }
     throw new Error("Failed to translate results.");
   }
 }
@@ -115,16 +133,22 @@ export async function generateCoachingMessage(history: HealthAnalysis[], latest:
     });
     return response.text?.trim() || "Keep up the great work on your wellness journey!";
   } catch (error: any) {
-    console.error("Gemini Coaching Error:", error);
+    console.error("Aura Coaching Error:", error);
     return "Keep up the great work on your wellness journey!";
   }
 }
 
 export async function analyzeFaceHealth(base64Image: string, language: string = 'English', focusArea: string = 'General Wellness'): Promise<HealthAnalysis> {
-  const model = "gemini-flash-latest";
+  const model = "gemini-3.1-pro-preview";
   
   const prompt = `
     You are a world-class AI Biometric Health Analyst specializing in non-invasive physiological assessment via facial mapping. Your task is to analyze the provided high-resolution facial image to detect subtle biometric markers that correlate with systemic health.
+
+    ### RIGOROUS ACCURACY PROTOCOL:
+    1. **Visual Evidence Only:** Base your findings strictly on visible markers in the image. Do not hallucinate.
+    2. **Confidence Scoring:** For every indicator, provide a confidence score (0.0 to 1.0). If lighting is poor or features are obscured, lower the confidence significantly.
+    3. **Micro-Marker Detection:** Look for minute details: capillary breakage, pore size distribution, subtle skin tone shifts (dyschromia), and periorbital texture.
+    4. **Systemic Correlation:** Link facial markers to internal physiological systems (Endocrine, Digestive, Cardiovascular, Renal, Hepatic).
 
     ### LANGUAGE REQUIREMENT:
     You MUST return all text fields (summary, label, facial_signs, systemic_implication, tip, disclaimer, challenge title/description/task) in the following language: ${language}.
@@ -133,40 +157,28 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
     The user has requested a specific focus on: **${focusArea}**.
     Ensure that your analysis heavily weights this area. Provide exactly 5 key health indicators. At least 2 or 3 of these indicators MUST directly address the requested focus area based on facial markers.
 
-    ### METHODOLOGY:
-    Use a combination of modern clinical dermatology and traditional face mapping (Traditional Chinese Medicine/Ayurvedic correlations) to identify potential internal imbalances.
+    ### BIOMETRIC MAPPING PARAMETERS:
+    1. **Vascular & Oxygenation (Lip/Sclera/Cheek):**
+       - Check for Malar flush (Cardiovascular/Autoimmune).
+       - Check for Pallor (Anemia/Circulation).
+       - Check for Cyanotic hues (Oxygenation).
+       - Check for Scleral icterus (Hepatic).
 
-    ### ANALYSIS FOCUS (EXTENDED PARAMETERS):
-    1. **Colorimetry & Vascularity:**
-       - **Pallor:** Anemia, low circulation (check lips, inner eyelids).
-       - **Malar Flush:** Mitral stenosis, high blood pressure, or systemic lupus (butterfly rash).
-       - **Cyanosis:** Oxygenation issues (check lip/nail bed hue).
-       - **Jaundice:** Liver/Gallbladder (check sclera and skin undertone).
-       - **Xanthelasma:** Yellow deposits around eyes (high cholesterol).
+    2. **Metabolic & Endocrine (Jawline/Neck/Eyes):**
+       - Check for Acanthosis Nigricans (Insulin Resistance).
+       - Check for Xanthelasma (Lipid Metabolism).
+       - Check for Periorbital puffiness (Thyroid/Renal).
+       - Check for Hirsutism or specific acne patterns (Hormonal).
 
-    2. **Texture & Hydration:**
-       - **Turgor:** Skin elasticity (hydration levels).
-       - **Sebum Distribution:** T-zone oiliness vs. cheek dryness (hormonal/metabolic).
-       - **Deep Furrows:** Chronic stress or specific organ strain (e.g., vertical line between brows for Liver).
+    3. **Digestive & Gut-Skin Axis (Forehead/Mouth/Cheeks):**
+       - Check for Angular cheilitis (Vitamin B/Iron).
+       - Check for Forehead furrows (Digestive stress/Hydration).
+       - Check for Nasolabial fold depth (Respiratory/Digestive).
 
-    3. **Periorbital (Eye) Region:**
-       - **Dark Circles:** Kidney strain, chronic fatigue, or allergies (allergic shiners).
-       - **Puffiness:** Fluid retention, high sodium, or thyroid function.
-       - **Arcus Senilis:** White ring around cornea (lipid metabolism).
-
-    4. **Dermatological & Metabolic Markers:**
-       - **Angular Cheilitis:** Cracks at mouth corners (B12/Iron deficiency).
-       - **Acne Mapping:** Jawline (Hormonal), Forehead (Digestive), Cheeks (Respiratory/Stomach).
-       - **Acanthosis Nigricans:** Darkening of skin folds (Insulin resistance/Metabolic health).
-       - **Skin Tags:** Often correlated with metabolic syndrome.
-
-    5. **Respiratory & Oxygenation:**
-       - **Nasal Flare/Redness:** Respiratory strain or chronic inflammation.
-       - **Lip Hue:** Oxygen saturation levels.
-
-    6. **Micronutrient Status:**
-       - **Zinc Markers:** White spots or specific texture changes.
-       - **Vitamin C:** Redness or easy bruising markers.
+    4. **Dermatological Integrity:**
+       - Check for Seborrheic distribution.
+       - Check for Photo-aging (UV damage).
+       - Check for Transepidermal water loss (TEWL) markers.
 
     ### 7-DAY CHALLENGE:
     Identify the most critical finding (the indicator with the lowest score). Generate a personalized 7-day wellness challenge that is DIRECTLY linked to improving this specific indicator.
@@ -174,35 +186,13 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
     - The 'description' should explain how these tasks address the critical finding.
     - Each day should have a small, actionable task that helps improve that specific health marker.
 
-    ### FEW-SHOT EXAMPLE (English):
-    If you see: "Deep horizontal forehead lines, dry skin, and slight puffiness under eyes."
-    Your indicator should be:
-    {
-      "label": "Digestive & Kidney Function",
-      "status": "fair",
-      "score": 65,
-      "confidence": 0.88,
-      "facial_signs": ["Deep forehead furrows", "Periorbital edema"],
-      "affected_regions": ["forehead", "eyes"],
-      "systemic_implication": "Forehead lines often correlate with digestive stress or high sugar intake, while under-eye puffiness suggests the kidneys are working harder to manage fluid balance."
-    }
-
     ### RESPONSE REQUIREMENTS:
     - Return ONLY valid JSON.
     - Provide exactly 5 indicators in the 'indicators' array.
     - Be clinically objective but maintain a wellness-focused tone.
     - If the image is unclear, lower the 'confidence' score accordingly.
     
-    ### GENERAL RECOMMENDATIONS:
-    Provide 3-4 general, actionable wellness tips in the 'recommendations' array. Categorize them (e.g., 'Nutrition', 'Hydration', 'Sleep', 'Lifestyle') and provide a brief, helpful tip for each.
-    
-    Example of recommendations:
-    [
-      { "category": "Nutrition", "tip": "Increase intake of leafy greens to boost iron and vitamin levels." },
-      { "category": "Hydration", "tip": "Aim for 2-3 liters of water daily to support metabolic function." }
-    ]
-
-    ### BUSINESS INTEGRATION (NEW):
+    ### BUSINESS INTEGRATION:
     1. **Recommended Products:** Suggest 2-3 specific types of products (e.g., "Hyaluronic Acid Serum", "Zinc Supplement") that would help the user based on their results. Include a realistic brand name and price.
     2. **Personalized Nutrition:** Provide 2 simple meal ideas that target the critical findings. For each meal, provide:
        - A descriptive 'image_keyword' for finding a relevant photo (e.g., "salmon-salad", "green-smoothie").
@@ -212,25 +202,30 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
     {
       "summary": "...",
       "overall_score": 0,
-      "indicators": [...],
+      "indicators": [
+        {
+          "label": "...",
+          "status": "optimal|fair|attention_needed",
+          "score": 0-100,
+          "confidence": 0.0-1.0,
+          "facial_signs": ["...", "..."],
+          "affected_regions": ["forehead", "eyes", "cheeks", "nose", "mouth", "jawline", "skin_overall"],
+          "systemic_implication": "..."
+        }
+      ],
       "recommendations": [
         { "category": "...", "tip": "..." }
       ],
       "products": [
-        { "name": "Product Name", "type": "SKINCARE|SUPPLEMENT", "reason": "Why this helps", "link": "#", "brand": "Brand Name", "price": "$29.99" }
+        { "name": "...", "type": "SKINCARE|SUPPLEMENT", "reason": "...", "link": "#", "brand": "...", "price": "..." }
       ],
       "meals": [
         { 
-          "title": "Meal Name", 
-          "description": "How it helps", 
-          "ingredients": ["item 1", "item 2"],
-          "image_keyword": "keyword",
-          "nutritional_info": {
-            "calories": 450,
-            "protein": "25g",
-            "carbs": "40g",
-            "fats": "15g"
-          }
+          "title": "...", 
+          "description": "...", 
+          "ingredients": ["...", "..."],
+          "image_keyword": "...",
+          "nutritional_info": { "calories": 0, "protein": "...", "carbs": "...", "fats": "..." }
         }
       ],
       "challenge": { ... },
@@ -257,12 +252,26 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
     const result = JSON.parse(response.text || "{}");
     return { ...result, language } as HealthAnalysis;
   } catch (error: any) {
-    console.error("Gemini Analysis Error Details:", JSON.stringify(error, null, 2));
+    console.error("Aura Analysis Error Details:", JSON.stringify(error, null, 2));
     
-    // Check if it's a quota/rate limit error
-    const errorMessage = error?.message?.toLowerCase() || "";
-    if (errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("resource_exhausted")) {
-      throw new Error("Gemini API Quota Exceeded. Please check your API key billing details or try again later.");
+    // Check if it's a quota/rate limit error or API key error
+    const errorMessage = (error?.message || "").toLowerCase();
+    const errorString = JSON.stringify(error).toLowerCase();
+    
+    if (
+      errorMessage.includes("429") || 
+      errorMessage.includes("quota") || 
+      errorMessage.includes("resource_exhausted") ||
+      errorMessage.includes("api key") ||
+      errorMessage.includes("api_key_invalid") ||
+      errorMessage.includes("invalid") ||
+      errorString.includes("429") ||
+      errorString.includes("quota") ||
+      errorString.includes("api_key_invalid") ||
+      errorString.includes("api key not valid") ||
+      errorString.includes("invalid_argument")
+    ) {
+      throw new Error("Free Quota Finish for Today. Please Try again tomorrow !");
     }
     
     throw new Error(`Failed to analyze facial health: ${error.message || "Unknown error"}`);

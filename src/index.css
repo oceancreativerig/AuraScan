@@ -1,13 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Cormorant Garamond", serif;
+  --font-display: "Outfit", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --animate-blob: blob 7s infinite;
   --animate-scan: scan 2s linear infinite;
   --animate-reverse-spin: reverse-spin 10s linear infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes reverse-spin {
@@ -29,26 +30,60 @@
 
 @layer base {
   :root {
-    --tooltip-bg: #ffffff;
-    --tooltip-border: #e2e8f0;
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --border-color: #e2e8f0;
+    --accent-teal: #0d9488;
+    --accent-teal-soft: #f0fdfa;
+    --accent-teal-border: #ccfbf1;
+    --tooltip-bg: #0f172a;
+    --tooltip-border: #1e293b;
     --chart-grid: #e2e8f0;
-    --chart-axis: #94a3b8;
+    --chart-axis: #64748b;
   }
+
+  .dark {
+    --bg-main: #020617;
+    --bg-card: rgba(15, 23, 42, 0.4);
+    --bg-card-hover: rgba(15, 23, 42, 0.6);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --border-color: rgba(30, 41, 59, 0.5);
+    --accent-teal: #2dd4bf;
+    --accent-teal-soft: rgba(45, 212, 191, 0.1);
+    --accent-teal-border: rgba(45, 212, 191, 0.2);
+    --tooltip-bg: #0f172a;
+    --tooltip-border: #1e293b;
+    --chart-grid: #1e293b;
+    --chart-axis: #64748b;
+  }
+
   body {
-    @apply bg-slate-50 text-slate-900 antialiased transition-colors duration-300;
+    @apply bg-[var(--bg-main)] text-[var(--text-primary)] antialiased transition-colors duration-300;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-white/80 backdrop-blur-xl border border-slate-200 shadow-sm transition-all;
+    @apply bg-[var(--bg-card)] backdrop-blur-xl border border-[var(--border-color)] shadow-xl transition-all;
   }
   
   .glass-panel {
-    @apply bg-white border border-slate-200 shadow-sm transition-all;
+    @apply bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] shadow-lg transition-all;
   }
   
   .medical-card {
-    @apply bg-white border border-slate-200 rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] overflow-hidden transition-all;
+    @apply bg-[var(--bg-card)] backdrop-blur-xl border border-[var(--border-color)] rounded-3xl shadow-2xl overflow-hidden transition-all hover:border-[var(--accent-teal-border)];
+  }
+
+  .text-glow-teal {
+    @apply text-[var(--accent-teal)] drop-shadow-[0_0_8px_rgba(45,212,191,0.5)];
+  }
+
+  .bg-glow-teal {
+    @apply bg-[var(--accent-teal)] shadow-[0_0_20px_rgba(45,212,191,0.4)];
   }
 }

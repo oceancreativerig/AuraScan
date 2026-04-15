@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { HealthAnalysis } from '../services/geminiService';
+import { HealthAnalysis } from '../services/auraService';
 import { cn } from '../lib/utils';
 import { useLanguage } from '../lib/i18n';
 
@@ -64,19 +64,19 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'optimal': return 'text-emerald-600 bg-emerald-50 border-emerald-100 shadow-sm';
-      case 'fair': return 'text-amber-600 bg-amber-50 border-amber-100 shadow-sm';
-      case 'attention_needed': return 'text-rose-600 bg-rose-50 border-rose-100 shadow-sm';
-      default: return 'text-slate-600 bg-slate-50 border-slate-100';
+      case 'optimal': return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]';
+      case 'fair': return 'text-amber-500 bg-amber-500/10 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]';
+      case 'attention_needed': return 'text-rose-500 bg-rose-500/10 border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]';
+      default: return 'text-[var(--text-secondary)] bg-[var(--bg-card-hover)] border-[var(--border-color)]';
     }
   };
 
   const getProgressBarColor = (status: string) => {
     switch (status) {
-      case 'optimal': return 'bg-emerald-500';
-      case 'fair': return 'bg-amber-500';
-      case 'attention_needed': return 'bg-rose-500';
-      default: return 'bg-slate-400';
+      case 'optimal': return 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]';
+      case 'fair': return 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]';
+      case 'attention_needed': return 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]';
+      default: return 'bg-slate-600';
     }
   };
 
@@ -116,30 +116,50 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
     fullMark: 100,
   }));
 
+  const lowConfidence = analysis.indicators.some(ind => (ind.confidence || 1) < 0.7);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-4xl mx-auto space-y-6 md:space-y-8 pb-10 md:pb-20"
     >
+      {lowConfidence && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-4"
+        >
+          <div className="p-2 bg-amber-500/20 rounded-lg">
+            <AlertCircle className="w-5 h-5 text-amber-500" />
+          </div>
+          <div>
+            <h4 className="text-amber-600 dark:text-amber-200 font-medium text-sm mb-1">{t('Low Confidence Analysis')}</h4>
+            <p className="text-amber-600/70 dark:text-amber-400/70 text-xs leading-relaxed">
+              {t('The AI encountered some difficulty analyzing certain facial markers. For 100% accuracy, ensure you are in a brightly lit environment, remove glasses, and position your face clearly within the guide.')}
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Header Summary */}
       <div className="medical-card p-6 md:p-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 blur-[80px] rounded-full pointer-events-none" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-[80px] rounded-full pointer-events-none" />
         <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-center relative z-10">
           
           <div className="flex flex-col items-center">
             <div className="relative w-48 h-48 md:w-64 md:h-64 mb-4">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                  <PolarGrid stroke="currentColor" className="text-slate-200" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: 'currentColor', fontSize: 10 }} className="text-slate-500" />
+                  <PolarGrid stroke="currentColor" className="text-[var(--border-color)]" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: 'currentColor', fontSize: 10 }} className="text-[var(--text-secondary)]" />
                   <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                   <Radar
                     name="Score"
                     dataKey="score"
-                    stroke="#0d9488"
+                    stroke="#2dd4bf"
                     strokeWidth={2}
-                    fill="#0d9488"
+                    fill="#2dd4bf"
                     fillOpacity={0.2}
                   />
                 </RadarChart>
@@ -149,7 +169,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
             {/* Overall Score Circular Gauge */}
             <div className="relative w-28 h-28 md:w-32 md:h-32 flex-shrink-0 flex items-center justify-center -mt-8 md:-mt-4">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" className="text-slate-100" />
+                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" className="text-[var(--bg-card-hover)]" />
                 <motion.circle 
                   cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" 
                   strokeDasharray="283"
@@ -157,30 +177,30 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
                   animate={{ strokeDashoffset: 283 - (283 * (analysis.overall_score || 0)) / 100 }}
                   transition={{ duration: 1.5, ease: "easeOut" }}
                   className={cn(
-                    "drop-shadow-sm",
-                    analysis.overall_score >= 80 ? "text-emerald-500" : analysis.overall_score >= 50 ? "text-amber-500" : "text-rose-500"
+                    "drop-shadow-[0_0_8px_rgba(45,212,191,0.5)]",
+                    analysis.overall_score >= 80 ? "text-teal-500" : analysis.overall_score >= 50 ? "text-amber-500" : "text-rose-500"
                   )}
                   strokeLinecap="round"
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold text-slate-900 tracking-tighter">{analysis.overall_score}</span>
-                <span className="text-[10px] uppercase tracking-widest text-slate-500">{t('Score')}</span>
+                <span className="text-4xl font-display font-bold text-[var(--text-primary)] tracking-tighter">{analysis.overall_score}</span>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-secondary)]">{t('Score')}</span>
               </div>
             </div>
           </div>
 
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-teal-50 rounded-xl border border-teal-100">
-                <HeartPulse className="w-6 h-6 text-teal-600" />
+              <div className="p-2 bg-[var(--accent-teal-soft)] rounded-xl border border-[var(--accent-teal-border)]">
+                <HeartPulse className="w-6 h-6 text-[var(--accent-teal)]" />
               </div>
               <div>
-                <h2 className="text-2xl font-serif font-medium text-slate-900 tracking-tight">{t('Analysis Complete')}</h2>
-                <p className="text-teal-600 text-xs font-mono uppercase tracking-widest">{t('AuraScan Biometric Report')}</p>
+                <h2 className="text-3xl font-display font-bold text-[var(--text-primary)] tracking-tight">{t('Analysis Complete')}</h2>
+                <p className="text-[var(--accent-teal)] text-[10px] font-mono uppercase tracking-[0.3em]">{t('AuraScan Biometric Report')}</p>
               </div>
             </div>
-            <p className="text-slate-700 text-base leading-relaxed italic font-light border-l-2 border-teal-500/30 pl-4 py-1">
+            <p className="text-[var(--text-secondary)] text-lg leading-relaxed italic font-light border-l-2 border-[var(--accent-teal-border)] pl-6 py-2">
               "{analysis.summary}"
             </p>
           </div>
@@ -202,13 +222,13 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
           >
             <div>
               <div className="flex items-center justify-between mb-4">
-                <span className="font-serif font-medium text-lg tracking-tight text-slate-900">{indicator.label}</span>
+                <span className="font-display font-bold text-xl tracking-tight text-[var(--text-primary)]">{indicator.label}</span>
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col items-end">
-                    <span className="text-[10px] text-slate-500 uppercase tracking-widest">{t('Confidence')}</span>
-                    <span className="text-xs font-mono text-teal-600">{Math.round(indicator.confidence * 100)}%</span>
+                    <span className="text-[10px] font-mono text-[var(--text-secondary)] uppercase tracking-widest">{t('Confidence')}</span>
+                    <span className="text-xs font-mono text-[var(--accent-teal)]">{Math.round(indicator.confidence * 100)}%</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-white/50 border border-white/20">
+                  <div className="p-2 rounded-xl bg-[var(--bg-card-hover)] border border-[var(--border-color)]">
                     {getIndicatorIcon(indicator.label, indicator.status)}
                   </div>
                 </div>
@@ -217,24 +237,24 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
               {/* Facial Signs Badges */}
               <div className="flex flex-wrap gap-2 mb-4">
                 {indicator.facial_signs?.map((sign, i) => (
-                  <span key={i} className="px-2 py-1 text-[10px] uppercase tracking-wider font-mono bg-white/50 text-slate-500 rounded-md border border-slate-200/50">
+                  <span key={i} className="px-2 py-1 text-[9px] uppercase tracking-[0.2em] font-mono bg-[var(--bg-card-hover)] text-[var(--text-secondary)] rounded-md border border-[var(--border-color)]">
                     {sign}
                   </span>
                 ))}
               </div>
 
-              <p className="text-sm text-slate-700 leading-relaxed mb-6 font-light">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-6 font-light">
                 {indicator.systemic_implication}
               </p>
             </div>
             
             {/* Progress Bar */}
-            <div className="mt-auto pt-4 border-t border-slate-900/5">
-              <div className="flex justify-between text-xs font-mono uppercase tracking-wider mb-2 opacity-70">
+            <div className="mt-auto pt-4 border-t border-[var(--border-color)]">
+              <div className="flex justify-between text-[10px] font-mono uppercase tracking-[0.2em] mb-2 opacity-70">
                 <span>{t(indicator.status.replace('_', ' '))}</span>
-                <span>{indicator.score}/100</span>
+                <span className="text-[var(--text-primary)]">{indicator.score}/100</span>
               </div>
-              <div className="h-1.5 w-full bg-slate-900/5 rounded-full overflow-hidden">
+              <div className="h-1.5 w-full bg-[var(--bg-card-hover)] rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${indicator.score}%` }}
@@ -250,33 +270,33 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
       {/* 7-Day Challenge */}
       {analysis.challenge && (
         <div className="medical-card p-6 md:p-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 blur-[80px] rounded-full pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-[80px] rounded-full pointer-events-none" />
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
             <div className="flex-1">
-              <h3 className="text-xl md:text-2xl font-serif font-medium text-slate-900 flex items-center gap-3 tracking-tight">
-                <div className="p-2 bg-teal-50 rounded-xl border border-teal-100">
-                  <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-teal-600" />
+              <h3 className="text-2xl md:text-3xl font-display font-bold text-[var(--text-primary)] flex items-center gap-3 tracking-tight">
+                <div className="p-2 bg-[var(--accent-teal-soft)] rounded-xl border border-[var(--accent-teal-border)]">
+                  <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-[var(--accent-teal)]" />
                 </div>
                 {analysis.challenge.title}
               </h3>
-              <p className="text-slate-600 text-sm mt-2 max-w-xl font-light">{analysis.challenge.description}</p>
+              <p className="text-[var(--text-secondary)] text-sm mt-2 max-w-xl font-light">{analysis.challenge.description}</p>
             </div>
             
             {/* Progress Tracker */}
-            <div className="flex flex-col items-end gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-100 w-full md:w-auto">
+            <div className="flex flex-col items-end gap-2 bg-[var(--bg-card-hover)] p-4 rounded-2xl border border-[var(--border-color)] w-full md:w-auto">
               <div className="flex justify-between w-full items-center gap-4">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-600">{t('Progress')}</span>
-                <span className="text-sm font-bold text-teal-600">
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-secondary)]">{t('Progress')}</span>
+                <span className="text-sm font-bold text-[var(--accent-teal)]">
                   {analysis.challenge?.days?.filter(d => d.completed).length || 0} / 7
                 </span>
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1.5">
                 {analysis.challenge?.days?.map((day, idx) => (
                   <div 
                     key={idx} 
                     className={cn(
-                      "h-1.5 w-4 rounded-full transition-colors",
-                      day.completed ? "bg-teal-500" : "bg-slate-200"
+                      "h-1.5 w-5 rounded-full transition-all duration-500",
+                      day.completed ? "bg-[var(--accent-teal)] shadow-[0_0_8px_rgba(45,212,191,0.5)]" : "bg-[var(--border-color)]"
                     )}
                   />
                 ))}
@@ -293,38 +313,38 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
                 transition={{ delay: 0.6 + idx * 0.05 }}
                 onClick={() => onUpdateChallenge && onUpdateChallenge(idx, !day.completed)}
                 className={cn(
-                  "p-4 rounded-2xl border transition-all group cursor-pointer relative overflow-hidden",
+                  "p-5 rounded-2xl border transition-all group cursor-pointer relative overflow-hidden",
                   day.completed 
-                    ? "bg-teal-50 border-teal-200 shadow-sm" 
-                    : "bg-slate-50 border-slate-100 hover:border-teal-200"
+                    ? "bg-[var(--accent-teal-soft)] border-[var(--accent-teal-border)] shadow-xl" 
+                    : "bg-[var(--bg-card-hover)] border-[var(--border-color)] hover:border-[var(--accent-teal-border)]"
                 )}
               >
                 {day.completed && (
-                  <div className="absolute -right-4 -top-4 w-16 h-16 bg-teal-500/10 rounded-full blur-xl pointer-events-none" />
+                  <div className="absolute -right-4 -top-4 w-16 h-16 bg-teal-500/20 rounded-full blur-xl pointer-events-none" />
                 )}
-                <div className="flex items-center justify-between mb-3 relative z-10">
+                <div className="flex items-center justify-between mb-4 relative z-10">
                   <span className={cn(
-                    "text-xs font-mono transition-colors",
-                    day.completed ? "text-teal-700 font-bold" : "text-teal-600/60 group-hover:text-teal-600"
+                    "text-[10px] font-mono transition-colors tracking-[0.2em]",
+                    day.completed ? "text-[var(--accent-teal)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--accent-teal)]"
                   )}>
-                    {t('DAY')} {day.day}
+                    {t('DAY')} 0{day.day}
                   </span>
                   <div className={cn(
                     "w-6 h-6 rounded-full border flex items-center justify-center transition-all",
                     day.completed 
-                      ? "bg-teal-500 border-teal-500 text-white" 
-                      : "border-slate-300 group-hover:border-teal-400 bg-white"
+                      ? "bg-[var(--accent-teal)] border-[var(--accent-teal)] text-[var(--bg-card)]" 
+                      : "border-[var(--border-color)] group-hover:border-[var(--accent-teal)] bg-[var(--bg-card)]"
                   )}>
                     {day.completed ? (
                       <CheckCircle2 className="w-4 h-4" />
                     ) : (
-                      <div className="w-2 h-2 rounded-full bg-transparent group-hover:bg-teal-400 transition-colors" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-[var(--accent-teal)] transition-colors" />
                     )}
                   </div>
                 </div>
                 <p className={cn(
                   "text-sm leading-relaxed transition-colors relative z-10",
-                  day.completed ? "text-teal-900 font-medium" : "text-slate-600 font-light group-hover:text-slate-900"
+                  day.completed ? "text-[var(--text-primary)] font-medium" : "text-[var(--text-secondary)] font-light group-hover:text-[var(--text-primary)]"
                 )}>
                   {day.task}
                 </p>
@@ -336,10 +356,10 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
 
       {/* Recommendations */}
       <div className="medical-card p-6 md:p-8 relative overflow-hidden">
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-500/5 blur-[80px] rounded-full pointer-events-none" />
-        <h3 className="text-xl md:text-2xl font-serif font-medium text-slate-900 mb-6 md:mb-8 flex items-center gap-3 relative z-10 tracking-tight">
-          <div className="p-2 bg-teal-50 rounded-lg border border-teal-100">
-            <ArrowRight className="w-5 h-5 text-teal-600" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-500/10 blur-[80px] rounded-full pointer-events-none" />
+        <h3 className="text-2xl md:text-3xl font-display font-bold text-[var(--text-primary)] mb-6 md:mb-8 flex items-center gap-3 relative z-10 tracking-tight">
+          <div className="p-2 bg-[var(--accent-teal-soft)] rounded-lg border border-[var(--accent-teal-border)]">
+            <ArrowRight className="w-5 h-5 text-[var(--accent-teal)]" />
           </div>
           {t('Personalized Recommendations')}
         </h3>
@@ -351,20 +371,20 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 + idx * 0.1, type: "spring" }}
-                className="flex items-start gap-3 md:gap-4 p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-sm transition-all"
+                className="flex items-start gap-3 md:gap-5 p-5 md:p-6 bg-[var(--bg-card-hover)] rounded-2xl border border-[var(--border-color)] hover:bg-[var(--bg-card)] hover:border-[var(--accent-teal-border)] transition-all group"
               >
-                <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
+                <div className="w-12 h-12 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center flex-shrink-0 mt-0.5 shadow-xl group-hover:border-[var(--accent-teal-border)] transition-all">
                   {getRecommendationIcon(rec.category)}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-teal-600 text-xs font-mono uppercase tracking-wider mb-1">{rec.category}</span>
-                  <p className="text-slate-900 leading-relaxed font-light">{rec.tip}</p>
+                  <span className="text-[var(--accent-teal)] text-[10px] font-mono uppercase tracking-[0.2em] mb-1.5">{rec.category}</span>
+                  <p className="text-[var(--text-secondary)] leading-relaxed font-light text-base">{rec.tip}</p>
                 </div>
               </motion.div>
             ))
           ) : (
-            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-100">
-              <p className="text-slate-500 font-light">{t('No specific recommendations found for this scan. Continue maintaining your healthy habits!')}</p>
+            <div className="p-8 text-center bg-[var(--bg-card-hover)] rounded-2xl border border-[var(--border-color)]">
+              <p className="text-[var(--text-secondary)] font-light">{t('No specific recommendations found for this scan. Continue maintaining your healthy habits!')}</p>
             </div>
           )}
         </div>
@@ -379,12 +399,12 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
           className="medical-card p-6 relative overflow-hidden"
         >
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-serif font-medium text-slate-900 flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-teal-600" />
+            <h3 className="text-2xl font-display font-bold text-[var(--text-primary)] flex items-center gap-3">
+              <ShoppingBag className="w-5 h-5 text-[var(--accent-teal)]" />
               {t('Recommended for You')}
             </h3>
             {!isPro && (
-              <span className="text-[10px] font-mono bg-amber-100 text-amber-700 px-2 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+              <span className="text-[10px] font-mono bg-amber-500/10 text-amber-500 px-3 py-1 rounded-full uppercase tracking-[0.2em] flex items-center gap-1.5 border border-amber-500/20">
                 <Lock className="w-3 h-3" />
                 {t('Pro Feature')}
               </span>
@@ -393,31 +413,31 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
 
           <div className={`space-y-4 ${!isPro ? 'blur-sm pointer-events-none select-none' : ''}`}>
             {analysis.products?.map((product, idx) => (
-              <div key={idx} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-teal-500/30 transition-all hover:shadow-sm">
-                <div className="flex justify-between items-start mb-2">
+              <div key={idx} className="p-6 bg-[var(--bg-card-hover)] rounded-2xl border border-[var(--border-color)] group hover:border-[var(--accent-teal-border)] transition-all hover:shadow-2xl">
+                <div className="flex justify-between items-start mb-3">
                   <div>
-                    <span className="text-[10px] font-mono text-teal-600 uppercase tracking-widest mb-1 block">{product.brand || t('Premium Choice')}</span>
-                    <h4 className="font-bold text-slate-900 text-lg">{product.name}</h4>
+                    <span className="text-[10px] font-mono text-[var(--accent-teal)] uppercase tracking-[0.3em] mb-1.5 block">{product.brand || t('Premium Choice')}</span>
+                    <h4 className="font-bold text-[var(--text-primary)] text-xl tracking-tight">{product.name}</h4>
                   </div>
-                  <span className="text-sm font-bold text-slate-900 bg-white px-3 py-1 rounded-lg border border-slate-100 shadow-sm">{product.price || '$--.--'}</span>
+                  <span className="text-sm font-bold text-[var(--text-primary)] bg-[var(--bg-card)] px-4 py-1.5 rounded-xl border border-[var(--border-color)] shadow-xl">{product.price || '$--.--'}</span>
                 </div>
-                <p className="text-xs text-slate-600 mb-4 leading-relaxed">{product.reason}</p>
-                <div className="flex gap-2">
+                <p className="text-sm text-[var(--text-secondary)] mb-5 leading-relaxed font-light">{product.reason}</p>
+                <div className="flex gap-3">
                   <a 
                     href={product.link} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex-1 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
+                    className="flex-1 px-4 py-3 bg-[var(--text-primary)] text-[var(--bg-card)] text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-xl"
                   >
-                    <ShoppingCart className="w-3.5 h-3.5" />
+                    <ShoppingCart className="w-4 h-4" />
                     {t('Add to Cart')}
                   </a>
                   <button 
                     onClick={() => setSelectedProduct(product)}
-                    className="px-4 py-2 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
+                    className="px-4 py-3 bg-[var(--bg-card-hover)] border border-[var(--border-color)] text-[var(--text-secondary)] text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-[var(--bg-card)] transition-all"
                   >
                     {t('Details')}
-                    <ChevronRight className="w-3.5 h-3.5" />
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -425,10 +445,10 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
           </div>
 
           {!isPro && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/10 backdrop-blur-[2px] z-10">
+            <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-main)]/20 backdrop-blur-[2px] z-10">
               <button
                 onClick={onUpgrade}
-                className="px-6 py-2 bg-amber-500 text-white font-bold rounded-full shadow-lg hover:bg-amber-600 transition-colors text-sm"
+                className="px-8 py-3 bg-[var(--accent-teal)] text-white font-bold rounded-full shadow-lg hover:opacity-90 transition-all text-sm"
               >
                 {t('Unlock Recommendations')}
               </button>
@@ -443,12 +463,12 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
           className="medical-card p-6 relative overflow-hidden"
         >
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-serif font-medium text-slate-900 flex items-center gap-2">
-              <Utensils className="w-5 h-5 text-sky-600" />
+            <h3 className="text-2xl font-display font-bold text-[var(--text-primary)] flex items-center gap-3">
+              <Utensils className="w-5 h-5 text-sky-500" />
               {t('Personalized Nutrition')}
             </h3>
             {!isPro && (
-              <span className="text-[10px] font-mono bg-amber-100 text-amber-700 px-2 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+              <span className="text-[10px] font-mono bg-amber-500/10 text-amber-500 px-3 py-1 rounded-full uppercase tracking-[0.2em] flex items-center gap-1.5 border border-amber-500/20">
                 <Lock className="w-3 h-3" />
                 {t('Pro Feature')}
               </span>
@@ -457,47 +477,47 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
 
           <div className={`space-y-6 ${!isPro ? 'blur-sm pointer-events-none select-none' : ''}`}>
             {analysis.meals?.map((meal, idx) => (
-              <div key={idx} className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden group hover:shadow-md transition-all">
-                <div className="h-40 w-full relative overflow-hidden">
+              <div key={idx} className="bg-[var(--bg-card-hover)] rounded-2xl border border-[var(--border-color)] overflow-hidden group hover:border-[var(--accent-teal-border)] transition-all shadow-xl">
+                <div className="h-44 w-full relative overflow-hidden">
                   <img 
                     src={`https://picsum.photos/seed/${meal.image_keyword || 'healthy-food'}/600/400`} 
                     alt={meal.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h4 className="text-white font-bold text-lg leading-tight">{meal.title}</h4>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-main)] via-[var(--bg-main)]/20 to-transparent" />
+                  <div className="absolute bottom-5 left-5 right-5">
+                    <h4 className="text-white font-bold text-xl leading-tight tracking-tight drop-shadow-md">{meal.title}</h4>
                   </div>
                 </div>
-                <div className="p-5">
-                  <p className="text-xs text-slate-600 mb-4 leading-relaxed">{meal.description}</p>
+                <div className="p-6">
+                  <p className="text-sm text-[var(--text-secondary)] mb-5 leading-relaxed font-light">{meal.description}</p>
                   
                   {/* Nutritional Info */}
                   {meal.nutritional_info && (
-                    <div className="grid grid-cols-4 gap-2 mb-4">
-                      <div className="bg-white p-2 rounded-xl border border-slate-100 text-center">
-                        <span className="block text-[10px] text-slate-500 uppercase font-mono">{t('CAL')}</span>
-                        <span className="text-xs font-bold text-slate-900">{meal.nutritional_info.calories}</span>
+                    <div className="grid grid-cols-4 gap-3 mb-5">
+                      <div className="bg-[var(--bg-card)] p-2.5 rounded-xl border border-[var(--border-color)] text-center">
+                        <span className="block text-[9px] text-[var(--text-secondary)] uppercase font-mono tracking-widest">{t('CAL')}</span>
+                        <span className="text-xs font-bold text-[var(--text-primary)]">{meal.nutritional_info.calories}</span>
                       </div>
-                      <div className="bg-white p-2 rounded-xl border border-slate-100 text-center">
-                        <span className="block text-[10px] text-slate-500 uppercase font-mono">{t('PRO')}</span>
-                        <span className="text-xs font-bold text-slate-900">{meal.nutritional_info.protein}</span>
+                      <div className="bg-[var(--bg-card)] p-2.5 rounded-xl border border-[var(--border-color)] text-center">
+                        <span className="block text-[9px] text-[var(--text-secondary)] uppercase font-mono tracking-widest">{t('PRO')}</span>
+                        <span className="text-xs font-bold text-[var(--text-primary)]">{meal.nutritional_info.protein}</span>
                       </div>
-                      <div className="bg-white p-2 rounded-xl border border-slate-100 text-center">
-                        <span className="block text-[10px] text-slate-500 uppercase font-mono">{t('CARB')}</span>
-                        <span className="text-xs font-bold text-slate-900">{meal.nutritional_info.carbs}</span>
+                      <div className="bg-[var(--bg-card)] p-2.5 rounded-xl border border-[var(--border-color)] text-center">
+                        <span className="block text-[9px] text-[var(--text-secondary)] uppercase font-mono tracking-widest">{t('CARB')}</span>
+                        <span className="text-xs font-bold text-[var(--text-primary)]">{meal.nutritional_info.carbs}</span>
                       </div>
-                      <div className="bg-white p-2 rounded-xl border border-slate-100 text-center">
-                        <span className="block text-[10px] text-slate-500 uppercase font-mono">{t('FAT')}</span>
-                        <span className="text-xs font-bold text-slate-900">{meal.nutritional_info.fats}</span>
+                      <div className="bg-[var(--bg-card)] p-2.5 rounded-xl border border-[var(--border-color)] text-center">
+                        <span className="block text-[9px] text-[var(--text-secondary)] uppercase font-mono tracking-widest">{t('FAT')}</span>
+                        <span className="text-xs font-bold text-[var(--text-primary)]">{meal.nutritional_info.fats}</span>
                       </div>
                     </div>
                   )}
 
                   <div className="flex flex-wrap gap-2">
                     {meal.ingredients.map((ing, i) => (
-                      <span key={i} className="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded-lg text-slate-600 font-medium">
+                      <span key={i} className="text-[10px] bg-[var(--bg-card)] border border-[var(--border-color)] px-3 py-1 rounded-lg text-[var(--text-secondary)] font-mono tracking-wider">
                         {ing}
                       </span>
                     ))}
@@ -508,10 +528,10 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
           </div>
 
           {!isPro && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/10 backdrop-blur-[2px] z-10">
+            <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-main)]/20 backdrop-blur-[2px] z-10">
               <button
                 onClick={onUpgrade}
-                className="px-6 py-2 bg-amber-500 text-white font-bold rounded-full shadow-lg hover:bg-amber-600 transition-colors text-sm"
+                className="px-8 py-3 bg-[var(--accent-teal)] text-white font-bold rounded-full shadow-lg hover:opacity-90 transition-all text-sm"
               >
                 {t('Unlock Meal Plans')}
               </button>
@@ -521,12 +541,12 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
       </div>
 
       {/* Disclaimer */}
-      <div className="p-6 bg-rose-50 border border-rose-100 rounded-2xl">
-        <div className="flex items-center gap-3 mb-2 text-rose-600">
+      <div className="p-6 bg-rose-500/5 border border-rose-500/20 rounded-2xl">
+        <div className="flex items-center gap-3 mb-2 text-rose-500">
           <ShieldAlert className="w-5 h-5" />
-          <span className="font-bold text-sm uppercase tracking-wider">{t('Medical Disclaimer')}</span>
+          <span className="font-bold text-sm uppercase tracking-[0.2em] font-mono">{t('Medical Disclaimer')}</span>
         </div>
-        <p className="text-rose-600/90 text-xs leading-relaxed font-light">
+        <p className="text-[var(--text-secondary)] text-xs leading-relaxed font-light">
           {analysis.disclaimer} {t('AuraScan is an AI-powered wellness tool and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.')}
         </p>
       </div>
@@ -535,7 +555,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
       <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4 md:pt-8 pb-8 md:pb-12">
         <button
           onClick={handleExport}
-          className="group relative px-8 md:px-10 py-3 md:py-4 bg-white border-2 border-slate-200 text-slate-900 font-bold rounded-full overflow-hidden transition-all hover:border-teal-500 active:scale-95 shadow-lg shadow-slate-200/20 w-full sm:w-auto"
+          className="group relative px-8 md:px-10 py-3 md:py-4 bg-[var(--bg-card)] border-2 border-[var(--border-color)] text-[var(--text-primary)] font-bold rounded-full overflow-hidden transition-all hover:border-[var(--accent-teal-border)] active:scale-95 shadow-2xl w-full sm:w-auto"
         >
           <span className="relative z-10 flex items-center justify-center gap-3">
             <Download className="w-5 h-5" />
@@ -545,7 +565,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
         </button>
         <button
           onClick={onReset}
-          className="group relative px-8 md:px-10 py-3 md:py-4 bg-slate-900 text-white font-bold rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-xl shadow-slate-900/20 w-full sm:w-auto"
+          className="group relative px-8 md:px-10 py-3 md:py-4 bg-[var(--text-primary)] text-[var(--bg-card)] font-bold rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-2xl w-full sm:w-auto"
         >
           <span className="relative z-10 flex items-center justify-center gap-3">
             <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
@@ -563,22 +583,22 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedProduct(null)}
-              className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-[var(--bg-main)]/40 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-2xl"
+              className="relative w-full max-w-lg bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[2.5rem] overflow-hidden shadow-2xl"
             >
               <div className="p-8 md:p-10">
                 <div className="flex justify-between items-start mb-8">
-                  <div className="p-3 bg-teal-50 rounded-2xl border border-teal-100">
-                    <ShoppingBag className="w-8 h-8 text-teal-600" />
+                  <div className="p-3 bg-[var(--accent-teal-soft)] rounded-2xl border border-[var(--accent-teal-border)]">
+                    <ShoppingBag className="w-8 h-8 text-[var(--accent-teal)]" />
                   </div>
                   <button
                     onClick={() => setSelectedProduct(null)}
-                    className="p-2 hover:bg-slate-50 rounded-full transition-colors text-slate-400 hover:text-slate-600"
+                    className="p-2 hover:bg-[var(--bg-card-hover)] rounded-full transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   >
                     <X className="w-6 h-6" />
                   </button>
@@ -586,28 +606,28 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
 
                 <div className="space-y-6">
                   <div>
-                    <span className="text-xs font-mono text-teal-600 uppercase tracking-[0.2em] mb-2 block">
+                    <span className="text-[10px] font-mono text-[var(--accent-teal)] uppercase tracking-[0.3em] mb-2 block">
                       {selectedProduct.brand || t('Premium Recommendation')}
                     </span>
-                    <h3 className="text-3xl font-serif font-medium text-slate-900 leading-tight">
+                    <h3 className="text-3xl font-display font-bold text-[var(--text-primary)] leading-tight">
                       {selectedProduct.name}
                     </h3>
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <div className="px-4 py-2 bg-slate-900 text-white rounded-xl font-bold text-xl shadow-lg">
+                    <div className="px-5 py-2.5 bg-[var(--text-primary)] text-[var(--bg-card)] rounded-xl font-bold text-xl shadow-xl">
                       {selectedProduct.price || '$--.--'}
                     </div>
-                    <span className="text-xs font-mono text-slate-500 uppercase tracking-widest">
+                    <span className="text-[10px] font-mono text-[var(--text-secondary)] uppercase tracking-[0.2em]">
                       {selectedProduct.type === 'SKINCARE' ? t('Skincare Solution') : t('Wellness Supplement')}
                     </span>
                   </div>
 
-                  <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-3">
+                  <div className="p-6 bg-[var(--bg-card-hover)] rounded-3xl border border-[var(--border-color)]">
+                    <h4 className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-secondary)] mb-3">
                       {t('Why it was selected')}
                     </h4>
-                    <p className="text-slate-700 leading-relaxed font-light">
+                    <p className="text-[var(--text-secondary)] leading-relaxed font-light">
                       {selectedProduct.reason}
                     </p>
                   </div>
@@ -617,7 +637,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
                       href={selectedProduct.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 px-8 py-4 bg-slate-900 text-white font-bold rounded-full flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-slate-900/20"
+                      className="flex-1 px-8 py-4 bg-[var(--text-primary)] text-[var(--bg-card)] font-bold rounded-full flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
                     >
                       <ShoppingCart className="w-5 h-5" />
                       {t('Buy Now')}
@@ -626,7 +646,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
                       href={selectedProduct.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-6 py-4 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-full flex items-center justify-center hover:bg-slate-50 transition-all"
+                      className="px-6 py-4 bg-[var(--bg-card-hover)] border-2 border-[var(--border-color)] text-[var(--text-secondary)] font-bold rounded-full flex items-center justify-center hover:bg-[var(--bg-card)] transition-all"
                       title={t('External Link')}
                     >
                       <ExternalLink className="w-5 h-5" />

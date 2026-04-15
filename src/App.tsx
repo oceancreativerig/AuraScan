@@ -5,7 +5,7 @@ import { History } from './components/History';
 import { FeedbackModal } from './components/FeedbackModal';
 import { Onboarding } from './components/Onboarding';
 import { CoachCard } from './components/CoachCard';
-import { analyzeFaceHealth, translateAnalysis, HealthAnalysis, generateCoachingMessage } from './services/geminiService';
+import { analyzeFaceHealth, translateAnalysis, HealthAnalysis, generateCoachingMessage } from './services/auraService';
 import { Shield, Sparkles, Activity, LogIn, LogOut, Clock, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './lib/firebase';
@@ -14,10 +14,11 @@ import { doc, setDoc, collection, addDoc, serverTimestamp, query, orderBy, limit
 import { useLanguage, languages } from './lib/i18n';
 
 import { AdminPanel } from './components/AdminPanel';
+import { ThemeProvider, useTheme } from './lib/ThemeContext';
 
-type AppState = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'ERROR' | 'HISTORY' | 'ADMIN';
+type AppState = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'HISTORY' | 'ADMIN' | 'ERROR';
 
-export default function App() {
+function AppContent() {
   const [state, setState] = useState<AppState>('IDLE');
   const [analysis, setAnalysis] = useState<HealthAnalysis | null>(null);
   const [currentScanId, setCurrentScanId] = useState<string | null>(null);
@@ -28,6 +29,7 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
@@ -282,11 +284,15 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-teal-500/30 transition-colors duration-300">
+    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] font-sans selection:bg-teal-500/30 transition-colors duration-300 overflow-x-hidden">
       {/* Background Atmosphere */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
-        <div className="absolute w-[800px] h-[800px] bg-teal-500/5 blur-[120px] rounded-full animate-blob opacity-50" />
-        <div className="absolute w-[600px] h-[600px] bg-sky-500/5 blur-[120px] rounded-full animate-blob animation-delay-2000 opacity-50" />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-teal-500/10 blur-[120px] rounded-full animate-blob opacity-40" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-500/10 blur-[120px] rounded-full animate-blob animation-delay-2000 opacity-40" />
+        <div className="absolute top-[30%] right-[10%] w-[30%] h-[30%] bg-purple-500/5 blur-[100px] rounded-full animate-blob animation-delay-4000 opacity-30" />
+        
+        {/* Grid Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
       </div>
 
       <main className="relative z-10 container mx-auto px-4 py-6 md:py-12 flex flex-col items-center min-h-screen">
@@ -295,24 +301,34 @@ export default function App() {
           <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
             <button
               onClick={() => setState('IDLE')}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 transition-colors text-sm font-medium shadow-sm text-slate-900"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] hover:bg-[var(--bg-card-hover)] transition-all text-sm font-medium shadow-xl text-[var(--text-primary)]"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
               {t('Home')}
             </button>
+            
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all shadow-lg"
+              title={theme === 'light' ? t('Switch to Dark Mode') : t('Switch to Light Mode')}
+            >
+              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </button>
+
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500 ml-1">{t('Language')}</span>
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-secondary)] ml-1">{t('Language')}</span>
               <div className="relative group">
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="appearance-none bg-white border border-slate-200 rounded-full px-4 py-2 pr-8 text-sm font-medium hover:border-slate-300 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-slate-900"
+                  className="appearance-none bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] rounded-full px-4 py-2 pr-8 text-sm font-medium hover:border-[var(--accent-teal)] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-[var(--text-primary)]"
                 >
                   {languages.map(lang => (
-                    <option key={lang} value={lang} className="bg-white text-slate-900">{lang}</option>
+                    <option key={lang} value={lang} className="bg-[var(--bg-card)] text-[var(--text-primary)]">{lang}</option>
                   ))}
                 </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                 </div>
               </div>
@@ -325,7 +341,7 @@ export default function App() {
                 {!isPro && (
                   <button
                     onClick={handleUpgrade}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:shadow-lg transition-all text-sm font-bold shadow-sm"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-teal-400 to-emerald-500 text-slate-950 hover:shadow-[0_0_20px_rgba(45,212,191,0.4)] transition-all text-sm font-bold shadow-xl"
                   >
                     <Sparkles className="w-4 h-4" />
                     {t('Upgrade to Pro')}
@@ -334,7 +350,7 @@ export default function App() {
                 {isAdmin && (
                   <button
                     onClick={() => setState('ADMIN')}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-teal-50 border border-teal-200 text-teal-700 hover:bg-teal-100 transition-colors text-sm font-medium shadow-sm"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-card)] border border-[var(--accent-teal-border)] text-[var(--accent-teal)] hover:bg-[var(--accent-teal-soft)] transition-all text-sm font-medium shadow-xl"
                   >
                     <Shield className="w-4 h-4" />
                     {t('Admin')}
@@ -342,18 +358,18 @@ export default function App() {
                 )}
                 <button
                   onClick={() => setState('HISTORY')}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 transition-colors text-sm font-medium shadow-sm text-slate-900"
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] hover:bg-[var(--bg-card-hover)] transition-all text-sm font-medium shadow-xl text-[var(--text-primary)]"
                 >
                   <Clock className="w-4 h-4" />
                   {t('History')}
                 </button>
-                <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+                <div className="flex items-center gap-3 pl-4 border-l border-[var(--border-color)]">
                   {user.photoURL && (
-                    <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-slate-200 shadow-sm" referrerPolicy="no-referrer" />
+                    <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-[var(--border-color)] shadow-xl" referrerPolicy="no-referrer" />
                   )}
                   <button
                     onClick={logout}
-                    className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors text-sm"
+                    className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all text-sm"
                   >
                     <LogOut className="w-4 h-4" />
                     {t('Logout')}
@@ -363,7 +379,7 @@ export default function App() {
             ) : (
               <button
               onClick={handleLogin}
-              className="flex items-center gap-2 px-6 py-2 rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-all text-sm font-bold shadow-lg shadow-slate-900/10 w-full sm:w-auto justify-center"
+              className="flex items-center gap-2 px-6 py-2 rounded-full bg-[var(--text-primary)] text-[var(--bg-card)] hover:opacity-90 transition-all text-sm font-bold shadow-xl w-full sm:w-auto justify-center"
             >
               <LogIn className="w-4 h-4" />
               {t('Sign in to Save Scans')}
@@ -378,24 +394,38 @@ export default function App() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-700 text-xs font-mono tracking-widest uppercase mb-6"
+            className="flex flex-col items-center gap-6 mb-8"
           >
-            <Sparkles className="w-4 h-4" />
-            {t('AI-Powered Biometrics')}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-[10px] font-mono tracking-[0.3em] uppercase">
+              <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+              {t('AI-Powered Biometrics')}
+            </div>
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 20 }}
-            className="text-5xl md:text-8xl font-serif font-medium tracking-tight mb-4 md:mb-6 text-slate-900"
+            className="text-7xl md:text-9xl font-display font-bold tracking-tighter mb-4 md:mb-6 flex items-center justify-center gap-2"
           >
-            AuraScan
+            <span className="bg-clip-text text-transparent bg-gradient-to-br from-[var(--accent-teal)] via-[var(--text-primary)] to-[var(--text-secondary)]">
+              Aura
+            </span>
+            <span className="relative">
+              <span className="bg-clip-text text-transparent bg-gradient-to-tr from-[var(--text-primary)] to-[var(--accent-teal)]">
+                Scan
+              </span>
+              <motion.div 
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute -top-2 -right-4 w-2 h-2 bg-[var(--accent-teal)] rounded-full blur-[2px]" 
+              />
+            </span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-slate-600 max-w-xl mx-auto text-base md:text-xl font-light leading-relaxed px-4"
+            className="text-[var(--text-secondary)] max-w-xl mx-auto text-base md:text-xl font-light leading-relaxed px-4"
           >
             {t('Advanced facial analysis for full-body wellness insights and personalized health recommendations.')}
           </motion.p>
@@ -417,24 +447,24 @@ export default function App() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="medical-card p-6 relative overflow-hidden cursor-pointer group"
+                    className="medical-card p-6 relative overflow-hidden cursor-pointer group border-teal-500/20"
                     onClick={() => {
                       setAnalysis(latestScan);
                       setState('RESULTS');
                     }}
                   >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 blur-[40px] rounded-full" />
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 blur-[40px] rounded-full group-hover:bg-teal-500/20 transition-all" />
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-teal-500/10 rounded-lg">
-                        <Sparkles className="w-4 h-4 text-teal-600" />
+                      <div className="p-2 bg-[var(--accent-teal-soft)] rounded-lg">
+                        <Sparkles className="w-4 h-4 text-[var(--accent-teal)]" />
                       </div>
-                      <span className="text-[10px] font-mono uppercase tracking-widest text-teal-600">{t('Daily Wellness Insight')}</span>
+                      <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--accent-teal)]">{t('Daily Wellness Insight')}</span>
                     </div>
-                    <p className="text-slate-700 text-sm leading-relaxed mb-4">
-                      {t('Based on your last scan, focus on')} <span className="text-teal-600 font-bold">{latestScan.indicators?.sort((a, b) => a.score - b.score)[0]?.label || t('wellness')}</span> {t('today.')}
+                    <p className="text-[var(--text-primary)] text-sm leading-relaxed mb-4">
+                      {t('Based on your last scan, focus on')} <span className="text-[var(--accent-teal)] font-bold">{latestScan.indicators?.sort((a, b) => a.score - b.score)[0]?.label || t('wellness')}</span> {t('today.')}
                     </p>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <p className="text-slate-600 text-xs italic">"{latestScan.recommendations[0].tip}"</p>
+                    <div className="p-3 bg-[var(--bg-card-hover)] rounded-xl border border-[var(--border-color)]">
+                      <p className="text-[var(--text-secondary)] text-xs italic">"{latestScan.recommendations[0].tip}"</p>
                     </div>
                   </motion.div>
                   {coachingMessage && <CoachCard message={coachingMessage} />}
@@ -448,18 +478,18 @@ export default function App() {
                 className="flex flex-col items-center gap-4 w-full max-w-md"
               >
                 <div className="w-full flex flex-col gap-2">
-                  <label className="text-sm font-medium text-slate-700 ml-1">{t('Select Focus Area')}</label>
+                  <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-secondary)] ml-1">{t('Select Focus Area')}</label>
                   <div className="relative group">
                     <select
                       value={focusArea}
                       onChange={(e) => setFocusArea(e.target.value)}
-                      className="w-full appearance-none bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 pr-12 text-base font-medium text-slate-900 hover:border-teal-500/50 transition-colors cursor-pointer focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 shadow-sm"
+                      className="w-full appearance-none bg-[var(--bg-card)] backdrop-blur-md border-2 border-[var(--border-color)] rounded-2xl px-6 py-4 pr-12 text-base font-medium text-[var(--text-primary)] hover:border-[var(--accent-teal)] transition-all cursor-pointer focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-[var(--accent-teal)] shadow-2xl"
                     >
                       {focusAreas.map(area => (
-                        <option key={area} value={area} className="bg-white text-slate-900">{t(area)}</option>
+                        <option key={area} value={area} className="bg-[var(--bg-card)] text-[var(--text-primary)]">{t(area)}</option>
                       ))}
                     </select>
-                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-teal-500 transition-colors">
+                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)] group-hover:text-[var(--accent-teal)] transition-all">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                     </div>
                   </div>
@@ -467,7 +497,7 @@ export default function App() {
 
                 <button
                   onClick={() => setState('SCANNING')}
-                  className="group relative w-full px-12 py-5 bg-slate-900 text-white font-bold text-lg rounded-full overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-slate-900/20"
+                  className="group relative w-full px-12 py-5 bg-[var(--text-primary)] text-[var(--bg-card)] font-bold text-lg rounded-full overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-2xl"
                 >
                   <span className="relative z-10 flex items-center justify-center gap-3">
                     {t('Start Health Scan')}
@@ -480,7 +510,7 @@ export default function App() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-slate-400 text-sm flex items-center gap-2"
+                className="text-[var(--text-secondary)] text-sm flex items-center gap-2"
               >
                 <Shield className="w-4 h-4" />
                 {t('Requires camera access for facial analysis')}
@@ -493,37 +523,37 @@ export default function App() {
                 transition={{ delay: 0.5 }}
                 className="max-w-md w-full p-6 medical-card mt-4"
               >
-                <h4 className="text-xs font-mono uppercase tracking-widest text-teal-600 mb-4 flex items-center gap-2">
+                <h4 className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--accent-teal)] mb-4 flex items-center gap-2">
                   <Sparkles className="w-3 h-3" />
                   {t('Accuracy Tip: Perfect Lighting')}
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
-                    <span className="text-slate-900 text-sm font-medium">{t('Face the Light')}</span>
-                    <span className="text-slate-600 text-xs">{t('Position yourself towards a window or lamp.')}</span>
+                    <span className="text-[var(--text-primary)] text-sm font-medium">{t('Face the Light')}</span>
+                    <span className="text-[var(--text-secondary)] text-xs">{t('Position yourself towards a window or lamp.')}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-slate-900 text-sm font-medium">{t('No Shadows')}</span>
-                    <span className="text-slate-600 text-xs">{t('Ensure even lighting across your entire face.')}</span>
+                    <span className="text-[var(--text-primary)] text-sm font-medium">{t('No Shadows')}</span>
+                    <span className="text-[var(--text-secondary)] text-xs">{t('Ensure even lighting across your entire face.')}</span>
                   </div>
                 </div>
               </motion.div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full mt-12">
                 <FeatureCard
-                  icon={<Shield className="w-8 h-8 text-teal-600" />}
+                  icon={<Shield className="w-8 h-8 text-[var(--accent-teal)]" />}
                   title={t('Secure Analysis')}
                   description={t('Your biometric data is processed securely and never stored on our servers.')}
                   delay={0.5}
                 />
                 <FeatureCard
-                  icon={<Activity className="w-8 h-8 text-sky-600" />}
+                  icon={<Activity className="w-8 h-8 text-sky-400" />}
                   title={t('Real-time Insights')}
                   description={t('Get instant feedback on hydration, stress, and vitality markers.')}
                   delay={0.6}
                 />
                 <FeatureCard
-                  icon={<Sparkles className="w-8 h-8 text-indigo-600" />}
+                  icon={<Sparkles className="w-8 h-8 text-purple-400" />}
                   title={t('AI Wellness')}
                   description={t('Personalized recommendations powered by advanced machine learning.')}
                   delay={0.7}
@@ -537,22 +567,22 @@ export default function App() {
                 transition={{ delay: 0.8 }}
                 className="max-w-4xl w-full mt-20 text-center"
               >
-                <h3 className="text-2xl font-serif font-medium text-slate-900 mb-12">{t('How AuraScan Works')}</h3>
+                <h3 className="text-3xl font-display font-bold text-[var(--text-primary)] mb-12 tracking-tight">{t('How AuraScan Works')}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-12">
                   <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-600 font-bold border border-teal-500/20">1</div>
-                    <h4 className="font-bold text-slate-900">{t('Facial Mapping')}</h4>
-                    <p className="text-sm text-slate-600 font-light leading-relaxed">{t('Our AI identifies 468+ biometric landmarks to assess micro-expressions and skin markers.')}</p>
+                    <div className="w-14 h-14 rounded-2xl bg-[var(--accent-teal-soft)] flex items-center justify-center text-[var(--accent-teal)] font-mono text-xl border border-[var(--accent-teal-border)] shadow-xl">01</div>
+                    <h4 className="font-bold text-[var(--text-primary)] text-lg">{t('Facial Mapping')}</h4>
+                    <p className="text-sm text-[var(--text-secondary)] font-light leading-relaxed">{t('Our AI identifies 468+ biometric landmarks to assess micro-expressions and skin markers.')}</p>
                   </div>
                   <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 font-bold border border-sky-500/20">2</div>
-                    <h4 className="font-bold text-slate-900">{t('Systemic Analysis')}</h4>
-                    <p className="text-sm text-slate-600 font-light leading-relaxed">{t('Markers are correlated with systemic health indicators like hydration, stress, and metabolism.')}</p>
+                    <div className="w-14 h-14 rounded-2xl bg-sky-500/10 flex items-center justify-center text-sky-400 font-mono text-xl border border-sky-500/20 shadow-xl">02</div>
+                    <h4 className="font-bold text-[var(--text-primary)] text-lg">{t('Systemic Analysis')}</h4>
+                    <p className="text-sm text-[var(--text-secondary)] font-light leading-relaxed">{t('Markers are correlated with systemic health indicators like hydration, stress, and metabolism.')}</p>
                   </div>
                   <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 font-bold border border-indigo-500/20">3</div>
-                    <h4 className="font-bold text-slate-900">{t('Wellness Plan')}</h4>
-                    <p className="text-sm text-slate-600 font-light leading-relaxed">{t('Receive a personalized 7-day challenge and evidence-based lifestyle recommendations.')}</p>
+                    <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-400 font-mono text-xl border border-purple-500/20 shadow-xl">03</div>
+                    <h4 className="font-bold text-[var(--text-primary)] text-lg">{t('Wellness Plan')}</h4>
+                    <p className="text-sm text-[var(--text-secondary)] font-light leading-relaxed">{t('Receive a personalized 7-day challenge and evidence-based lifestyle recommendations.')}</p>
                   </div>
                 </div>
               </motion.div>
@@ -615,11 +645,11 @@ export default function App() {
               <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Shield className="w-8 h-8 text-rose-600" />
               </div>
-              <h2 className="text-2xl font-serif font-medium mb-2">{t('Analysis Failed')}</h2>
-              <p className="text-slate-500 mb-8">{error}</p>
+              <h2 className="text-2xl font-display font-bold mb-2 text-[var(--text-primary)]">{t('Analysis Failed')}</h2>
+              <p className="text-[var(--text-secondary)] mb-8">{error}</p>
               <button
                 onClick={reset}
-                className="px-8 py-3 bg-slate-900 text-white font-bold rounded-full hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10"
+                className="px-8 py-3 bg-[var(--text-primary)] text-[var(--bg-card)] font-bold rounded-full hover:opacity-90 transition-colors shadow-lg"
               >
                 {t('Try Again')}
               </button>
@@ -629,31 +659,37 @@ export default function App() {
 
         {/* Footer */}
         <footer className="mt-auto pt-20 pb-12 w-full max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12 border-t border-slate-200 pt-12">
-            <div className="flex flex-col gap-4">
-              <h3 className="text-xl font-serif font-medium text-slate-900">AuraScan</h3>
-              <p className="text-sm text-slate-600 font-light leading-relaxed">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12 border-t border-[var(--border-color)] pt-12">
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center gap-2">
+                <h3 className="text-2xl font-display font-bold tracking-tight">
+                  <span className="text-[var(--accent-teal)]">Aura</span>
+                  <span className="text-[var(--text-primary)]">Scan</span>
+                </h3>
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-teal)] animate-pulse" />
+              </div>
+              <p className="text-sm text-[var(--text-secondary)] font-light leading-relaxed">
                 {t('Professional-grade biometric analysis for the modern wellness journey. Empowering individuals with data-driven health insights.')}
               </p>
             </div>
             <div className="flex flex-col gap-4">
-              <h4 className="text-xs font-mono uppercase tracking-widest text-slate-900">{t('Legal')}</h4>
+              <h4 className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-secondary)]">{t('Legal')}</h4>
               <nav className="flex flex-col gap-2">
-                <button className="text-sm text-slate-600 hover:text-teal-600 transition-colors text-left">{t('Privacy Policy')}</button>
-                <button className="text-sm text-slate-600 hover:text-teal-600 transition-colors text-left">{t('Terms of Service')}</button>
-                <button className="text-sm text-slate-600 hover:text-teal-600 transition-colors text-left">{t('Medical Disclaimer')}</button>
+                <button className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-all text-left">{t('Privacy Policy')}</button>
+                <button className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-all text-left">{t('Terms of Service')}</button>
+                <button className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-all text-left">{t('Medical Disclaimer')}</button>
               </nav>
             </div>
             <div className="flex flex-col gap-4">
-              <h4 className="text-xs font-mono uppercase tracking-widest text-slate-900">{t('Support')}</h4>
+              <h4 className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-secondary)]">{t('Support')}</h4>
               <nav className="flex flex-col gap-2">
-                <button className="text-sm text-slate-600 hover:text-teal-600 transition-colors text-left">{t('Help Center')}</button>
-                <button className="text-sm text-slate-600 hover:text-teal-600 transition-colors text-left">{t('Contact Us')}</button>
-                <button className="text-sm text-slate-600 hover:text-teal-600 transition-colors text-left">{t('API Documentation')}</button>
+                <button className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-all text-left">{t('Help Center')}</button>
+                <button className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-all text-left">{t('Contact Us')}</button>
+                <button className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-all text-left">{t('API Documentation')}</button>
               </nav>
             </div>
           </div>
-          <div className="text-center text-slate-400 text-[10px] uppercase tracking-[0.3em] font-mono">
+          <div className="text-center text-[var(--text-secondary)] text-[10px] uppercase tracking-[0.4em] font-mono opacity-50">
             {t('© 2026 AuraScan Biometrics • For Informational Purposes Only')}
           </div>
         </footer>
@@ -662,6 +698,14 @@ export default function App() {
       <FeedbackModal />
       {showOnboarding && <Onboarding onComplete={handleCompleteOnboarding} />}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 
@@ -674,11 +718,11 @@ function FeatureCard({ icon, title, description, delay = 0 }: { icon: React.Reac
       whileHover={{ y: -5 }}
       className="p-8 medical-card group cursor-pointer"
     >
-      <div className="mb-6 p-4 bg-slate-50 rounded-2xl inline-block group-hover:bg-white transition-colors border border-slate-100">
+      <div className="mb-6 p-4 bg-[var(--bg-card-hover)] rounded-2xl inline-block group-hover:bg-[var(--bg-card)] transition-all border border-[var(--border-color)]">
         {icon}
       </div>
-      <h3 className="text-xl font-serif font-medium text-slate-900 mb-3 tracking-tight">{title}</h3>
-      <p className="text-slate-600 text-sm leading-relaxed font-light">{description}</p>
+      <h3 className="text-xl font-display font-bold text-[var(--text-primary)] mb-3 tracking-tight">{title}</h3>
+      <p className="text-[var(--text-secondary)] text-sm leading-relaxed font-light">{description}</p>
     </motion.div>
   );
 }

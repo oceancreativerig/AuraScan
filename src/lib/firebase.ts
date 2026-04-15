@@ -67,7 +67,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 export const loginWithGoogle = async () => {
   try {
-    // Always use signInWithPopup in AI Studio environment for better reliability
+    // Always use signInWithPopup for better reliability in this environment
     await signInWithPopup(auth, googleProvider);
   } catch (error) {
     console.error("Error signing in with Google", error);

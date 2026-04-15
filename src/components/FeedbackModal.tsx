@@ -46,11 +46,11 @@ export const FeedbackModal: React.FC = () => {
       {/* Floating Feedback Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 p-4 bg-slate-900 text-white rounded-full shadow-xl hover:scale-110 active:scale-95 transition-all group"
+        className="fixed bottom-6 right-6 z-40 p-4 bg-[var(--text-primary)] text-[var(--bg-card)] rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all group"
         title={t('Feedback')}
       >
         <MessageSquare className="w-6 h-6" />
-        <span className="absolute right-full mr-3 px-3 py-1 bg-white text-slate-900 text-xs font-mono uppercase tracking-widest rounded-lg border border-slate-200 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+        <span className="absolute right-full mr-3 px-3 py-1 bg-[var(--bg-card)] text-[var(--text-primary)] text-[10px] font-mono uppercase tracking-[0.2em] rounded-lg border border-[var(--border-color)] shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
           {t('Feedback')}
         </span>
       </button>
@@ -63,26 +63,26 @@ export const FeedbackModal: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-[var(--bg-main)]/40 backdrop-blur-sm"
             />
             
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md bg-white border border-slate-200 rounded-[2rem] overflow-hidden shadow-2xl"
+              className="relative w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[2rem] overflow-hidden shadow-2xl"
             >
               <div className="p-6 md:p-8">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-teal-50 rounded-xl border border-teal-100">
-                      <MessageSquare className="w-5 h-5 text-teal-600" />
+                    <div className="p-2 bg-[var(--accent-teal-soft)] rounded-xl border border-[var(--accent-teal-border)]">
+                      <MessageSquare className="w-5 h-5 text-[var(--accent-teal)]" />
                     </div>
-                    <h3 className="text-xl font-serif font-medium text-slate-900 tracking-tight">{t('Help us improve AuraScan')}</h3>
+                    <h3 className="text-xl font-display font-bold text-[var(--text-primary)] tracking-tight">{t('Help us improve AuraScan')}</h3>
                   </div>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 hover:bg-slate-50 rounded-full transition-colors text-slate-400 hover:text-slate-600"
+                    className="p-2 hover:bg-[var(--bg-card-hover)] rounded-full transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -94,22 +94,22 @@ export const FeedbackModal: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="flex flex-col items-center justify-center py-12 text-center"
                   >
-                    <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 border border-emerald-100">
-                      <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+                    <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 border border-emerald-500/20">
+                      <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                     </div>
-                    <p className="text-slate-900 font-medium">{t('Thank you for your feedback!')}</p>
+                    <p className="text-[var(--text-primary)] font-medium">{t('Thank you for your feedback!')}</p>
                   </motion.div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                      <label className="block text-xs font-mono uppercase tracking-widest text-slate-500 mb-2 ml-1">
+                      <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-secondary)] mb-2 ml-1">
                         {t('Your feedback')}
                       </label>
                       <textarea
                         value={feedback}
                         onChange={(e) => setFeedback(e.target.value)}
                         placeholder={t('Tell us what you think or report an issue...')}
-                        className="w-full h-32 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/50 transition-all resize-none"
+                        className="w-full h-32 bg-[var(--bg-card-hover)] border border-[var(--border-color)] rounded-2xl p-4 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-teal)]/20 focus:border-[var(--accent-teal)] transition-all resize-none font-light"
                         required
                       />
                     </div>
@@ -118,7 +118,7 @@ export const FeedbackModal: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setIsOpen(false)}
-                        className="flex-1 px-6 py-3 rounded-full border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                        className="flex-1 px-6 py-3 rounded-full border border-[var(--border-color)] text-[var(--text-secondary)] font-medium hover:bg-[var(--bg-card-hover)] transition-colors text-sm"
                       >
                         {t('Cancel')}
                       </button>
@@ -126,10 +126,10 @@ export const FeedbackModal: React.FC = () => {
                         type="submit"
                         disabled={isSubmitting || !feedback.trim()}
                         className={cn(
-                          "flex-[2] px-6 py-3 rounded-full font-bold flex items-center justify-center gap-2 transition-all shadow-lg",
+                          "flex-[2] px-6 py-3 rounded-full font-bold flex items-center justify-center gap-2 transition-all shadow-xl text-sm",
                           isSubmitting || !feedback.trim()
-                            ? "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
-                            : "bg-slate-900 text-white hover:bg-slate-800 active:scale-95"
+                            ? "bg-[var(--bg-card-hover)] text-[var(--text-secondary)] cursor-not-allowed shadow-none"
+                            : "bg-[var(--text-primary)] text-[var(--bg-card)] hover:opacity-90 active:scale-95"
                         )}
                       >
                         {isSubmitting ? (
