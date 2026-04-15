@@ -304,8 +304,173 @@ export const translations: Translations = {
   "Please ensure this domain is added to Firebase Authorized Domains:": {
     English: "Please ensure this domain is added to Firebase Authorized Domains:", Spanish: "Asegúrese de que este dominio esté agregado a los dominios autorizados de Firebase:", French: "Veuillez vous assurer que ce domaine est ajouté aux domaines autorisés Firebase :", German: "Bitte stellen Sie sicher, dass diese Domain zu den autorisierten Firebase-Domains hinzugefügt wurde:", Chinese: "请确保此域名已添加到 Firebase 授权域名中：", Japanese: "このドメインが Firebase の承認済みドメインに追加されていることを確認してください:", Hindi: "कृपया सुनिश्चित करें कि यह डोमेन Firebase अधिकृत डोमेन में जोड़ा गया है:", Arabic: "يرجى التأكد من إضافة هذا النطاق إلى نطاقات Firebase المعتمدة:", Portuguese: "Certifique-se de que este domínio foi adicionado aos Domínios Autorizados do Firebase:", Russian: "Убедитесь, что этот домен добавлен в список разрешенных доменов Firebase:"
   },
+  "Admin": {
+    English: "Admin", Spanish: "Administrador", French: "Admin", German: "Admin", Chinese: "管理员", Japanese: "管理者", Hindi: "व्यवस्थापक", Arabic: "المشرف", Portuguese: "Admin", Russian: "Админ"
+  },
+  "Admin Control Panel": {
+    English: "Admin Control Panel", Spanish: "Panel de control del administrador", French: "Panneau de configuration de l'administrateur", German: "Admin-Kontrollzentrum", Chinese: "管理员控制面板", Japanese: "管理者コントロールパネル", Hindi: "व्यवस्थापक नियंत्रण कक्ष", Arabic: "لوحة تحكم المشرف", Portuguese: "Painel de Controle do Administrador", Russian: "Панель управления администратора"
+  },
+  "Total Feedback": {
+    English: "Total Feedback", Spanish: "Comentarios totales", French: "Commentaires totaux", German: "Gesamtes Feedback", Chinese: "总反馈", Japanese: "総フィードバック", Hindi: "कुल प्रतिक्रिया", Arabic: "إجمالي الملاحظات", Portuguese: "Total de Feedback", Russian: "Всего отзывов"
+  },
+  "Recent Users": {
+    English: "Recent Users", Spanish: "Usuarios recientes", French: "Utilisateurs récents", German: "Kürzliche Benutzer", Chinese: "最近用户", Japanese: "最近のユーザー", Hindi: "हाल के उपयोगकर्ता", Arabic: "المستخدمون الجدد", Portuguese: "Usuários Recentes", Russian: "Недавние пользователи"
+  },
+  "User Feedback": {
+    English: "User Feedback", Spanish: "Comentarios de los usuarios", French: "Commentaires des utilisateurs", German: "Benutzer-Feedback", Chinese: "用户反馈", Japanese: "ユーザーフィードバック", Hindi: "उपयोगकर्ता प्रतिक्रिया", Arabic: "ملاحظات المستخدم", Portuguese: "Feedback do Usuário", Russian: "Отзывы пользователей"
+  },
+  "Loading admin data...": {
+    English: "Loading admin data...", Spanish: "Cargando datos del administrador...", French: "Chargement des données de l'administrateur...", German: "Admin-Daten werden geladen...", Chinese: "正在加载管理员数据...", Japanese: "管理者データを読み込んでいます...", Hindi: "व्यवस्थापक डेटा लोड हो रहा है...", Arabic: "جاري تحميل بيانات المشرف...", Portuguese: "Carregando dados do administrador...", Russian: "Загрузка данных администратора..."
+  },
+  "No feedback received yet.": {
+    English: "No feedback received yet.", Spanish: "Aún no se han recibido comentarios.", French: "Aucun commentaire reçu pour le moment.", German: "Noch kein Feedback erhalten.", Chinese: "尚未收到反馈。", Japanese: "まだフィードバックを受け取っていません。", Hindi: "अभी तक कोई प्रतिक्रिया नहीं मिली है।", Arabic: "لم يتم تلقي أي ملاحظات بعد.", Portuguese: "Nenhum feedback recebido ainda.", Russian: "Отзывов пока нет."
+  },
+  "No users found.": {
+    English: "No users found.", Spanish: "No se encontraron usuarios.", French: "Aucun utilisateur trouvé.", German: "Keine Benutzer gefunden.", Chinese: "未找到用户。", Japanese: "ユーザーが見つかりません。", Hindi: "कोई उपयोगकर्ता नहीं मिला।", Arabic: "لم يتم العثور على مستخدمين.", Portuguese: "Nenhum usuário encontrado.", Russian: "Пользователи не найдены."
+  },
+  "Email": {
+    English: "Email", Spanish: "Correo electrónico", French: "E-mail", German: "E-Mail", Chinese: "电子邮件", Japanese: "Eメール", Hindi: "ईमेल", Arabic: "البريد الإلكتروني", Portuguese: "E-mail", Russian: "Электронная почта"
+  },
+  "Joined": {
+    English: "Joined", Spanish: "Unido", French: "Inscrit", German: "Beigetreten", Chinese: "加入", Japanese: "参加しました", Hindi: "शामिल हुए", Arabic: "انضم", Portuguese: "Entrou", Russian: "Присоединился"
+  },
+  "User ID": {
+    English: "User ID", Spanish: "ID de usuario", French: "ID utilisateur", German: "Benutzer-ID", Chinese: "用户 ID", Japanese: "ユーザー ID", Hindi: "उपयोगकर्ता आईडी", Arabic: "معرف المستخدم", Portuguese: "ID do Usuário", Russian: "ID пользователя"
+  },
+  "Back to Dashboard": {
+    English: "Back to Dashboard", Spanish: "Volver al panel", French: "Retour au tableau de bord", German: "Zurück zum Dashboard", Chinese: "返回仪表板", Japanese: "ダッシュボードに戻る", Hindi: "डैशबोर्ड पर वापस जाएं", Arabic: "العودة إلى لوحة القيادة", Portuguese: "Voltar ao Painel", Russian: "Вернуться на панель управления"
+  },
+  "Upgrade to Pro": {
+    English: "Upgrade to Pro", Spanish: "Actualizar a Pro", French: "Passer à la version Pro", German: "Auf Pro upgraden", Chinese: "升级到 Pro", Japanese: "Pro にアップグレード", Hindi: "प्रो में अपग्रेड करें", Arabic: "الترقية إلى برو", Portuguese: "Atualizar para Pro", Russian: "Обновить до Pro"
+  },
+  "Welcome to AuraScan Pro!": {
+    English: "Welcome to AuraScan Pro!", Spanish: "¡Bienvenido a AuraScan Pro!", French: "Bienvenue sur AuraScan Pro !", German: "Willkommen bei AuraScan Pro!", Chinese: "欢迎使用 AuraScan Pro！", Japanese: "AuraScan Pro へようこそ！", Hindi: "AuraScan Pro में आपका स्वागत है!", Arabic: "مرحبًا بك في AuraScan Pro!", Portuguese: "Bem-vindo ao AuraScan Pro!", Russian: "Добро пожаловать в AuraScan Pro!"
+  },
+  "Recommended for You": {
+    English: "Recommended for You", Spanish: "Recomendado para ti", French: "Recommandé pour vous", German: "Für Sie empfohlen", Chinese: "为你推荐", Japanese: "あなたへのおすすめ", Hindi: "आपके लिए अनुशंसित", Arabic: "موصى به لك", Portuguese: "Recomendado para Você", Russian: "Рекомендовано для вас"
+  },
+  "Personalized Nutrition": {
+    English: "Personalized Nutrition", Spanish: "Nutrición personalizada", French: "Nutrition personnalisée", German: "Personalisierte Ernährung", Chinese: "个性化营养", Japanese: "パーソナライズされた栄養", Hindi: "व्यक्तिगत पोषण", Arabic: "تغذية مخصصة", Portuguese: "Nutrição Personalizada", Russian: "Персонализированное питание"
+  },
+  "Pro Feature": {
+    English: "Pro Feature", Spanish: "Función Pro", French: "Fonctionnalité Pro", German: "Pro-Funktion", Chinese: "Pro 功能", Japanese: "Pro 機能", Hindi: "प्रो सुविधा", Arabic: "ميزة برو", Portuguese: "Recurso Pro", Russian: "Pro-функция"
+  },
+  "Unlock Recommendations": {
+    English: "Unlock Recommendations", Spanish: "Desbloquear recomendaciones", French: "Débloquer les recommandations", German: "Empfehlungen freischalten", Chinese: "解锁推荐", Japanese: "推奨事項のロックを解除", Hindi: "अनुशंसाएँ अनलॉक करें", Arabic: "فتح التوصيات", Portuguese: "Desbloquear Recomendações", Russian: "Разблокировать рекомендации"
+  },
+  "Unlock Meal Plans": {
+    English: "Unlock Meal Plans", Spanish: "Desbloquear planes de comidas", French: "Débloquer les plans de repas", German: "Mahlzeitenpläne freischalten", Chinese: "解锁饮食计划", Japanese: "ミールプランのロックを解除", Hindi: "भोजन योजनाएं अनलॉक करें", Arabic: "فتح خطط الوجبات", Portuguese: "Desbloquear Planos de Refeição", Russian: "Разблокировать планы питания"
+  },
+  "View Product": {
+    English: "View Product", Spanish: "Ver producto", French: "Voir le produit", German: "Produkt ansehen", Chinese: "查看产品", Japanese: "製品を見る", Hindi: "उत्पाद देखें", Arabic: "عرض المنتج", Portuguese: "Ver Produto", Russian: "Посмотреть продукт"
+  },
+  "Export Report": {
+    English: "Export Report", Spanish: "Exportar informe", French: "Exporter le rapport", German: "Bericht exportieren", Chinese: "导出报告", Japanese: "レポートをエクスポート", Hindi: "रिपोर्ट निर्यात करें", Arabic: "تصدير التقرير", Portuguese: "Exportar Relatório", Russian: "Экспортировать отчет"
+  },
   "Sending...": {
     English: "Sending...", Spanish: "Enviando...", French: "Envoi en cours...", German: "Wird gesendet...", Chinese: "正在发送...", Japanese: "送信中...", Hindi: "भेजा जा रहा है...", Arabic: "جاري الإرسال...", Portuguese: "Enviando...", Russian: "Отправка..."
+  },
+  "Add to Cart": {
+    English: "Add to Cart", Spanish: "Añadir al carrito", French: "Ajouter au panier", German: "In den Warenkorb", Chinese: "加入购物车", Japanese: "カートに入れる", Hindi: "कार्ट में जोड़ें", Arabic: "أضف إلى السلة", Portuguese: "Adicionar ao Carrinho", Russian: "Добавить в корзину"
+  },
+  "Details": {
+    English: "Details", Spanish: "Detalles", French: "Détails", German: "Details", Chinese: "详情", Japanese: "詳細", Hindi: "विवरण", Arabic: "التفاصيل", Portuguese: "Detalhes", Russian: "Подробности"
+  },
+  "CAL": {
+    English: "CAL", Spanish: "CAL", French: "CAL", German: "KAL", Chinese: "卡路里", Japanese: "カロリー", Hindi: "कैलोरी", Arabic: "سعرة", Portuguese: "CAL", Russian: "КАЛ"
+  },
+  "PRO": {
+    English: "PRO", Spanish: "PROT", French: "PROT", German: "EIW", Chinese: "蛋白质", Japanese: "タンパク質", Hindi: "प्रोटीन", Arabic: "بروتين", Portuguese: "PROT", Russian: "БЕЛ"
+  },
+  "CARB": {
+    English: "CARB", Spanish: "CARB", French: "GLUC", German: "KH", Chinese: "碳水", Japanese: "炭水化物", Hindi: "कार्ब", Arabic: "كربوهيدرات", Portuguese: "CARB", Russian: "УГЛ"
+  },
+  "FAT": {
+    English: "FAT", Spanish: "GRASA", French: "LIP", German: "FETT", Chinese: "脂肪", Japanese: "脂質", Hindi: "वसा", Arabic: "دهون", Portuguese: "GORD", Russian: "ЖИР"
+  },
+  "Premium Choice": {
+    English: "Premium Choice", Spanish: "Opción Premium", French: "Choix Premium", German: "Premium-Auswahl", Chinese: "优质选择", Japanese: "プレミアムチョイス", Hindi: "प्रीमियम विकल्प", Arabic: "خيار ممتاز", Portuguese: "Escolha Premium", Russian: "Премиум выбор"
+  },
+  "How AuraScan Works": {
+    English: "How AuraScan Works", Spanish: "Cómo funciona AuraScan", French: "Comment fonctionne AuraScan", German: "Wie AuraScan funktioniert", Chinese: "AuraScan 如何工作", Japanese: "AuraScanの仕組み", Hindi: "AuraScan कैसे काम करता है", Arabic: "كيف يعمل AuraScan", Portuguese: "Como o AuraScan Funciona", Russian: "Как работает AuraScan"
+  },
+  "Facial Mapping": {
+    English: "Facial Mapping", Spanish: "Mapeo facial", French: "Cartographie faciale", German: "Gesichtskartierung", Chinese: "面部映射", Japanese: "フェイシャルマッピング", Hindi: "चेहरे का मानचित्रण", Arabic: "تخطيط الوجه", Portuguese: "Mapeamento Facial", Russian: "Картирование лица"
+  },
+  "Our AI identifies 468+ biometric landmarks to assess micro-expressions and skin markers.": {
+    English: "Our AI identifies 468+ biometric landmarks to assess micro-expressions and skin markers.",
+    Spanish: "Nuestra IA identifica más de 468 puntos biométricos para evaluar microexpresiones.",
+    French: "Notre IA identifie plus de 468 points biométriques pour évaluer les micro-expressions.",
+    German: "Unsere KI identifiziert über 468 biometrische Merkmale zur Bewertung von Mikroexpressionen.",
+    Chinese: "我们的 AI 识别 468+ 个生物识别特征点，以评估微表情和皮肤标记。",
+    Japanese: "当社のAIは468以上のバイオメトリックランドマークを特定し、微表情や肌のマーカーを評価します。",
+    Hindi: "हमारा एआई सूक्ष्म भावों और त्वचा के निशानों का आकलन करने के लिए 468+ बायोमेट्रिक स्थलों की पहचान करता है।",
+    Arabic: "يحدد الذكاء الاصطناعي لدينا أكثر من 468 علامة حيوية لتقييم التعبيرات الدقيقة وعلامات الجلد.",
+    Portuguese: "Nossa IA identifica mais de 468 pontos biométricos para avaliar microexpressões e marcadores de pele.",
+    Russian: "Наш ИИ идентифицирует более 468 биометрических точек для оценки микровыражений и состояния кожи."
+  },
+  "Systemic Analysis": {
+    English: "Systemic Analysis", Spanish: "Análisis sistémico", French: "Analyse systémique", German: "Systemische Analyse", Chinese: "系统分析", Japanese: "全身分析", Hindi: "प्रणालीगत विश्लेषण", Arabic: "التحليل النظامي", Portuguese: "Análise Sistêmica", Russian: "Системный анализ"
+  },
+  "Markers are correlated with systemic health indicators like hydration, stress, and metabolism.": {
+    English: "Markers are correlated with systemic health indicators like hydration, stress, and metabolism.",
+    Spanish: "Los marcadores se correlacionan con indicadores de salud como hidratación y estrés.",
+    French: "Les marqueurs sont corrélés à des indicateurs de santé comme l'hydratation et le stress.",
+    German: "Merkmale werden mit Gesundheitsindikatoren wie Hydratation, Stress und Stoffwechsel korreliert.",
+    Chinese: "标记与水分、压力和新陈代谢等系统健康指标相关联。",
+    Japanese: "マーカーは水分補給、ストレス、代謝などの全身の健康指標と相関しています。",
+    Hindi: "मार्कर हाइड्रेशन, तनाव और चयापचय जैसे प्रणालीगत स्वास्थ्य संकेतकों के साथ सहसंबद्ध हैं।",
+    Arabic: "ترتبط العلامات بمؤشرات صحية شاملة مثل الترطيب والتوتر والتمثيل الغذائي.",
+    Portuguese: "Os marcadores são correlacionados com indicadores de saúde sistêmica, como hidratação, estresse e metabolismo.",
+    Russian: "Показатели коррелируют с системными индикаторами здоровья, такими как гидратация, стресс и метаболизм."
+  },
+  "Wellness Plan": {
+    English: "Wellness Plan", Spanish: "Plan de bienestar", French: "Plan de bien-être", German: "Wellness-Plan", Chinese: "健康计划", Japanese: "ウェルネスプラン", Hindi: "कल्याण योजना", Arabic: "خطة العافية", Portuguese: "Plano de Bem-estar", Russian: "План оздоровления"
+  },
+  "Receive a personalized 7-day challenge and evidence-based lifestyle recommendations.": {
+    English: "Receive a personalized 7-day challenge and evidence-based lifestyle recommendations.",
+    Spanish: "Recibe un desafío de 7 días y recomendaciones de estilo de vida.",
+    French: "Recevez un défi de 7 jours et des recommandations de style de vie.",
+    German: "Erhalten Sie eine personalisierte 7-Tage-Challenge und evidenzbasierte Empfehlungen.",
+    Chinese: "收到个性化的 7 天挑战和基于证据的生活方式建议。",
+    Japanese: "パーソナライズされた7日間のチャレンジとエビデンスに基づいたライフスタイルの推奨事項を受け取ります。",
+    Hindi: "एक व्यक्तिगत 7-दिवसीय चुनौती और साक्ष्य-आधारित जीवन शैली सिफारिशें प्राप्त करें।",
+    Arabic: "احصل على تحدٍ مخصص لمدة 7 أيام وتوصيات نمط حياة قائمة على الأدلة.",
+    Portuguese: "Receba um desafio de 7 dias personalizado e recomendações de estilo de vida baseadas em evidências.",
+    Russian: "Получите персональный 7-дневный план и научно обоснованные рекомендации по образу жизни."
+  },
+  "Professional-grade biometric analysis for the modern wellness journey. Empowering individuals with data-driven health insights.": {
+    English: "Professional-grade biometric analysis for the modern wellness journey. Empowering individuals with data-driven health insights.",
+    Spanish: "Análisis biométrico profesional para el viaje de bienestar moderno.",
+    French: "Analyse biométrique de qualité professionnelle pour le bien-être moderne.",
+    German: "Professionelle biometrische Analyse für die moderne Wellness-Reise.",
+    Chinese: "现代健康之旅的专业级生物识别分析。通过数据驱动的健康洞察赋能个人。",
+    Japanese: "現代のウェルネスの旅のためのプロフェッショナルグレードのバイオメトリック分析。",
+    Hindi: "आधुनिक कल्याण यात्रा के लिए पेशेवर-ग्रेड बायोमेट्रिक विश्लेषण।",
+    Arabic: "تحليل قياسات حيوية احترافي لرحلة العافية الحديثة.",
+    Portuguese: "Análise biométrica de nível profissional para a jornada de bem-estar moderna.",
+    Russian: "Биометрический анализ профессионального уровня для современного пути к здоровью."
+  },
+  "Legal": {
+    English: "Legal", Spanish: "Legal", French: "Juridique", German: "Rechtliches", Chinese: "法律", Japanese: "法務", Hindi: "कानूनी", Arabic: "قانوني", Portuguese: "Legal", Russian: "Юридическая информация"
+  },
+  "Privacy Policy": {
+    English: "Privacy Policy", Spanish: "Política de privacidad", French: "Politique de confidentialité", German: "Datenschutzrichtlinie", Chinese: "隐私政策", Japanese: "プライバシーポリシー", Hindi: "गोपनीयता नीति", Arabic: "سياسة الخصوصية", Portuguese: "Política de Privacidade", Russian: "Политика конфиденциальности"
+  },
+  "Terms of Service": {
+    English: "Terms of Service", Spanish: "Términos de servicio", French: "Conditions d'utilisation", German: "Nutzungsbedingungen", Chinese: "服务条款", Japanese: "利用規約", Hindi: "सेवा की शर्तें", Arabic: "شروط الخدمة", Portuguese: "Termos de Serviço", Russian: "Условия использования"
+  },
+  "Support": {
+    English: "Support", Spanish: "Soporte", French: "Support", German: "Support", Chinese: "支持", Japanese: "サポート", Hindi: "सहायता", Arabic: "الدعم", Portuguese: "Suporte", Russian: "Поддержка"
+  },
+  "Help Center": {
+    English: "Help Center", Spanish: "Centro de ayuda", French: "Centre d'aide", German: "Hilfezentrum", Chinese: "帮助中心", Japanese: "ヘルプセンター", Hindi: "सहायता केंद्र", Arabic: "مركز المساعدة", Portuguese: "Central de Ajuda", Russian: "Справочный центр"
+  },
+  "Contact Us": {
+    English: "Contact Us", Spanish: "Contáctanos", French: "Contactez-nous", German: "Kontaktieren Sie uns", Chinese: "联系我们", Japanese: "お問い合わせ", Hindi: "संपर्क करें", Arabic: "اتصل بنا", Portuguese: "Contate-nos", Russian: "Связаться с нами"
+  },
+  "API Documentation": {
+    English: "API Documentation", Spanish: "Documentación de la API", French: "Documentation API", German: "API-Dokumentation", Chinese: "API 文档", Japanese: "API ドキュメント", Hindi: "एपीआई दस्तावेज़", Arabic: "وثائق API", Portuguese: "Documentação da API", Russian: "Документация API"
   }
 };
 

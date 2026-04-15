@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   CheckCircle2, 
   AlertCircle, 
@@ -24,9 +24,16 @@ import {
   Dumbbell,
   Brain,
   Coffee,
-  Utensils
+  Utensils,
+  ShoppingBag,
+  ExternalLink,
+  Lock,
+  Download,
+  ShoppingCart,
+  ChevronRight,
+  X
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { HealthAnalysis } from '../services/geminiService';
 import { cn } from '../lib/utils';
@@ -34,12 +41,23 @@ import { useLanguage } from '../lib/i18n';
 
 interface ResultsProps {
   analysis: HealthAnalysis;
+  isPro?: boolean;
   onReset: () => void;
   onUpdateChallenge?: (dayIndex: number, completed: boolean) => void;
+  onUpgrade?: () => void;
 }
 
-export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateChallenge }) => {
+export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUpdateChallenge, onUpgrade }) => {
   const { t } = useLanguage();
+  const [selectedProduct, setSelectedProduct] = useState<typeof analysis.products extends (infer T)[] ? T : never | null>(null);
+
+  const handleExport = () => {
+    if (!isPro) {
+      onUpgrade?.();
+      return;
+    }
+    window.print();
+  };
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
@@ -63,7 +81,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
   };
 
   const getIndicatorIcon = (label: string, status: string) => {
-    const lowerLabel = label.toLowerCase();
+    const lowerLabel = (label || '').toLowerCase();
     if (lowerLabel.includes('cardiovascular') || lowerLabel.includes('heart')) return <HeartPulse className="w-5 h-5" />;
     if (lowerLabel.includes('digestive') || lowerLabel.includes('gut')) return <Leaf className="w-5 h-5" />;
     if (lowerLabel.includes('hormonal')) return <Activity className="w-5 h-5" />;
@@ -81,7 +99,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
   };
 
   const getRecommendationIcon = (category: string) => {
-    const lowerCategory = category.toLowerCase();
+    const lowerCategory = (category || '').toLowerCase();
     if (lowerCategory.includes('nutrition') || lowerCategory.includes('diet') || lowerCategory.includes('food')) return <Apple className="w-5 h-5 text-emerald-400" />;
     if (lowerCategory.includes('hydration') || lowerCategory.includes('water')) return <Droplets className="w-5 h-5 text-blue-400" />;
     if (lowerCategory.includes('sleep') || lowerCategory.includes('rest')) return <Moon className="w-5 h-5 text-indigo-400" />;
@@ -93,7 +111,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
   };
 
   const radarData = analysis.indicators.map(ind => ({
-    subject: ind.label.split(' ')[0], // Shorten label for radar chart
+    subject: (ind.label || '').split(' ')[0], // Shorten label for radar chart
     score: ind.score,
     fullMark: 100,
   }));
@@ -113,8 +131,8 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
             <div className="relative w-48 h-48 md:w-64 md:h-64 mb-4">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                  <PolarGrid stroke="rgba(0,0,0,0.05)" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10 }} />
+                  <PolarGrid stroke="currentColor" className="text-slate-200" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: 'currentColor', fontSize: 10 }} className="text-slate-500" />
                   <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                   <Radar
                     name="Score"
@@ -147,7 +165,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-3xl font-bold text-slate-900 tracking-tighter">{analysis.overall_score}</span>
-                <span className="text-[10px] uppercase tracking-widest text-slate-400">{t('Score')}</span>
+                <span className="text-[10px] uppercase tracking-widest text-slate-500">{t('Score')}</span>
               </div>
             </div>
           </div>
@@ -162,7 +180,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
                 <p className="text-teal-600 text-xs font-mono uppercase tracking-widest">{t('AuraScan Biometric Report')}</p>
               </div>
             </div>
-            <p className="text-slate-600 text-base leading-relaxed italic font-light border-l-2 border-teal-500/30 pl-4 py-1">
+            <p className="text-slate-700 text-base leading-relaxed italic font-light border-l-2 border-teal-500/30 pl-4 py-1">
               "{analysis.summary}"
             </p>
           </div>
@@ -187,7 +205,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
                 <span className="font-serif font-medium text-lg tracking-tight text-slate-900">{indicator.label}</span>
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col items-end">
-                    <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t('Confidence')}</span>
+                    <span className="text-[10px] text-slate-500 uppercase tracking-widest">{t('Confidence')}</span>
                     <span className="text-xs font-mono text-teal-600">{Math.round(indicator.confidence * 100)}%</span>
                   </div>
                   <div className="p-2 rounded-xl bg-white/50 border border-white/20">
@@ -205,7 +223,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
                 ))}
               </div>
 
-              <p className="text-sm text-slate-600 leading-relaxed mb-6 font-light">
+              <p className="text-sm text-slate-700 leading-relaxed mb-6 font-light">
                 {indicator.systemic_implication}
               </p>
             </div>
@@ -241,19 +259,19 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
                 </div>
                 {analysis.challenge.title}
               </h3>
-              <p className="text-slate-500 text-sm mt-2 max-w-xl font-light">{analysis.challenge.description}</p>
+              <p className="text-slate-600 text-sm mt-2 max-w-xl font-light">{analysis.challenge.description}</p>
             </div>
             
             {/* Progress Tracker */}
             <div className="flex flex-col items-end gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-100 w-full md:w-auto">
               <div className="flex justify-between w-full items-center gap-4">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500">{t('Progress')}</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-600">{t('Progress')}</span>
                 <span className="text-sm font-bold text-teal-600">
-                  {analysis.challenge.days.filter(d => d.completed).length} / 7
+                  {analysis.challenge?.days?.filter(d => d.completed).length || 0} / 7
                 </span>
               </div>
               <div className="flex gap-1">
-                {analysis.challenge.days.map((day, idx) => (
+                {analysis.challenge?.days?.map((day, idx) => (
                   <div 
                     key={idx} 
                     className={cn(
@@ -267,7 +285,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-            {analysis.challenge.days.map((day, idx) => (
+            {analysis.challenge?.days?.map((day, idx) => (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -339,11 +357,161 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
               </div>
               <div className="flex flex-col">
                 <span className="text-teal-600 text-xs font-mono uppercase tracking-wider mb-1">{rec.category}</span>
-                <p className="text-slate-600 leading-relaxed font-light">{rec.tip}</p>
+                <p className="text-slate-700 leading-relaxed font-light">{rec.tip}</p>
               </div>
             </motion.div>
           ))}
         </div>
+      </div>
+
+      {/* Business Integration: Products & Meals */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        {/* Recommended Products */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="medical-card p-6 relative overflow-hidden"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-serif font-medium text-slate-900 flex items-center gap-2">
+              <ShoppingBag className="w-5 h-5 text-teal-600" />
+              {t('Recommended for You')}
+            </h3>
+            {!isPro && (
+              <span className="text-[10px] font-mono bg-amber-100 text-amber-700 px-2 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                <Lock className="w-3 h-3" />
+                {t('Pro Feature')}
+              </span>
+            )}
+          </div>
+
+          <div className={`space-y-4 ${!isPro ? 'blur-sm pointer-events-none select-none' : ''}`}>
+            {analysis.products?.map((product, idx) => (
+              <div key={idx} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-teal-500/30 transition-all hover:shadow-sm">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <span className="text-[10px] font-mono text-teal-600 uppercase tracking-widest mb-1 block">{product.brand || t('Premium Choice')}</span>
+                    <h4 className="font-bold text-slate-900 text-lg">{product.name}</h4>
+                  </div>
+                  <span className="text-sm font-bold text-slate-900 bg-white px-3 py-1 rounded-lg border border-slate-100 shadow-sm">{product.price || '$--.--'}</span>
+                </div>
+                <p className="text-xs text-slate-600 mb-4 leading-relaxed">{product.reason}</p>
+                <div className="flex gap-2">
+                  <a 
+                    href={product.link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex-1 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                    {t('Add to Cart')}
+                  </a>
+                  <button 
+                    onClick={() => setSelectedProduct(product)}
+                    className="px-4 py-2 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
+                  >
+                    {t('Details')}
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {!isPro && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/10 backdrop-blur-[2px] z-10">
+              <button
+                onClick={onUpgrade}
+                className="px-6 py-2 bg-amber-500 text-white font-bold rounded-full shadow-lg hover:bg-amber-600 transition-colors text-sm"
+              >
+                {t('Unlock Recommendations')}
+              </button>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Personalized Nutrition */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="medical-card p-6 relative overflow-hidden"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-serif font-medium text-slate-900 flex items-center gap-2">
+              <Utensils className="w-5 h-5 text-sky-600" />
+              {t('Personalized Nutrition')}
+            </h3>
+            {!isPro && (
+              <span className="text-[10px] font-mono bg-amber-100 text-amber-700 px-2 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                <Lock className="w-3 h-3" />
+                {t('Pro Feature')}
+              </span>
+            )}
+          </div>
+
+          <div className={`space-y-6 ${!isPro ? 'blur-sm pointer-events-none select-none' : ''}`}>
+            {analysis.meals?.map((meal, idx) => (
+              <div key={idx} className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden group hover:shadow-md transition-all">
+                <div className="h-40 w-full relative overflow-hidden">
+                  <img 
+                    src={`https://picsum.photos/seed/${meal.image_keyword || 'healthy-food'}/600/400`} 
+                    alt={meal.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h4 className="text-white font-bold text-lg leading-tight">{meal.title}</h4>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <p className="text-xs text-slate-600 mb-4 leading-relaxed">{meal.description}</p>
+                  
+                  {/* Nutritional Info */}
+                  {meal.nutritional_info && (
+                    <div className="grid grid-cols-4 gap-2 mb-4">
+                      <div className="bg-white p-2 rounded-xl border border-slate-100 text-center">
+                        <span className="block text-[10px] text-slate-500 uppercase font-mono">{t('CAL')}</span>
+                        <span className="text-xs font-bold text-slate-900">{meal.nutritional_info.calories}</span>
+                      </div>
+                      <div className="bg-white p-2 rounded-xl border border-slate-100 text-center">
+                        <span className="block text-[10px] text-slate-500 uppercase font-mono">{t('PRO')}</span>
+                        <span className="text-xs font-bold text-slate-900">{meal.nutritional_info.protein}</span>
+                      </div>
+                      <div className="bg-white p-2 rounded-xl border border-slate-100 text-center">
+                        <span className="block text-[10px] text-slate-500 uppercase font-mono">{t('CARB')}</span>
+                        <span className="text-xs font-bold text-slate-900">{meal.nutritional_info.carbs}</span>
+                      </div>
+                      <div className="bg-white p-2 rounded-xl border border-slate-100 text-center">
+                        <span className="block text-[10px] text-slate-500 uppercase font-mono">{t('FAT')}</span>
+                        <span className="text-xs font-bold text-slate-900">{meal.nutritional_info.fats}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2">
+                    {meal.ingredients.map((ing, i) => (
+                      <span key={i} className="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded-lg text-slate-600 font-medium">
+                        {ing}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {!isPro && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/10 backdrop-blur-[2px] z-10">
+              <button
+                onClick={onUpgrade}
+                className="px-6 py-2 bg-amber-500 text-white font-bold rounded-full shadow-lg hover:bg-amber-600 transition-colors text-sm"
+              >
+                {t('Unlock Meal Plans')}
+              </button>
+            </div>
+          )}
+        </motion.div>
       </div>
 
       {/* Disclaimer */}
@@ -352,13 +520,23 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
           <ShieldAlert className="w-5 h-5" />
           <span className="font-bold text-sm uppercase tracking-wider">{t('Medical Disclaimer')}</span>
         </div>
-        <p className="text-rose-500/80 text-xs leading-relaxed font-light">
+        <p className="text-rose-600/90 text-xs leading-relaxed font-light">
           {analysis.disclaimer} {t('AuraScan is an AI-powered wellness tool and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.')}
         </p>
       </div>
 
       {/* Action */}
-      <div className="flex justify-center pt-4 md:pt-8 pb-8 md:pb-12">
+      <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4 md:pt-8 pb-8 md:pb-12">
+        <button
+          onClick={handleExport}
+          className="group relative px-8 md:px-10 py-3 md:py-4 bg-white border-2 border-slate-200 text-slate-900 font-bold rounded-full overflow-hidden transition-all hover:border-teal-500 active:scale-95 shadow-lg shadow-slate-200/20 w-full sm:w-auto"
+        >
+          <span className="relative z-10 flex items-center justify-center gap-3">
+            <Download className="w-5 h-5" />
+            {t('Export Report')}
+            {!isPro && <Lock className="w-3 h-3 text-amber-500" />}
+          </span>
+        </button>
         <button
           onClick={onReset}
           className="group relative px-8 md:px-10 py-3 md:py-4 bg-slate-900 text-white font-bold rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-xl shadow-slate-900/20 w-full sm:w-auto"
@@ -369,6 +547,91 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
           </span>
         </button>
       </div>
+
+      {/* Product Details Modal */}
+      <AnimatePresence>
+        {selectedProduct && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedProduct(null)}
+              className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-lg bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-2xl"
+            >
+              <div className="p-8 md:p-10">
+                <div className="flex justify-between items-start mb-8">
+                  <div className="p-3 bg-teal-50 rounded-2xl border border-teal-100">
+                    <ShoppingBag className="w-8 h-8 text-teal-600" />
+                  </div>
+                  <button
+                    onClick={() => setSelectedProduct(null)}
+                    className="p-2 hover:bg-slate-50 rounded-full transition-colors text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <span className="text-xs font-mono text-teal-600 uppercase tracking-[0.2em] mb-2 block">
+                      {selectedProduct.brand || t('Premium Recommendation')}
+                    </span>
+                    <h3 className="text-3xl font-serif font-medium text-slate-900 leading-tight">
+                      {selectedProduct.name}
+                    </h3>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="px-4 py-2 bg-slate-900 text-white rounded-xl font-bold text-xl shadow-lg">
+                      {selectedProduct.price || '$--.--'}
+                    </div>
+                    <span className="text-xs font-mono text-slate-500 uppercase tracking-widest">
+                      {selectedProduct.type === 'SKINCARE' ? t('Skincare Solution') : t('Wellness Supplement')}
+                    </span>
+                  </div>
+
+                  <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-3">
+                      {t('Why it was selected')}
+                    </h4>
+                    <p className="text-slate-700 leading-relaxed font-light">
+                      {selectedProduct.reason}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <a
+                      href={selectedProduct.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 px-8 py-4 bg-slate-900 text-white font-bold rounded-full flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-slate-900/20"
+                    >
+                      <ShoppingCart className="w-5 h-5" />
+                      {t('Buy Now')}
+                    </a>
+                    <a
+                      href={selectedProduct.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-6 py-4 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-full flex items-center justify-center hover:bg-slate-50 transition-all"
+                      title={t('External Link')}
+                    >
+                      <ExternalLink className="w-5 h-5" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

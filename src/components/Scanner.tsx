@@ -1,7 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Camera, RefreshCw, ShieldAlert, Loader2, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
+import { FaceLandmarker } from '@mediapipe/tasks-vision';
+import { getFaceLandmarker } from '../services/visionService';
 import { cn } from '../lib/utils';
 import { useLanguage } from '../lib/i18n';
 
@@ -40,18 +41,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
     let isMounted = true;
     const initModel = async () => {
       try {
-        const vision = await FilesetResolver.forVisionTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
-        );
-        const landmarker = await FaceLandmarker.createFromOptions(vision, {
-          baseOptions: {
-            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-            delegate: "GPU"
-          },
-          outputFaceBlendshapes: false,
-          runningMode: "VIDEO",
-          numFaces: 1
-        });
+        const landmarker = await getFaceLandmarker();
         if (isMounted) {
           faceLandmarkerRef.current = landmarker;
           setIsModelLoaded(true);
@@ -64,9 +54,8 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
     initModel();
     return () => {
       isMounted = false;
-      if (faceLandmarkerRef.current) {
-        faceLandmarkerRef.current.close();
-      }
+      // We don't close the landmarker here because it's managed by the singleton service
+      // This allows faster re-mounting of the Scanner component
     };
   }, [t]);
 
@@ -362,8 +351,11 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
       {error && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 p-8 text-center z-30">
           <ShieldAlert className="w-12 h-12 text-rose-500 mb-4" />
-          <p className="text-white font-medium mb-6 text-sm">{error}</p>
-          <div className="flex flex-col gap-3 w-full max-w-[200px]">
+          <p className="text-white font-medium mb-2 text-sm">{error}</p>
+          <p className="text-slate-300 text-xs mb-6 leading-relaxed">
+            {t('If you are in a private browser or iframe, you may need to upload a photo manually.')}
+          </p>
+          <div className="flex flex-col gap-3 w-full max-w-[220px]">
             <button
               onClick={startCamera}
               className="w-full px-4 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl transition-colors flex items-center justify-center gap-2 text-sm font-medium"

@@ -19,6 +19,26 @@ export interface HealthAnalysis {
     category: string;
     tip: string;
   }[];
+  products?: {
+    name: string;
+    type: 'SKINCARE' | 'SUPPLEMENT';
+    reason: string;
+    link: string;
+    brand?: string;
+    price?: string;
+  }[];
+  meals?: {
+    title: string;
+    description: string;
+    ingredients: string[];
+    image_keyword: string;
+    nutritional_info: {
+      calories: number;
+      protein: string;
+      carbs: string;
+      fats: string;
+    };
+  }[];
   challenge: {
     title: string;
     description: string;
@@ -135,38 +155,37 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
     - Be clinically objective but maintain a wellness-focused tone.
     - If the image is unclear, lower the 'confidence' score accordingly.
     
+    ### BUSINESS INTEGRATION (NEW):
+    1. **Recommended Products:** Suggest 2-3 specific types of products (e.g., "Hyaluronic Acid Serum", "Zinc Supplement") that would help the user based on their results. Include a realistic brand name and price.
+    2. **Personalized Nutrition:** Provide 2 simple meal ideas that target the critical findings. For each meal, provide:
+       - A descriptive 'image_keyword' for finding a relevant photo (e.g., "salmon-salad", "green-smoothie").
+       - Detailed 'nutritional_info' including calories, protein, carbs, and fats.
+
     ### JSON STRUCTURE:
     {
-      "summary": "A detailed clinical summary of the biometric findings.",
-      "overall_score": number (0-100),
-      "indicators": [
+      "summary": "...",
+      "overall_score": 0,
+      "indicators": [...],
+      "recommendations": [...],
+      "products": [
+        { "name": "Product Name", "type": "SKINCARE|SUPPLEMENT", "reason": "Why this helps", "link": "#", "brand": "Brand Name", "price": "$29.99" }
+      ],
+      "meals": [
         { 
-          "label": "System Name", 
-          "status": "optimal|fair|attention_needed", 
-          "score": number,
-          "confidence": number (0.0-1.0),
-          "facial_signs": ["sign 1", "sign 2"],
-          "affected_regions": ["forehead", "eyes", "cheeks", "nose", "mouth", "jawline", "skin_overall"],
-          "systemic_implication": "Detailed correlation text." 
+          "title": "Meal Name", 
+          "description": "How it helps", 
+          "ingredients": ["item 1", "item 2"],
+          "image_keyword": "keyword",
+          "nutritional_info": {
+            "calories": 450,
+            "protein": "25g",
+            "carbs": "40g",
+            "fats": "15g"
+          }
         }
       ],
-      "recommendations": [
-        { "category": "DIET|LIFESTYLE|SKINCARE|SUPPLEMENTS", "tip": "Actionable advice" }
-      ],
-      "challenge": {
-        "title": "Challenge Title",
-        "description": "Challenge description",
-        "days": [
-          { "day": 1, "task": "Task description" },
-          { "day": 2, "task": "Task description" },
-          { "day": 3, "task": "Task description" },
-          { "day": 4, "task": "Task description" },
-          { "day": 5, "task": "Task description" },
-          { "day": 6, "task": "Task description" },
-          { "day": 7, "task": "Task description" }
-        ]
-      },
-      "disclaimer": "This analysis is for informational purposes only and is not a medical diagnosis."
+      "challenge": { ... },
+      "disclaimer": "..."
     }
   `;
 

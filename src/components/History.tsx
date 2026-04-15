@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { db, auth } from '../lib/firebase';
+import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { HealthAnalysis } from '../services/geminiService';
 import { motion } from 'motion/react';
 import { Clock, ArrowLeft, HeartPulse, TrendingUp } from 'lucide-react';
@@ -26,6 +26,7 @@ export const History: React.FC<HistoryProps> = ({ onBack, onViewScan }) => {
   useEffect(() => {
     if (!auth.currentUser) return;
 
+    const scansPath = `users/${auth.currentUser.uid}/scans`;
     const q = query(
       collection(db, 'users', auth.currentUser.uid, 'scans'),
       orderBy('createdAt', 'desc')
@@ -39,7 +40,7 @@ export const History: React.FC<HistoryProps> = ({ onBack, onViewScan }) => {
       setScans(scanData);
       setLoading(false);
     }, (error) => {
-      console.error("Error fetching history:", error);
+      handleFirestoreError(error, OperationType.LIST, scansPath);
       setLoading(false);
     });
 
@@ -100,17 +101,19 @@ export const History: React.FC<HistoryProps> = ({ onBack, onViewScan }) => {
                     <stop offset="95%" stopColor="#0d9488" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-slate-200" vertical={false} />
                 <XAxis 
                   dataKey="date" 
-                  stroke="#94a3b8" 
+                  stroke="currentColor" 
+                  className="text-slate-400"
                   fontSize={10} 
                   tickLine={false} 
                   axisLine={false}
                   dy={10}
                 />
                 <YAxis 
-                  stroke="#94a3b8" 
+                  stroke="currentColor" 
+                  className="text-slate-400"
                   fontSize={10} 
                   tickLine={false} 
                   axisLine={false}
@@ -118,8 +121,8 @@ export const History: React.FC<HistoryProps> = ({ onBack, onViewScan }) => {
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#ffffff', 
-                    border: '1px solid #e2e8f0', 
+                    backgroundColor: 'var(--tooltip-bg, #ffffff)', 
+                    border: '1px solid var(--tooltip-border, #e2e8f0)', 
                     borderRadius: '12px',
                     fontSize: '12px',
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
@@ -142,11 +145,11 @@ export const History: React.FC<HistoryProps> = ({ onBack, onViewScan }) => {
       )}
 
       {loading ? (
-        <div className="text-center py-10 md:py-20 text-slate-400">{t('Loading history...')}</div>
+        <div className="text-center py-10 md:py-20 text-slate-600">{t('Loading history...')}</div>
       ) : scans.length === 0 ? (
         <div className="text-center py-10 md:py-20 medical-card rounded-3xl">
           <HeartPulse className="w-10 h-10 md:w-12 md:h-12 text-slate-200 mx-auto mb-4" />
-          <p className="text-slate-400 text-sm md:text-base">{t('No scans found. Start your first health scan!')}</p>
+          <p className="text-slate-600 text-sm md:text-base">{t('No scans found. Start your first health scan!')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -164,11 +167,11 @@ export const History: React.FC<HistoryProps> = ({ onBack, onViewScan }) => {
                   <span className="text-3xl font-bold text-slate-900">{scan.overall_score}</span>
                   <span className="text-xs text-slate-400 ml-1 uppercase tracking-wider">{t('Score')}</span>
                 </div>
-                <div className="text-xs text-slate-400 font-mono">
+                <div className="text-xs text-slate-500 font-mono">
                   {scan.createdAt?.toDate ? scan.createdAt.toDate().toLocaleDateString() : t('Recent')}
                 </div>
               </div>
-              <p className="text-sm text-slate-600 line-clamp-2 italic font-light">
+              <p className="text-sm text-slate-700 line-clamp-2 italic font-light">
                 "{scan.summary}"
               </p>
             </motion.div>

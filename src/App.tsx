@@ -4,14 +4,16 @@ import { Results } from './components/Results';
 import { History } from './components/History';
 import { FeedbackModal } from './components/FeedbackModal';
 import { analyzeFaceHealth, translateAnalysis, HealthAnalysis } from './services/geminiService';
-import { Shield, Sparkles, Activity, LogIn, LogOut, Clock } from 'lucide-react';
+import { Shield, Sparkles, Activity, LogIn, LogOut, Clock, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { auth, db, loginWithGoogle, logout } from './lib/firebase';
+import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './lib/firebase';
 import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
-import { doc, setDoc, collection, addDoc, serverTimestamp, query, orderBy, limit, onSnapshot, getDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, addDoc, serverTimestamp, query, orderBy, limit, onSnapshot, getDoc, getDocFromServer } from 'firebase/firestore';
 import { useLanguage, languages } from './lib/i18n';
 
-type AppState = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'ERROR' | 'HISTORY';
+import { AdminPanel } from './components/AdminPanel';
+
+type AppState = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'ERROR' | 'HISTORY' | 'ADMIN';
 
 export default function App() {
   const [state, setState] = useState<AppState>('IDLE');
@@ -19,8 +21,60 @@ export default function App() {
   const [currentScanId, setCurrentScanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isPro, setIsPro] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+
+  useEffect(() => {
+    async function testConnection() {
+      try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('the client is offline')) {
+          console.error("Please check your Firebase configuration. The client is offline.");
+          setError(t("Firebase configuration error. Please check your settings."));
+          setState('ERROR');
+        }
+        // Skip logging for other errors, as this is simply a connection test.
+      }
+    }
+    testConnection();
+  }, [t]);
+
+  const handleLogin = async () => {
+    try {
+      await loginWithGoogle();
+    } catch (err: any) {
+      console.error("Login error:", err);
+      let message = t("Login failed. Please try again.");
+      if (err.code === 'auth/popup-blocked') {
+        message = t("Popup blocked. Please allow popups for this site.");
+      } else if (err.code === 'auth/unauthorized-domain') {
+        const domain = window.location.hostname;
+        message = `${t("Login failed.")} ${t("Please ensure this domain is added to Firebase Authorized Domains:")} ${domain}`;
+      } else if (err.message) {
+        message = err.message;
+      }
+      setError(message);
+      setState('ERROR');
+    }
+  };
+
+  const handleUpgrade = async () => {
+    if (!user) {
+      handleLogin();
+      return;
+    }
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, { isPro: true }, { merge: true });
+      setIsPro(true);
+      alert(t("Welcome to AuraScan Pro!"));
+    } catch (err) {
+      console.error("Upgrade error:", err);
+    }
+  };
   const [latestScan, setLatestScan] = useState<(HealthAnalysis & { id: string }) | null>(null);
   const [focusArea, setFocusArea] = useState<string>('General Wellness');
 
@@ -55,11 +109,17 @@ export default function App() {
 
       if (currentUser) {
         // Ensure user profile exists in Firestore
+        const userPath = `users/${currentUser.uid}`;
         try {
           const userRef = doc(db, 'users', currentUser.uid);
-          const userSnap = await getDoc(userRef);
+          let userSnap;
+          try {
+            userSnap = await getDoc(userRef);
+          } catch (err) {
+            handleFirestoreError(err, OperationType.GET, userPath);
+          }
           
-          if (!userSnap.exists()) {
+          if (!userSnap || !userSnap.exists()) {
             const userData: any = {
               uid: currentUser.uid,
               createdAt: serverTimestamp()
@@ -68,10 +128,21 @@ export default function App() {
             if (currentUser.displayName) userData.displayName = currentUser.displayName;
             if (currentUser.photoURL) userData.photoURL = currentUser.photoURL;
             
-            await setDoc(userRef, userData);
+            try {
+              await setDoc(userRef, userData);
+            } catch (err) {
+              handleFirestoreError(err, OperationType.CREATE, userPath);
+            }
+            setIsAdmin(currentUser.email === 'oceancreativerig@gmail.com');
+            setIsPro(false);
+          } else {
+            const userData = userSnap.data();
+            setIsAdmin(userData.role === 'admin' || currentUser.email === 'oceancreativerig@gmail.com');
+            setIsPro(userData.isPro || false);
           }
 
           // Fetch latest scan for the daily insight
+          const scansPath = `users/${currentUser.uid}/scans`;
           const q = query(
             collection(db, 'users', currentUser.uid, 'scans'),
             orderBy('createdAt', 'desc'),
@@ -83,10 +154,10 @@ export default function App() {
               setLatestScan({ ...doc.data(), id: doc.id } as HealthAnalysis & { id: string });
             }
           }, (error) => {
-            console.error("Snapshot error:", error);
+            handleFirestoreError(error, OperationType.LIST, scansPath);
           });
         } catch (err) {
-          console.error("Error creating user profile:", err);
+          console.error("Error in auth state change:", err);
         }
       } else {
         setLatestScan(null);
@@ -134,8 +205,9 @@ export default function App() {
 
       // Save to Firebase if logged in
       if (user) {
+        const scansPath = `users/${user.uid}/scans`;
         try {
-          const docRef = await addDoc(collection(db, 'users', user.uid, 'scans'), {
+          const docRef = await addDoc(collection(db, scansPath), {
             ...result,
             language,
             focusArea,
@@ -143,7 +215,7 @@ export default function App() {
           });
           setCurrentScanId(docRef.id);
         } catch (err) {
-          console.error("Error saving scan to history:", err);
+          handleFirestoreError(err, OperationType.CREATE, scansPath);
         }
       } else {
         setCurrentScanId(null);
@@ -163,11 +235,12 @@ export default function App() {
     setAnalysis(updatedAnalysis);
 
     if (user && currentScanId) {
+      const scanPath = `users/${user.uid}/scans/${currentScanId}`;
       try {
         const scanRef = doc(db, 'users', user.uid, 'scans', currentScanId);
         await setDoc(scanRef, { challenge: updatedAnalysis.challenge }, { merge: true });
       } catch (err) {
-        console.error("Error updating challenge progress:", err);
+        handleFirestoreError(err, OperationType.UPDATE, scanPath);
       }
     }
   };
@@ -180,7 +253,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-teal-500/30">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-teal-500/30 transition-colors duration-300">
       {/* Background Atmosphere */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
         <div className="absolute w-[800px] h-[800px] bg-teal-500/5 blur-[120px] rounded-full animate-blob opacity-50" />
@@ -197,7 +270,7 @@ export default function App() {
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="appearance-none bg-white border border-slate-200 rounded-full px-4 py-2 pr-8 text-sm font-medium hover:border-slate-300 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="appearance-none bg-white border border-slate-200 rounded-full px-4 py-2 pr-8 text-sm font-medium hover:border-slate-300 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-slate-900"
                 >
                   {languages.map(lang => (
                     <option key={lang} value={lang} className="bg-white text-slate-900">{lang}</option>
@@ -213,9 +286,27 @@ export default function App() {
           {authReady && (
             user ? (
               <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+                {!isPro && (
+                  <button
+                    onClick={handleUpgrade}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:shadow-lg transition-all text-sm font-bold shadow-sm"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {t('Upgrade to Pro')}
+                  </button>
+                )}
+                {isAdmin && (
+                  <button
+                    onClick={() => setState('ADMIN')}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-teal-50 border border-teal-200 text-teal-700 hover:bg-teal-100 transition-colors text-sm font-medium shadow-sm"
+                  >
+                    <Shield className="w-4 h-4" />
+                    {t('Admin')}
+                  </button>
+                )}
                 <button
                   onClick={() => setState('HISTORY')}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 transition-colors text-sm font-medium shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 transition-colors text-sm font-medium shadow-sm text-slate-900"
                 >
                   <Clock className="w-4 h-4" />
                   {t('History')}
@@ -235,18 +326,18 @@ export default function App() {
               </div>
             ) : (
               <button
-                onClick={loginWithGoogle}
-                className="flex items-center gap-2 px-6 py-2 rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-all text-sm font-bold shadow-lg shadow-slate-900/10 w-full sm:w-auto justify-center"
-              >
-                <LogIn className="w-4 h-4" />
-                {t('Sign in to Save Scans')}
-              </button>
+              onClick={handleLogin}
+              className="flex items-center gap-2 px-6 py-2 rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-all text-sm font-bold shadow-lg shadow-slate-900/10 w-full sm:w-auto justify-center"
+            >
+              <LogIn className="w-4 h-4" />
+              {t('Sign in to Save Scans')}
+            </button>
             )
           )}
         </nav>
 
         {/* Header */}
-        {state !== 'HISTORY' && (
+        {state !== 'HISTORY' && state !== 'ADMIN' && (
           <header className="text-center mb-10 md:mb-16 mt-2 md:mt-4">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -268,7 +359,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-slate-500 max-w-xl mx-auto text-base md:text-xl font-light leading-relaxed px-4"
+            className="text-slate-600 max-w-xl mx-auto text-base md:text-xl font-light leading-relaxed px-4"
           >
             {t('Advanced facial analysis for full-body wellness insights and personalized health recommendations.')}
           </motion.p>
@@ -303,10 +394,10 @@ export default function App() {
                     <span className="text-[10px] font-mono uppercase tracking-widest text-teal-600">{t('Daily Wellness Insight')}</span>
                   </div>
                   <p className="text-slate-700 text-sm leading-relaxed mb-4">
-                    {t('Based on your last scan, focus on')} <span className="text-teal-600 font-bold">{latestScan.indicators.sort((a, b) => a.score - b.score)[0].label}</span> {t('today.')}
+                    {t('Based on your last scan, focus on')} <span className="text-teal-600 font-bold">{latestScan.indicators?.sort((a, b) => a.score - b.score)[0]?.label || t('wellness')}</span> {t('today.')}
                   </p>
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <p className="text-slate-500 text-xs italic">"{latestScan.recommendations[0].tip}"</p>
+                    <p className="text-slate-600 text-xs italic">"{latestScan.recommendations[0].tip}"</p>
                   </div>
                 </motion.div>
               )}
@@ -370,11 +461,11 @@ export default function App() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
                     <span className="text-slate-900 text-sm font-medium">{t('Face the Light')}</span>
-                    <span className="text-slate-500 text-xs">{t('Position yourself towards a window or lamp.')}</span>
+                    <span className="text-slate-600 text-xs">{t('Position yourself towards a window or lamp.')}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-slate-900 text-sm font-medium">{t('No Shadows')}</span>
-                    <span className="text-slate-500 text-xs">{t('Ensure even lighting across your entire face.')}</span>
+                    <span className="text-slate-600 text-xs">{t('Ensure even lighting across your entire face.')}</span>
                   </div>
                 </div>
               </motion.div>
@@ -399,6 +490,33 @@ export default function App() {
                   delay={0.7}
                 />
               </div>
+
+              {/* How it Works */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="max-w-4xl w-full mt-20 text-center"
+              >
+                <h3 className="text-2xl font-serif font-medium text-slate-900 mb-12">{t('How AuraScan Works')}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-12">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-600 font-bold border border-teal-500/20">1</div>
+                    <h4 className="font-bold text-slate-900">{t('Facial Mapping')}</h4>
+                    <p className="text-sm text-slate-600 font-light leading-relaxed">{t('Our AI identifies 468+ biometric landmarks to assess micro-expressions and skin markers.')}</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 font-bold border border-sky-500/20">2</div>
+                    <h4 className="font-bold text-slate-900">{t('Systemic Analysis')}</h4>
+                    <p className="text-sm text-slate-600 font-light leading-relaxed">{t('Markers are correlated with systemic health indicators like hydration, stress, and metabolism.')}</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 font-bold border border-indigo-500/20">3</div>
+                    <h4 className="font-bold text-slate-900">{t('Wellness Plan')}</h4>
+                    <p className="text-sm text-slate-600 font-light leading-relaxed">{t('Receive a personalized 7-day challenge and evidence-based lifestyle recommendations.')}</p>
+                  </div>
+                </div>
+              </motion.div>
             </motion.div>
           )}
 
@@ -433,12 +551,18 @@ export default function App() {
             />
           )}
 
+          {state === 'ADMIN' && isAdmin && (
+            <AdminPanel onBack={() => setState('IDLE')} />
+          )}
+
           {state === 'RESULTS' && analysis && (
             <Results 
               key="results" 
               analysis={analysis} 
+              isPro={isPro}
               onReset={reset} 
               onUpdateChallenge={handleUpdateChallenge}
+              onUpgrade={handleUpgrade}
             />
           )}
 
@@ -465,8 +589,34 @@ export default function App() {
         </AnimatePresence>
 
         {/* Footer */}
-        <footer className="mt-auto pt-10 md:pt-20 pb-8 text-center text-slate-400 text-xs uppercase tracking-[0.2em] px-4 font-mono">
-          {t('© 2026 AuraScan Biometrics • For Informational Purposes Only')}
+        <footer className="mt-auto pt-20 pb-12 w-full max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12 border-t border-slate-200 pt-12">
+            <div className="flex flex-col gap-4">
+              <h3 className="text-xl font-serif font-medium text-slate-900">AuraScan</h3>
+              <p className="text-sm text-slate-600 font-light leading-relaxed">
+                {t('Professional-grade biometric analysis for the modern wellness journey. Empowering individuals with data-driven health insights.')}
+              </p>
+            </div>
+            <div className="flex flex-col gap-4">
+              <h4 className="text-xs font-mono uppercase tracking-widest text-slate-900">{t('Legal')}</h4>
+              <nav className="flex flex-col gap-2">
+                <button className="text-sm text-slate-600 hover:text-teal-600 transition-colors text-left">{t('Privacy Policy')}</button>
+                <button className="text-sm text-slate-600 hover:text-teal-600 transition-colors text-left">{t('Terms of Service')}</button>
+                <button className="text-sm text-slate-600 hover:text-teal-600 transition-colors text-left">{t('Medical Disclaimer')}</button>
+              </nav>
+            </div>
+            <div className="flex flex-col gap-4">
+              <h4 className="text-xs font-mono uppercase tracking-widest text-slate-900">{t('Support')}</h4>
+              <nav className="flex flex-col gap-2">
+                <button className="text-sm text-slate-600 hover:text-teal-600 transition-colors text-left">{t('Help Center')}</button>
+                <button className="text-sm text-slate-600 hover:text-teal-600 transition-colors text-left">{t('Contact Us')}</button>
+                <button className="text-sm text-slate-600 hover:text-teal-600 transition-colors text-left">{t('API Documentation')}</button>
+              </nav>
+            </div>
+          </div>
+          <div className="text-center text-slate-400 text-[10px] uppercase tracking-[0.3em] font-mono">
+            {t('© 2026 AuraScan Biometrics • For Informational Purposes Only')}
+          </div>
         </footer>
       </main>
 
@@ -488,7 +638,7 @@ function FeatureCard({ icon, title, description, delay = 0 }: { icon: React.Reac
         {icon}
       </div>
       <h3 className="text-xl font-serif font-medium text-slate-900 mb-3 tracking-tight">{title}</h3>
-      <p className="text-slate-500 text-sm leading-relaxed font-light">{description}</p>
+      <p className="text-slate-600 text-sm leading-relaxed font-light">{description}</p>
     </motion.div>
   );
 }

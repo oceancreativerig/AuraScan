@@ -28,19 +28,27 @@
 }
 
 @layer base {
+  :root {
+    --tooltip-bg: #ffffff;
+    --tooltip-border: #e2e8f0;
+    --chart-grid: #e2e8f0;
+    --chart-axis: #94a3b8;
+  }
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply bg-slate-50 text-slate-900 antialiased transition-colors duration-300;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-white/80 backdrop-blur-xl border border-slate-200 shadow-sm;
+    @apply bg-white/80 backdrop-blur-xl border border-slate-200 shadow-sm transition-all;
   }
+  
   .glass-panel {
-    @apply bg-white border border-slate-200 shadow-sm;
+    @apply bg-white border border-slate-200 shadow-sm transition-all;
   }
+  
   .medical-card {
-    @apply bg-white border border-slate-200 rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] overflow-hidden;
+    @apply bg-white border border-slate-200 rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] overflow-hidden transition-all;
   }
 }

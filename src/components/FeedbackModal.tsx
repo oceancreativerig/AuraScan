@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, X, Send, CheckCircle2, Loader2 } from 'lucide-react';
 import { useLanguage } from '../lib/i18n';
-import { db, auth } from '../lib/firebase';
+import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { cn } from '../lib/utils';
 
@@ -18,8 +18,9 @@ export const FeedbackModal: React.FC = () => {
     if (!feedback.trim()) return;
 
     setIsSubmitting(true);
+    const feedbackPath = 'feedback';
     try {
-      await addDoc(collection(db, 'feedback'), {
+      await addDoc(collection(db, feedbackPath), {
         text: feedback,
         userId: auth.currentUser?.uid || 'anonymous',
         userEmail: auth.currentUser?.email || 'anonymous',
@@ -34,7 +35,7 @@ export const FeedbackModal: React.FC = () => {
         setIsOpen(false);
       }, 2000);
     } catch (error) {
-      console.error('Error submitting feedback:', error);
+      handleFirestoreError(error, OperationType.CREATE, feedbackPath);
     } finally {
       setIsSubmitting(false);
     }
@@ -117,7 +118,7 @@ export const FeedbackModal: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setIsOpen(false)}
-                        className="flex-1 px-6 py-3 rounded-full border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors"
+                        className="flex-1 px-6 py-3 rounded-full border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
                       >
                         {t('Cancel')}
                       </button>

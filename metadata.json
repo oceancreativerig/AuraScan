@@ -1,12 +1,15 @@
 {
-  "name": "AuraScan: Biometric Wellness Analyst",
-  "description": "Professional-grade facial biometric analysis for systemic health insights and evidence-based wellness recommendations.",
+  "name": "AuraScan Pro: AI Biometric Wellness",
+  "description": "Professional-grade facial biometric analysis for systemic health insights. AuraScan uses advanced computer vision and AI to detect physiological markers, providing evidence-based wellness recommendations and personalized health tracking.",
   "requestFramePermissions": [
     "camera"
   ],
   "majorCapabilities": [
     "Computer Vision",
-    "Health Analysis",
-    "AI Recommendations"
-  ]
+    "Biometric Health Analysis",
+    "AI Recommendations",
+    "Wellness Tracking"
+  ],
+  "version": "1.0.0",
+  "author": "AuraScan Biometrics Team"
 }

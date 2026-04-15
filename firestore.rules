@@ -69,24 +69,33 @@ service cloud.firestore {
       return url is string && (url.matches("^https://.*") || url.matches("^http://.*"));
     }
 
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "oceancreativerig@gmail.com" && request.auth.token.email_verified == true));
+    }
+
     // ===============================================================
     // Domain Validators
     // ===============================================================
 
     function isValidUser() {
       let data = request.resource.data;
-      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'createdAt']) &&
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'createdAt', 'role', 'isPro', 'points']) &&
              hasRequiredFields(['uid', 'createdAt']) &&
              data.uid == request.auth.uid &&
              (!('email' in data) || isValidEmail(data.email)) &&
              (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
              (!('photoURL' in data) || (isValidUrl(data.photoURL) && data.photoURL.size() <= 2000)) &&
+             (!('role' in data) || (data.role in ['admin', 'user'])) &&
+             (!('isPro' in data) || (data.isPro is bool)) &&
+             (!('points' in data) || (data.points is number)) &&
              data.createdAt is timestamp;
     }
 
     function isValidScan() {
       let data = request.resource.data;
-      return hasOnlyAllowedFields(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations', 'disclaimer', 'language', 'challenge', 'focusArea']) &&
+      return hasOnlyAllowedFields(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations', 'disclaimer', 'language', 'challenge', 'focusArea', 'products', 'meals']) &&
              hasRequiredFields(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations', 'language', 'challenge']) &&
              data.createdAt is timestamp &&
              data.overall_score is number && data.overall_score >= 0 && data.overall_score <= 100 &&
@@ -95,6 +104,8 @@ service cloud.firestore {
              data.recommendations is list && data.recommendations.size() <= 20 &&
              data.language is string && data.language.size() <= 50 &&
              (!('focusArea' in data) || (data.focusArea is string && data.focusArea.size() <= 100)) &&
+             (!('products' in data) || (data.products is list)) &&
+             (!('meals' in data) || (data.meals is list)) &&
              data.challenge is map;
     }
 
@@ -113,23 +124,23 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidUser();
-      allow update: if isOwner(userId) && isValidUser() && areImmutableFieldsUnchanged(['uid', 'createdAt']);
-      allow delete: if isOwner(userId);
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser() && (!('role' in request.resource.data) || request.resource.data.role == 'user' || isAdmin());
+      allow update: if isOwner(userId) && isValidUser() && areImmutableFieldsUnchanged(['uid', 'createdAt']) && (!('role' in request.resource.data) || request.resource.data.role == resource.data.role || isAdmin());
+      allow delete: if isOwner(userId) || isAdmin();
       
       match /scans/{scanId} {
-        allow read: if isOwner(userId);
+        allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && isValidScan();
         // Allow updates ONLY to the challenge field
         allow update: if isOwner(userId) && isValidScan() && areImmutableFieldsUnchanged(['createdAt', 'overall_score', 'summary', 'indicators', 'recommendations', 'language', 'focusArea', 'disclaimer']); 
-        allow delete: if isOwner(userId);
+        allow delete: if isOwner(userId) || isAdmin();
       }
     }
 
     match /feedback/{feedbackId} {
       allow create: if isValidFeedback();
-      allow read, update, delete: if false; // Admin only via console
+      allow read, update, delete: if isAdmin();
     }
   }
 }
