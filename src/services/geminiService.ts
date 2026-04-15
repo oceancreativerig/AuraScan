@@ -1,6 +1,17 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiClient: GoogleGenAI | null = null;
+
+function getAIClient(): GoogleGenAI {
+  if (!aiClient) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY environment variable is required");
+    }
+    aiClient = new GoogleGenAI({ apiKey });
+  }
+  return aiClient;
+}
 
 export interface HealthAnalysis {
   summary: string;
@@ -48,7 +59,7 @@ export interface HealthAnalysis {
 }
 
 export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage: string): Promise<HealthAnalysis> {
-  const model = "gemini-3-flash-preview";
+  const model = "gemini-1.5-flash";
   
   const prompt = `
     You are an expert medical translator. Translate the following JSON object representing a biometric health analysis into ${targetLanguage}.
@@ -66,7 +77,7 @@ export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage
   `;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAIClient().models.generateContent({
       model,
       contents: prompt,
       config: {
@@ -82,8 +93,35 @@ export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage
   }
 }
 
+export async function generateCoachingMessage(history: HealthAnalysis[], latest: HealthAnalysis, language: string): Promise<string> {
+  const model = "gemini-1.5-flash";
+  const prompt = `
+    You are Aura, a persistent AI wellness coach. Your tone is motivational, scientific, and friendly.
+    Analyze the user's latest health scan and their scan history to provide personalized, encouraging feedback.
+    Language: ${language}.
+    
+    Latest Scan: ${JSON.stringify(latest)}
+    History: ${JSON.stringify(history)}
+    
+    Provide a short, punchy, and humanized coaching message (max 2 sentences).
+    Example: "Your fatigue markers dropped 12%. Keep this sleep cycle."
+    Return ONLY the message text.
+  `;
+
+  try {
+    const response = await getAIClient().models.generateContent({
+      model,
+      contents: prompt,
+    });
+    return response.text?.trim() || "Keep up the great work on your wellness journey!";
+  } catch (error: any) {
+    console.error("Gemini Coaching Error:", error);
+    return "Keep up the great work on your wellness journey!";
+  }
+}
+
 export async function analyzeFaceHealth(base64Image: string, language: string = 'English', focusArea: string = 'General Wellness'): Promise<HealthAnalysis> {
-  const model = "gemini-3-flash-preview";
+  const model = "gemini-1.5-flash";
   
   const prompt = `
     You are a world-class AI Biometric Health Analyst specializing in non-invasive physiological assessment via facial mapping. Your task is to analyze the provided high-resolution facial image to detect subtle biometric markers that correlate with systemic health.
@@ -155,6 +193,15 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
     - Be clinically objective but maintain a wellness-focused tone.
     - If the image is unclear, lower the 'confidence' score accordingly.
     
+    ### GENERAL RECOMMENDATIONS:
+    Provide 3-4 general, actionable wellness tips in the 'recommendations' array. Categorize them (e.g., 'Nutrition', 'Hydration', 'Sleep', 'Lifestyle') and provide a brief, helpful tip for each.
+    
+    Example of recommendations:
+    [
+      { "category": "Nutrition", "tip": "Increase intake of leafy greens to boost iron and vitamin levels." },
+      { "category": "Hydration", "tip": "Aim for 2-3 liters of water daily to support metabolic function." }
+    ]
+
     ### BUSINESS INTEGRATION (NEW):
     1. **Recommended Products:** Suggest 2-3 specific types of products (e.g., "Hyaluronic Acid Serum", "Zinc Supplement") that would help the user based on their results. Include a realistic brand name and price.
     2. **Personalized Nutrition:** Provide 2 simple meal ideas that target the critical findings. For each meal, provide:
@@ -166,7 +213,9 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
       "summary": "...",
       "overall_score": 0,
       "indicators": [...],
-      "recommendations": [...],
+      "recommendations": [
+        { "category": "...", "tip": "..." }
+      ],
       "products": [
         { "name": "Product Name", "type": "SKINCARE|SUPPLEMENT", "reason": "Why this helps", "link": "#", "brand": "Brand Name", "price": "$29.99" }
       ],
@@ -197,7 +246,7 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
   };
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAIClient().models.generateContent({
       model,
       contents: { parts: [imagePart, { text: prompt }] },
       config: {

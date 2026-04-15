@@ -3,7 +3,9 @@ import { Scanner } from './components/Scanner';
 import { Results } from './components/Results';
 import { History } from './components/History';
 import { FeedbackModal } from './components/FeedbackModal';
-import { analyzeFaceHealth, translateAnalysis, HealthAnalysis } from './services/geminiService';
+import { Onboarding } from './components/Onboarding';
+import { CoachCard } from './components/CoachCard';
+import { analyzeFaceHealth, translateAnalysis, HealthAnalysis, generateCoachingMessage } from './services/geminiService';
 import { Shield, Sparkles, Activity, LogIn, LogOut, Clock, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './lib/firebase';
@@ -24,7 +26,20 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPro, setIsPro] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  const handleCompleteOnboarding = () => {
+    localStorage.setItem('hasSeenOnboarding', 'true');
+    setShowOnboarding(false);
+  };
 
   useEffect(() => {
     async function testConnection() {
@@ -53,6 +68,10 @@ export default function App() {
       } else if (err.code === 'auth/unauthorized-domain') {
         const domain = window.location.hostname;
         message = `${t("Login failed.")} ${t("Please ensure this domain is added to Firebase Authorized Domains:")} ${domain}`;
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        // User closed the popup, do nothing
+        console.log("User closed the login popup.");
+        return;
       } else if (err.message) {
         message = err.message;
       }
@@ -76,6 +95,8 @@ export default function App() {
     }
   };
   const [latestScan, setLatestScan] = useState<(HealthAnalysis & { id: string }) | null>(null);
+  const [scanHistory, setScanHistory] = useState<(HealthAnalysis & { id: string })[]>([]);
+  const [coachingMessage, setCoachingMessage] = useState<string | null>(null);
   const [focusArea, setFocusArea] = useState<string>('General Wellness');
 
   const focusAreas = [
@@ -150,8 +171,9 @@ export default function App() {
           );
           unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
             if (!snapshot.empty) {
-              const doc = snapshot.docs[0];
-              setLatestScan({ ...doc.data(), id: doc.id } as HealthAnalysis & { id: string });
+              const scans = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as HealthAnalysis & { id: string }));
+              setLatestScan(scans[0]);
+              setScanHistory(scans);
             }
           }, (error) => {
             handleFirestoreError(error, OperationType.LIST, scansPath);
@@ -170,6 +192,13 @@ export default function App() {
       }
     };
   }, []);
+
+  // Generate coaching message when latest scan changes
+  useEffect(() => {
+    if (latestScan && scanHistory.length > 0) {
+      generateCoachingMessage(scanHistory, latestScan, language).then(setCoachingMessage);
+    }
+  }, [latestScan, scanHistory, language]);
 
   // Translate analysis when language changes or when viewing a past scan
   useEffect(() => {
@@ -264,6 +293,13 @@ export default function App() {
         {/* Top Navigation */}
         <nav className="w-full flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 md:mb-12">
           <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+            <button
+              onClick={() => setState('IDLE')}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 transition-colors text-sm font-medium shadow-sm text-slate-900"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+              {t('Home')}
+            </button>
             <div className="flex flex-col gap-1">
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500 ml-1">{t('Language')}</span>
               <div className="relative group">
@@ -377,29 +413,32 @@ export default function App() {
             >
               {/* Daily Insight Card */}
               {latestScan && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="max-w-md w-full medical-card p-6 relative overflow-hidden cursor-pointer group"
-                  onClick={() => {
-                    setAnalysis(latestScan);
-                    setState('RESULTS');
-                  }}
-                >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 blur-[40px] rounded-full" />
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-teal-500/10 rounded-lg">
-                      <Sparkles className="w-4 h-4 text-teal-600" />
+                <div className="flex flex-col gap-4 w-full max-w-md">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="medical-card p-6 relative overflow-hidden cursor-pointer group"
+                    onClick={() => {
+                      setAnalysis(latestScan);
+                      setState('RESULTS');
+                    }}
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 blur-[40px] rounded-full" />
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-teal-500/10 rounded-lg">
+                        <Sparkles className="w-4 h-4 text-teal-600" />
+                      </div>
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-teal-600">{t('Daily Wellness Insight')}</span>
                     </div>
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-teal-600">{t('Daily Wellness Insight')}</span>
-                  </div>
-                  <p className="text-slate-700 text-sm leading-relaxed mb-4">
-                    {t('Based on your last scan, focus on')} <span className="text-teal-600 font-bold">{latestScan.indicators?.sort((a, b) => a.score - b.score)[0]?.label || t('wellness')}</span> {t('today.')}
-                  </p>
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <p className="text-slate-600 text-xs italic">"{latestScan.recommendations[0].tip}"</p>
-                  </div>
-                </motion.div>
+                    <p className="text-slate-700 text-sm leading-relaxed mb-4">
+                      {t('Based on your last scan, focus on')} <span className="text-teal-600 font-bold">{latestScan.indicators?.sort((a, b) => a.score - b.score)[0]?.label || t('wellness')}</span> {t('today.')}
+                    </p>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <p className="text-slate-600 text-xs italic">"{latestScan.recommendations[0].tip}"</p>
+                    </div>
+                  </motion.div>
+                  {coachingMessage && <CoachCard message={coachingMessage} />}
+                </div>
               )}
 
               <motion.div
@@ -621,6 +660,7 @@ export default function App() {
       </main>
 
       <FeedbackModal />
+      {showOnboarding && <Onboarding onComplete={handleCompleteOnboarding} />}
     </div>
   );
 }

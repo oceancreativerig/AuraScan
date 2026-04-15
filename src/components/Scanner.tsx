@@ -72,7 +72,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
       setError(null);
     } catch (err) {
       console.error("Camera access error:", err);
-      setError(t("Camera access denied. Please allow camera access in your browser settings/address bar and try again."));
+      setError(t("Camera access denied. Please ensure you have granted permission in your browser settings. If you are in an iframe or private mode, camera access may be restricted."));
     }
   };
 
@@ -132,77 +132,81 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
             }
           }
 
-          const results = faceLandmarkerRef.current.detectForVideo(video, performance.now());
-          
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          try {
+            const results = faceLandmarkerRef.current.detectForVideo(video, performance.now());
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-          if (results.faceLandmarks && results.faceLandmarks.length > 0) {
-            const landmarks = results.faceLandmarks[0];
-            const width = canvas.width;
-            const height = canvas.height;
+            if (results.faceLandmarks && results.faceLandmarks.length > 0) {
+              const landmarks = results.faceLandmarks[0];
+              const width = canvas.width;
+              const height = canvas.height;
 
-            // Calculate bounding box
-            let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
-            landmarks.forEach((point) => {
-              if (point.x < minX) minX = point.x;
-              if (point.y < minY) minY = point.y;
-              if (point.x > maxX) maxX = point.x;
-              if (point.y > maxY) maxY = point.y;
-            });
+              // Calculate bounding box
+              let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
+              landmarks.forEach((point) => {
+                if (point.x < minX) minX = point.x;
+                if (point.y < minY) minY = point.y;
+                if (point.x > maxX) maxX = point.x;
+                if (point.y > maxY) maxY = point.y;
+              });
 
-            // Add padding to bounding box
-            const padding = 0.05;
-            minX = Math.max(0, minX - padding);
-            minY = Math.max(0, minY - padding);
-            maxX = Math.min(1, maxX + padding);
-            maxY = Math.min(1, maxY + padding);
+              // Add padding to bounding box
+              const padding = 0.05;
+              minX = Math.max(0, minX - padding);
+              minY = Math.max(0, minY - padding);
+              maxX = Math.min(1, maxX + padding);
+              maxY = Math.min(1, maxY + padding);
 
-            const boxX = minX * width;
-            const boxY = minY * height;
-            const boxW = (maxX - minX) * width;
-            const boxH = (maxY - minY) * height;
+              const boxX = minX * width;
+              const boxY = minY * height;
+              const boxW = (maxX - minX) * width;
+              const boxH = (maxY - minY) * height;
 
-            // Draw Semi-transparent Bounding Box
-            ctx.strokeStyle = 'rgba(13, 148, 136, 0.8)'; // teal-600
-            ctx.lineWidth = 2;
-            ctx.strokeRect(boxX, boxY, boxW, boxH);
-            ctx.fillStyle = 'rgba(13, 148, 136, 0.05)';
-            ctx.fillRect(boxX, boxY, boxW, boxH);
+              // Draw Semi-transparent Bounding Box
+              ctx.strokeStyle = 'rgba(13, 148, 136, 0.8)'; // teal-600
+              ctx.lineWidth = 2;
+              ctx.strokeRect(boxX, boxY, boxW, boxH);
+              ctx.fillStyle = 'rgba(13, 148, 136, 0.05)';
+              ctx.fillRect(boxX, boxY, boxW, boxH);
 
-            // Draw Key Landmarks (Eyes, Nose, Mouth Corners)
-            const keyPoints = [
-              33, 133, // left eye corners
-              362, 263, // right eye corners
-              1, // nose tip
-              61, 291, // mouth corners
-            ];
+              // Draw Key Landmarks (Eyes, Nose, Mouth Corners)
+              const keyPoints = [
+                33, 133, // left eye corners
+                362, 263, // right eye corners
+                1, // nose tip
+                61, 291, // mouth corners
+              ];
 
-            ctx.fillStyle = '#ffffff';
-            keyPoints.forEach(index => {
-              const pt = landmarks[index];
-              if (pt) {
-                ctx.beginPath();
-                ctx.arc(pt.x * width, pt.y * height, 3, 0, 2 * Math.PI);
-                ctx.fill();
-                
-                // Add subtle glow
-                ctx.beginPath();
-                ctx.arc(pt.x * width, pt.y * height, 6, 0, 2 * Math.PI);
-                ctx.fillStyle = 'rgba(13, 148, 136, 0.3)';
-                ctx.fill();
-                ctx.fillStyle = '#ffffff'; // reset
-              }
-            });
+              ctx.fillStyle = '#ffffff';
+              keyPoints.forEach(index => {
+                const pt = landmarks[index];
+                if (pt) {
+                  ctx.beginPath();
+                  ctx.arc(pt.x * width, pt.y * height, 3, 0, 2 * Math.PI);
+                  ctx.fill();
+                  
+                  // Add subtle glow
+                  ctx.beginPath();
+                  ctx.arc(pt.x * width, pt.y * height, 6, 0, 2 * Math.PI);
+                  ctx.fillStyle = 'rgba(13, 148, 136, 0.3)';
+                  ctx.fill();
+                  ctx.fillStyle = '#ffffff'; // reset
+                }
+              });
 
-            // Draw subtle mesh points
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            landmarks.forEach((pt, i) => {
-              if (!keyPoints.includes(i) && i % 3 === 0) { // draw every 3rd point to avoid clutter
-                ctx.beginPath();
-                ctx.arc(pt.x * width, pt.y * height, 1, 0, 2 * Math.PI);
-                ctx.fill();
-              }
-            });
+              // Draw subtle mesh points
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+              landmarks.forEach((pt, i) => {
+                if (!keyPoints.includes(i) && i % 3 === 0) { // draw every 3rd point to avoid clutter
+                  ctx.beginPath();
+                  ctx.arc(pt.x * width, pt.y * height, 1, 0, 2 * Math.PI);
+                  ctx.fill();
+                }
+              });
+            }
+          } catch (e) {
+            console.error("Face detection error:", e);
           }
         }
       }

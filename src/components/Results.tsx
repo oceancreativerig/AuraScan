@@ -357,7 +357,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
               </div>
               <div className="flex flex-col">
                 <span className="text-teal-600 text-xs font-mono uppercase tracking-wider mb-1">{rec.category}</span>
-                <p className="text-slate-700 leading-relaxed font-light">{rec.tip}</p>
+                <p className="text-slate-900 leading-relaxed font-light">{rec.tip}</p>
               </div>
             </motion.div>
           ))}
