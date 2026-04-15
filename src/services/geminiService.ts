@@ -257,7 +257,7 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
     const result = JSON.parse(response.text || "{}");
     return { ...result, language } as HealthAnalysis;
   } catch (error: any) {
-    console.error("Gemini Analysis Error:", error);
+    console.error("Gemini Analysis Error Details:", JSON.stringify(error, null, 2));
     
     // Check if it's a quota/rate limit error
     const errorMessage = error?.message?.toLowerCase() || "";
@@ -265,6 +265,6 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
       throw new Error("Gemini API Quota Exceeded. Please check your API key billing details or try again later.");
     }
     
-    throw new Error("Failed to analyze facial health. Please try again.");
+    throw new Error(`Failed to analyze facial health: ${error.message || "Unknown error"}`);
   }
 }
