@@ -344,23 +344,29 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
           {t('Personalized Recommendations')}
         </h3>
         <div className="space-y-3 md:space-y-4 relative z-10">
-          {analysis.recommendations.map((rec, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 + idx * 0.1, type: "spring" }}
-              className="flex items-start gap-3 md:gap-4 p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-sm transition-all"
-            >
-              <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
-                {getRecommendationIcon(rec.category)}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-teal-600 text-xs font-mono uppercase tracking-wider mb-1">{rec.category}</span>
-                <p className="text-slate-900 leading-relaxed font-light">{rec.tip}</p>
-              </div>
-            </motion.div>
-          ))}
+          {analysis.recommendations.length > 0 ? (
+            analysis.recommendations.map((rec, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 + idx * 0.1, type: "spring" }}
+                className="flex items-start gap-3 md:gap-4 p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-sm transition-all"
+              >
+                <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
+                  {getRecommendationIcon(rec.category)}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-teal-600 text-xs font-mono uppercase tracking-wider mb-1">{rec.category}</span>
+                  <p className="text-slate-900 leading-relaxed font-light">{rec.tip}</p>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-100">
+              <p className="text-slate-500 font-light">{t('No specific recommendations found for this scan. Continue maintaining your healthy habits!')}</p>
+            </div>
+          )}
         </div>
       </div>
 

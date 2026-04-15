@@ -59,7 +59,7 @@ export interface HealthAnalysis {
 }
 
 export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage: string): Promise<HealthAnalysis> {
-  const model = "gemini-1.5-flash-002";
+  const model = "gemini-flash-latest";
   
   const prompt = `
     You are an expert medical translator. Translate the following JSON object representing a biometric health analysis into ${targetLanguage}.
@@ -94,7 +94,7 @@ export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage
 }
 
 export async function generateCoachingMessage(history: HealthAnalysis[], latest: HealthAnalysis, language: string): Promise<string> {
-  const model = "gemini-1.5-flash-002";
+  const model = "gemini-flash-latest";
   const prompt = `
     You are Aura, a persistent AI wellness coach. Your tone is motivational, scientific, and friendly.
     Analyze the user's latest health scan and their scan history to provide personalized, encouraging feedback.
@@ -121,7 +121,7 @@ export async function generateCoachingMessage(history: HealthAnalysis[], latest:
 }
 
 export async function analyzeFaceHealth(base64Image: string, language: string = 'English', focusArea: string = 'General Wellness'): Promise<HealthAnalysis> {
-  const model = "gemini-1.5-flash-002";
+  const model = "gemini-flash-latest";
   
   const prompt = `
     You are a world-class AI Biometric Health Analyst specializing in non-invasive physiological assessment via facial mapping. Your task is to analyze the provided high-resolution facial image to detect subtle biometric markers that correlate with systemic health.
