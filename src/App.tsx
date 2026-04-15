@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Scanner } from './components/Scanner';
 import { Results } from './components/Results';
 import { History } from './components/History';
@@ -96,6 +96,19 @@ function AppContent() {
       console.error("Upgrade error:", err);
     }
   };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setState('IDLE');
+      setAnalysis(null);
+      setCurrentScanId(null);
+      setError(null);
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
+
   const [latestScan, setLatestScan] = useState<(HealthAnalysis & { id: string }) | null>(null);
   const [scanHistory, setScanHistory] = useState<(HealthAnalysis & { id: string })[]>([]);
   const [coachingMessage, setCoachingMessage] = useState<string | null>(null);
@@ -185,6 +198,10 @@ function AppContent() {
         }
       } else {
         setLatestScan(null);
+        setScanHistory([]);
+        setCoachingMessage(null);
+        setIsAdmin(false);
+        setIsPro(false);
       }
     });
     return () => {
@@ -196,8 +213,10 @@ function AppContent() {
   }, []);
 
   // Generate coaching message when latest scan changes
+  const lastCoachedScanId = useRef<string | null>(null);
   useEffect(() => {
-    if (latestScan && scanHistory.length > 0) {
+    if (latestScan && scanHistory.length > 0 && latestScan.id !== lastCoachedScanId.current) {
+      lastCoachedScanId.current = latestScan.id;
       generateCoachingMessage(scanHistory, latestScan, language).then(setCoachingMessage);
     }
   }, [latestScan, scanHistory, language]);
@@ -368,7 +387,7 @@ function AppContent() {
                     <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-[var(--border-color)] shadow-xl" referrerPolicy="no-referrer" />
                   )}
                   <button
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all text-sm"
                   >
                     <LogOut className="w-4 h-4" />

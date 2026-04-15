@@ -68,21 +68,41 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
     }
 
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: facingMode, width: { ideal: 720 }, height: { ideal: 1280 } },
+      // Use more flexible constraints to avoid issues on some devices
+      const constraints = {
+        video: { 
+          facingMode: facingMode,
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 }
+        },
         audio: false,
-      });
+      };
+
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
       setError(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Camera access error:", err);
+      
+      let errorMessage = t("Camera access denied. Please ensure you have granted permission in your browser settings.");
+      
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        errorMessage = t("Camera permission was denied. Please click the camera icon in your browser address bar to allow access, then click Retry.");
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        errorMessage = t("No camera found on this device.");
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        errorMessage = t("Camera is already in use by another application.");
+      }
+
       const isIframe = window.self !== window.top;
-      setError(isIframe 
-        ? t("Camera access is restricted in this preview. Please try opening the app in a new tab or uploading a photo manually.")
-        : t("Camera access denied. Please ensure you have granted permission in your browser settings."));
+      if (isIframe && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
+        errorMessage = t("Camera access is restricted in the preview iframe. Please click 'Open in New Tab' below to use your camera, or upload a photo manually.");
+      }
+
+      setError(errorMessage);
     }
   };
 
@@ -210,7 +230,44 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
               ctx.fillStyle = 'rgba(45, 212, 191, 0.05)';
               ctx.fillRect(boxX, boxY, boxW, boxH);
 
-              // Draw Key Landmarks (Eyes, Nose, Mouth Corners)
+              // Draw Key Features (Eyes, Nose, Mouth) with different styles
+              const drawPath = (indices: number[], color: string, lineWidth: number = 2, close: boolean = true) => {
+                ctx.beginPath();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = lineWidth;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                
+                indices.forEach((index, i) => {
+                  const pt = landmarks[index];
+                  if (pt) {
+                    if (i === 0) ctx.moveTo(pt.x * width, pt.y * height);
+                    else ctx.lineTo(pt.x * width, pt.y * height);
+                  }
+                });
+                
+                if (close) ctx.closePath();
+                ctx.stroke();
+                
+                // Add glow
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = color;
+                ctx.stroke();
+                ctx.shadowBlur = 0; // reset
+              };
+
+              // Left Eye
+              drawPath([33, 160, 158, 133, 153, 144], '#2dd4bf', 2);
+              // Right Eye
+              drawPath([362, 385, 387, 263, 373, 380], '#2dd4bf', 2);
+              // Lips Outer
+              drawPath([61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146], '#f43f5e', 2.5);
+              // Nose Bridge
+              drawPath([168, 6, 197, 195, 5], '#fbbf24', 2, false);
+              // Nose Bottom
+              drawPath([98, 2, 327], '#fbbf24', 2, false);
+
+              // Draw Key Landmark Points (Corners)
               const keyPoints = [
                 33, 133, // left eye corners
                 362, 263, // right eye corners
@@ -218,20 +275,19 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
                 61, 291, // mouth corners
               ];
 
-              ctx.fillStyle = '#ffffff';
               keyPoints.forEach(index => {
                 const pt = landmarks[index];
                 if (pt) {
+                  ctx.fillStyle = '#ffffff';
                   ctx.beginPath();
-                  ctx.arc(pt.x * width, pt.y * height, 2, 0, 2 * Math.PI);
+                  ctx.arc(pt.x * width, pt.y * height, 2.5, 0, 2 * Math.PI);
                   ctx.fill();
                   
-                  // Add subtle glow
+                  // Add extra glow for corners
                   ctx.beginPath();
-                  ctx.arc(pt.x * width, pt.y * height, 6, 0, 2 * Math.PI);
-                  ctx.fillStyle = 'rgba(45, 212, 191, 0.4)';
+                  ctx.arc(pt.x * width, pt.y * height, 8, 0, 2 * Math.PI);
+                  ctx.fillStyle = index === 61 || index === 291 ? 'rgba(244, 63, 94, 0.3)' : 'rgba(45, 212, 191, 0.3)';
                   ctx.fill();
-                  ctx.fillStyle = '#ffffff'; // reset
                 }
               });
 
@@ -240,16 +296,16 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
               ctx.fillStyle = '#2dd4bf';
               const nose = landmarks[1];
               if (nose) {
-                ctx.fillText(`X: ${nose.x.toFixed(3)}`, nose.x * width + 10, nose.y * height - 10);
-                ctx.fillText(`Y: ${nose.y.toFixed(3)}`, nose.x * width + 10, nose.y * height);
+                ctx.fillText(`BIOMETRIC_ID: ${Math.floor(nose.x * 10000)}`, nose.x * width + 15, nose.y * height - 15);
+                ctx.fillText(`CONFIDENCE: ${(results.faceLandmarks[0][0].visibility || 0.99).toFixed(2)}`, nose.x * width + 15, nose.y * height - 5);
               }
 
-              // Draw subtle mesh points
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+              // Draw subtle mesh points (background)
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
               landmarks.forEach((pt, i) => {
-                if (!keyPoints.includes(i) && i % 4 === 0) { // draw every 4th point
+                if (i % 8 === 0) { // draw every 8th point for a cleaner look
                   ctx.beginPath();
-                  ctx.arc(pt.x * width, pt.y * height, 0.8, 0, 2 * Math.PI);
+                  ctx.arc(pt.x * width, pt.y * height, 0.5, 0, 2 * Math.PI);
                   ctx.fill();
                 }
               });
@@ -443,6 +499,17 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--bg-card)] p-8 text-center z-30">
           <ShieldAlert className="w-12 h-12 text-rose-500 mb-4" />
           <p className="text-[var(--text-primary)] font-medium mb-2 text-sm">{error}</p>
+          
+          {error.includes("Free Quota Finish") && (
+            <motion.div 
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-3 rounded-xl bg-teal-500/5 border border-teal-500/10 text-[10px] text-teal-400/80 leading-relaxed font-mono"
+            >
+              {t('TIP: If this is a new window, ensure your API key in Settings is not restricted to specific domains.')}
+            </motion.div>
+          )}
+
           <p className="text-[var(--text-secondary)] text-xs mb-6 leading-relaxed">
             {t('If you are in a private browser or iframe, you may need to upload a photo manually.')}
           </p>

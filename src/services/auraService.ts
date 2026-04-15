@@ -59,7 +59,7 @@ export interface HealthAnalysis {
 }
 
 export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage: string): Promise<HealthAnalysis> {
-  const model = "gemini-flash-latest";
+  const model = "gemini-3-flash-preview";
   
   const prompt = `
     You are an expert medical translator. Translate the following JSON object representing a biometric health analysis into ${targetLanguage}.
@@ -105,14 +105,14 @@ export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage
       errorString.includes("api key not valid") ||
       errorString.includes("invalid_argument")
     ) {
-      throw new Error("Free Quota Finish for Today. Please Try again tomorrow !");
+      throw new Error("Daily AI analysis quota reached. Please try again tomorrow or use your own API key in the settings.");
     }
     throw new Error("Failed to translate results.");
   }
 }
 
 export async function generateCoachingMessage(history: HealthAnalysis[], latest: HealthAnalysis, language: string): Promise<string> {
-  const model = "gemini-flash-latest";
+  const model = "gemini-3-flash-preview";
   const prompt = `
     You are Aura, a persistent AI wellness coach. Your tone is motivational, scientific, and friendly.
     Analyze the user's latest health scan and their scan history to provide personalized, encouraging feedback.
@@ -139,7 +139,8 @@ export async function generateCoachingMessage(history: HealthAnalysis[], latest:
 }
 
 export async function analyzeFaceHealth(base64Image: string, language: string = 'English', focusArea: string = 'General Wellness'): Promise<HealthAnalysis> {
-  const model = "gemini-3.1-pro-preview";
+  // Use Flash for General Wellness to save costs (~90% cheaper), Pro for specific health focus areas
+  const model = focusArea === 'General Wellness' ? "gemini-3-flash-preview" : "gemini-3.1-pro-preview";
   
   const prompt = `
     You are a world-class AI Biometric Health Analyst specializing in non-invasive physiological assessment via facial mapping. Your task is to analyze the provided high-resolution facial image to detect subtle biometric markers that correlate with systemic health.
@@ -195,7 +196,7 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
     ### BUSINESS INTEGRATION:
     1. **Recommended Products:** Suggest 2-3 specific types of products (e.g., "Hyaluronic Acid Serum", "Zinc Supplement") that would help the user based on their results. Include a realistic brand name and price.
     2. **Personalized Nutrition:** Provide 2 simple meal ideas that target the critical findings. For each meal, provide:
-       - A descriptive 'image_keyword' for finding a relevant photo (e.g., "salmon-salad", "green-smoothie").
+       - A 'image_keyword' string containing 2-3 comma-separated tags for finding a relevant photo (e.g., "salmon,grilled,asparagus" or "smoothie,berry,spinach"). ALWAYS include "food" as one of the tags.
        - Detailed 'nutritional_info' including calories, protein, carbs, and fats.
 
     ### JSON STRUCTURE:
@@ -271,7 +272,7 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
       errorString.includes("api key not valid") ||
       errorString.includes("invalid_argument")
     ) {
-      throw new Error("Free Quota Finish for Today. Please Try again tomorrow !");
+      throw new Error("Daily AI analysis quota reached. Please try again tomorrow or use your own API key in the settings.");
     }
     
     throw new Error(`Failed to analyze facial health: ${error.message || "Unknown error"}`);

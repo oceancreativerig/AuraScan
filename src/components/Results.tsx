@@ -401,7 +401,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-display font-bold text-[var(--text-primary)] flex items-center gap-3">
               <ShoppingBag className="w-5 h-5 text-[var(--accent-teal)]" />
-              {t('Recommended for You')}
+              {t('Recommended products for you')}
             </h3>
             {!isPro && (
               <span className="text-[10px] font-mono bg-amber-500/10 text-amber-500 px-3 py-1 rounded-full uppercase tracking-[0.2em] flex items-center gap-1.5 border border-amber-500/20">
@@ -419,18 +419,17 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
                     <span className="text-[10px] font-mono text-[var(--accent-teal)] uppercase tracking-[0.3em] mb-1.5 block">{product.brand || t('Premium Choice')}</span>
                     <h4 className="font-bold text-[var(--text-primary)] text-xl tracking-tight">{product.name}</h4>
                   </div>
-                  <span className="text-sm font-bold text-[var(--text-primary)] bg-[var(--bg-card)] px-4 py-1.5 rounded-xl border border-[var(--border-color)] shadow-xl">{product.price || '$--.--'}</span>
                 </div>
                 <p className="text-sm text-[var(--text-secondary)] mb-5 leading-relaxed font-light">{product.reason}</p>
                 <div className="flex gap-3">
                   <a 
-                    href={product.link} 
+                    href={`https://www.google.com/search?q=${encodeURIComponent(product.name)}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex-1 px-4 py-3 bg-[var(--text-primary)] text-[var(--bg-card)] text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-xl"
                   >
-                    <ShoppingCart className="w-4 h-4" />
-                    {t('Add to Cart')}
+                    <ExternalLink className="w-4 h-4" />
+                    {t('get it')}
                   </a>
                   <button 
                     onClick={() => setSelectedProduct(product)}
@@ -480,7 +479,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
               <div key={idx} className="bg-[var(--bg-card-hover)] rounded-2xl border border-[var(--border-color)] overflow-hidden group hover:border-[var(--accent-teal-border)] transition-all shadow-xl">
                 <div className="h-44 w-full relative overflow-hidden">
                   <img 
-                    src={`https://picsum.photos/seed/${meal.image_keyword || 'healthy-food'}/600/400`} 
+                    src={`https://loremflickr.com/600/400/${encodeURIComponent((meal.image_keyword || meal.title || 'food').replace(/-/g, ','))}/all?lock=${meal.title.length + idx}`} 
                     alt={meal.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     referrerPolicy="no-referrer"
@@ -615,9 +614,6 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <div className="px-5 py-2.5 bg-[var(--text-primary)] text-[var(--bg-card)] rounded-xl font-bold text-xl shadow-xl">
-                      {selectedProduct.price || '$--.--'}
-                    </div>
                     <span className="text-[10px] font-mono text-[var(--text-secondary)] uppercase tracking-[0.2em]">
                       {selectedProduct.type === 'SKINCARE' ? t('Skincare Solution') : t('Wellness Supplement')}
                     </span>
@@ -634,13 +630,13 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
 
                   <div className="flex gap-4 pt-4">
                     <a
-                      href={selectedProduct.link}
+                      href={`https://www.google.com/search?q=${encodeURIComponent(selectedProduct.name)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 px-8 py-4 bg-[var(--text-primary)] text-[var(--bg-card)] font-bold rounded-full flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
                     >
-                      <ShoppingCart className="w-5 h-5" />
-                      {t('Buy Now')}
+                      <ExternalLink className="w-5 h-5" />
+                      {t('get it')}
                     </a>
                     <a
                       href={selectedProduct.link}

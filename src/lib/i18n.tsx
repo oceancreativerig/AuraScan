@@ -112,6 +112,36 @@ export const translations: Translations = {
     Portuguese: "Acesso à câmera negado. Permita o acesso na configuração do seu navegador e tente novamente.",
     Russian: "Доступ к камере запрещен. Пожалуйста, разрешите доступ к камере в настройках вашего браузера и повторите попытку."
   },
+  "Camera permission was denied. Please click the camera icon in your browser address bar to allow access, then click Retry.": {
+    English: "Camera permission was denied. Please click the camera icon in your browser address bar to allow access, then click Retry.",
+    Spanish: "Permiso de cámara denegado. Haz clic en el icono de la cámara en la barra de direcciones para permitir el acceso.",
+    French: "Autorisation caméra refusée. Cliquez sur l'icône caméra dans la barre d'adresse pour autoriser l'accès.",
+    German: "Kameraberechtigung verweigert. Klicken Sie auf das Kamerasymbol in der Adressleiste, um den Zugriff zu erlauben.",
+    Chinese: "相机权限被拒绝。请点击浏览器地址栏中的相机图标以允许访问。",
+    Japanese: "カメラの権限が拒否されました。アドレスバーのカメラアイコンをクリックしてアクセスを許可してください。",
+    Hindi: "कैमरा अनुमति अस्वीकृत। कृपया पहुंच की अनुमति देने के लिए ब्राउज़र एड्रेस बार में कैमरा आइकन पर क्लिक करें।",
+    Arabic: "تم رفض إذن الكاميرا. يرجى النقر فوق أيقونة الكاميرا في شريط عنوان المتصفح للسماح بالوصول.",
+    Portuguese: "Permissão de câmera negada. Clique no ícone da câmera na barra de endereços para permitir o acesso.",
+    Russian: "В разрешении на использование камеры отказано. Нажмите на значок камеры в адресной строке браузера."
+  },
+  "No camera found on this device.": {
+    English: "No camera found on this device.", Spanish: "No se encontró ninguna cámara.", French: "Aucune caméra trouvée.", German: "Keine Kamera gefunden.", Chinese: "未找到相机。", Japanese: "カメラが見つかりません。", Hindi: "कोई कैमरा नहीं मिला।", Arabic: "لم يتم العثور على كاميرا.", Portuguese: "Nenhuma câmera encontrada.", Russian: "Камера не найдена."
+  },
+  "Camera is already in use by another application.": {
+    English: "Camera is already in use by another application.", Spanish: "La cámara ya está en uso.", French: "La caméra est déjà utilisée.", German: "Kamera wird bereits verwendet.", Chinese: "相机已被占用。", Japanese: "カメラは既に使用中です。", Hindi: "कैमरा पहले से ही उपयोग में है।", Arabic: "الكاميرا قيد الاستخدام بالفعل.", Portuguese: "A câmera já está em uso.", Russian: "Камера уже используется."
+  },
+  "Camera access is restricted in this preview. Please try opening the app in a new tab using the button below.": {
+    English: "Camera access is restricted in this preview. Please try opening the app in a new tab using the button below.",
+    Spanish: "El acceso a la cámara está restringido. Ábrelo en una nueva pestaña.",
+    French: "L'accès à la caméra est restreint. Ouvrez dans un nouvel onglet.",
+    German: "Kamerazugriff eingeschränkt. In neuem Tab öffnen.",
+    Chinese: "此预览中相机访问受限。请使用下方按钮在新标签页中打开。",
+    Japanese: "プレビューではカメラへのアクセスが制限されています。下のボタンから新しいタブで開いてください。",
+    Hindi: "इस पूर्वावलोकन में कैमरा एक्सेस प्रतिबंधित है। कृपया नीचे दिए गए बटन का उपयोग करके नए टैब में खोलें।",
+    Arabic: "الوصول إلى الكاميرا مقيد. يرجى المحاولة في علامة تبويب جديدة.",
+    Portuguese: "O acesso à câmera está restrito. Abra em uma nova guia.",
+    Russian: "Доступ к камере ограничен. Откройте в новой вкладке."
+  },
   "Failed to load AI models. Please refresh.": {
     English: "Failed to load AI models. Please refresh.", Spanish: "Error al cargar modelos de IA. Por favor, actualiza.", French: "Échec du chargement des modèles IA. Veuillez rafraîchir.", German: "Fehler beim Laden der KI-Modelle. Bitte aktualisieren.", Chinese: "加载AI模型失败。请刷新。", Japanese: "AIモデルの読み込みに失敗しました。更新してください。", Hindi: "एआई मॉडल लोड करने में विफल। कृपया रीफ्रेश करें।", Arabic: "فشل تحميل نماذج الذكاء الاصطناعي. يرجى التحديث.", Portuguese: "Falha ao carregar modelos de IA. Atualize a página.", Russian: "Не удалось загрузить ИИ-модели. Пожалуйста, обновите страницу."
   },
@@ -369,6 +399,12 @@ export const translations: Translations = {
   },
   "Sending...": {
     English: "Sending...", Spanish: "Enviando...", French: "Envoi en cours...", German: "Wird gesendet...", Chinese: "正在发送...", Japanese: "送信中...", Hindi: "भेजा जा रहा है...", Arabic: "جاري الإرسال...", Portuguese: "Enviando...", Russian: "Отправка..."
+  },
+  "Recommended products for you": {
+    English: "Recommended products for you", Spanish: "Productos recomendados para ti", French: "Produits recommandés pour vous", German: "Empfohlene Produkte für Sie", Chinese: "为您推荐的产品", Japanese: "あなたへのおすすめ商品", Hindi: "आपके लिए अनुशंसित उत्पाद", Arabic: "المنتجات الموصى بها لك", Portuguese: "Produtos Recomendados para Você", Russian: "Рекомендованные товары для вас"
+  },
+  "get it": {
+    English: "get it", Spanish: "obtener", French: "l'obtenir", German: "hol es dir", Chinese: "获取", Japanese: "手に入れる", Hindi: "इसे प्राप्त करें", Arabic: "احصل عليه", Portuguese: "obter", Russian: "получить"
   },
   "Add to Cart": {
     English: "Add to Cart", Spanish: "Añadir al carrito", French: "Ajouter au panier", German: "In den Warenkorb", Chinese: "加入购物车", Japanese: "カートに入れる", Hindi: "कार्ट में जोड़ें", Arabic: "أضف إلى السلة", Portuguese: "Adicionar ao Carrinho", Russian: "Добавить в корзину"
