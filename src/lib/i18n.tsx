@@ -340,6 +340,81 @@ export const translations: Translations = {
   "Admin Control Panel": {
     English: "Admin Control Panel", Spanish: "Panel de control del administrador", French: "Panneau de configuration de l'administrateur", German: "Admin-Kontrollzentrum", Chinese: "管理员控制面板", Japanese: "管理者コントロールパネル", Hindi: "व्यवस्थापक नियंत्रण कक्ष", Arabic: "لوحة تحكم المشرف", Portuguese: "Painel de Controle do Administrador", Russian: "Панель управления администратора"
   },
+  "Total Scans": {
+    English: "Total Scans", Spanish: "Escaneos totales", French: "Total des scans", German: "Gesamtscans", Chinese: "总扫描次数", Japanese: "総スキャン数", Hindi: "कुल स्कैन", Arabic: "إجمالي عمليات المسح", Portuguese: "Total de Scans", Russian: "Всего сканирований"
+  },
+  "API & System": {
+    English: "API & System", Spanish: "API y sistema", French: "API et système", German: "API & System", Chinese: "API与系统", Japanese: "APIとシステム", Hindi: "एपीआई और सिस्टम", Arabic: "واجهة برمجة التطبيقات والنظام", Portuguese: "API e Sistema", Russian: "API и система"
+  },
+  "Gemini AI API Status": {
+    English: "Gemini AI API Status", Spanish: "Estado de la API de Gemini AI", French: "Statut de l'API Gemini AI", German: "Gemini AI API Status", Chinese: "Gemini AI API状态", Japanese: "Gemini AI APIステータス", Hindi: "जेमिनी एआई एपीआई स्थिति", Arabic: "حالة واجهة برمجة تطبيقات Gemini AI", Portuguese: "Status da API Gemini AI", Russian: "Статус Gemini AI API"
+  },
+  "API Configuration": {
+    English: "API Configuration", Spanish: "Configuración de API", French: "Configuration de l'API", German: "API-Konfiguration", Chinese: "API配置", Japanese: "API設定", Hindi: "एपीआई कॉन्फ़िगरेशन", Arabic: "تكوين واجهة برمجة التطبيقات", Portuguese: "Configuração da API", Russian: "Конфигурация API"
+  },
+  "Active & Connected": {
+    English: "Active & Connected", Spanish: "Activo y conectado", French: "Actif et connecté", German: "Aktiv & Verbunden", Chinese: "已激活并连接", Japanese: "アクティブで接続済み", Hindi: "सक्रिय और जुड़ा हुआ", Arabic: "نشط ومتصل", Portuguese: "Ativo e Conectado", Russian: "Активен и подключен"
+  },
+  "Current Model": {
+    English: "Current Model", Spanish: "Modelo actual", French: "Modèle actuel", German: "Aktuelles Modell", Chinese: "当前模型", Japanese: "現在のモデル", Hindi: "वर्तमान मॉडल", Arabic: "النموذج الحالي", Portuguese: "Modelo Atual", Russian: "Текущая модель"
+  },
+  "Estimated Balance": {
+    English: "Estimated Balance", Spanish: "Saldo estimado", French: "Solde estimé", German: "Geschätztes Guthaben", Chinese: "预估余额", Japanese: "推定残高", Hindi: "अनुमानित शेष", Arabic: "الرصيد التقديري", Portuguese: "Saldo Estimado", Russian: "Оценочный баланс"
+  },
+  "UNLIMITED PREVIEW": {
+    English: "UNLIMITED PREVIEW", Spanish: "VISTA PREVIA ILIMITADA", French: "APERÇU ILLIMITÉ", German: "UNBEGRENZTE VORSCHAU", Chinese: "无限预览", Japanese: "無制限プレビュー", Hindi: "असीमित पूर्वावलोकन", Arabic: "معاينة غير محدودة", Portuguese: "PRÉ-VISUALIZAÇÃO ILIMITADA", Russian: "НЕОГРАНИЧЕННЫЙ ПРОСМОТР"
+  },
+  "Usage Insights": {
+    English: "Usage Insights", Spanish: "Información de uso", French: "Aperçu de l'utilisation", German: "Nutzungseinblicke", Chinese: "使用洞察", Japanese: "使用状況のインサイト", Hindi: "उपयोग अंतर्दृष्टि", Arabic: "رؤى الاستخدام", Portuguese: "Insights de Uso", Russian: "Аналитика использования"
+  },
+  "Avg. Cost per Scan": {
+    English: "Avg. Cost per Scan", Spanish: "Costo promedio por escaneo", French: "Coût moyen por scan", German: "Durchschn. Kosten pro Scan", Chinese: "每次扫描平均成本", Japanese: "スキャンあたりの平均コスト", Hindi: "प्रति स्कैन औसत लागत", Arabic: "متوسط التكلفة لكل مسح", Portuguese: "Custo Médio por Scan", Russian: "Средняя стоимость сканирования"
+  },
+  "Total Estimated Cost": {
+    English: "Total Estimated Cost", Spanish: "Costo total estimado", French: "Coût total estimé", German: "Geschätzte Gesamtkosten", Chinese: "总预估成本", Japanese: "推定総コスト", Hindi: "कुल अनुमानित लागत", Arabic: "إجمالي التكلفة التقديرية", Portuguese: "Custo Total Estimado", Russian: "Общая оценочная стоимость"
+  },
+  "Quota Reset": {
+    English: "Quota Reset", Spanish: "Restablecimiento de cuota", French: "Réinitialisation du quota", German: "Kontingent-Reset", Chinese: "配额重置", Japanese: "クォータのリセット", Hindi: "कोटा रीसेट", Arabic: "إعادة تعيين الحصة", Portuguese: "Redefinição de Cota", Russian: "Сброс квоты"
+  },
+  "Note: Costs are estimated based on Gemini Flash pricing. Actual billing is handled via your Google Cloud Console.": {
+    English: "Note: Costs are estimated based on Gemini Flash pricing. Actual billing is handled via your Google Cloud Console.",
+    Spanish: "Nota: Los costos se estiman según los precios de Gemini Flash. La facturación real se gestiona a través de Google Cloud Console.",
+    French: "Note : Les coûts sont estimés sur la base des tarifs de Gemini Flash. La facturación real se gestiona a través de Google Cloud Console.",
+    German: "Hinweis: Die Kosten werden basierend auf den Gemini Flash-Preisen geschätzt. Die tatsächliche Abrechnung erfolgt über Ihre Google Cloud Console.",
+    Chinese: "注：成本是根据 Gemini Flash 定价估算的。实际账单通过您的 Google Cloud 控制台处理。",
+    Japanese: "注：コストは Gemini Flash の価格に基づいて推定されています。実際の請求は Google Cloud コンソールで処理されます。",
+    Hindi: "नोट: लागत जेमिनी फ्लैश मूल्य निर्धारण के आधार पर अनुमानित है। वास्तविक बिलिंग आपके Google क्लाउड कंसोल के माध्यम से नियंत्रित की जाती है।",
+    Arabic: "ملاحظة: يتم تقدير التكاليف بناءً على تسعير Gemini Flash. يتم التعامل مع الفواتير الفعلية عبر Google Cloud Console.",
+    Portuguese: "Nota: Os custos são estimados com base nos preços do Gemini Flash. O faturamento real é gerenciado pelo Google Cloud Console.",
+    Russian: "Примечание: Расходы оцениваются на основе цен Gemini Flash. Фактическое выставление счетов осуществляется через Google Cloud Console."
+  },
+  "External Client Access": {
+    English: "External Client Access", Spanish: "Acceso de cliente externo", French: "Accès client externe", German: "Externer Client-Zugriff", Chinese: "外部客户端访问", Japanese: "外部クライアントアクセス", Hindi: "बाहरी क्लाइंट एक्सेस", Arabic: "وصول العميل الخارجي", Portuguese: "Acesso de Cliente Externo", Russian: "Доступ внешнего клиента"
+  },
+  "Your API is currently configured to allow requests from authorized clients. To allow other applications to use your Gemini key, they should connect via your backend proxy endpoint:": {
+    English: "Your API is currently configured to allow requests from authorized clients. To allow other applications to use your Gemini key, they should connect via your backend proxy endpoint:",
+    Spanish: "Su API está configurada actualmente para permitir solicitudes de clientes autorizados. Para permitir que otras aplicaciones usen su clave Gemini, deben conectarse a través de su punto final de proxy de backend:",
+    French: "Votre API est actuellement configurée pour autoriser les requêtes de clients autorisés. Pour permettre à d'autres applications d'utiliser votre clé Gemini, elles doivent se connecter via votre point de terminaison proxy backend :",
+    German: "Ihre API ist derzeit so konfiguriert, dass Anfragen von autorisierten Clients zulässig sind. Damit andere Anwendungen Ihren Gemini-Schlüssel verwenden können, sollten sie über Ihren Backend-Proxy-Endpunkt eine Verbindung herstellen:",
+    Chinese: "您的 API 目前配置为允许来自授权客户端的请求。要允许其他应用程序使用您的 Gemini 密钥，它们应通过您的后端代理端点连接：",
+    Japanese: "API は現在、承認されたクライアントからのリクエストを許可するように構成されています。他のアプリケーションが Gemini キーを使用できるようにするには、バックエンド プロキシ エンドポイント経由で接続する必要があります。",
+    Hindi: "आपका एपीआई वर्तमान में अधिकृत क्लाइंट से अनुरोधों की अनुमति देने के लिए कॉन्फ़िगर किया गया है। अन्य अनुप्रयोगों को आपकी जेमिनी कुंजी का उपयोग करने की अनुमति देने के लिए, उन्हें आपके बैकएंड प्रॉक्सी एंडपॉइंट के माध्यम से जुड़ना चाहिए:",
+    Arabic: "تم تكوين واجهة برمجة التطبيقات الخاصة بك حاليًا للسماح بالطلبات من العملاء المصرح لهم. للسماح للتطبيقات الأخرى باستخدام مفتاح Gemini الخاص بك ، يجب عليهم الاتصال عبر نقطة نهاية وكيل الواجهة الخلفية:",
+    Portuguese: "Sua API está configurada atualmente para permitir solicitações de clientes autorizados. Para permitir que outros aplicativos usem sua chave Gemini, eles devem se conectar por meio do seu endpoint de proxy de back-end:",
+    Russian: "Ваш API в настоящее время настроен на разрешение запросов от авторизованных клиентов. Чтобы разрешить другим приложениям использовать ваш ключ Gemini, они должны подключаться через вашу прокси-точку бэкенда:"
+  },
+  "Security Warning: Ensure you implement proper authentication (JWT/API Keys) if exposing this endpoint publicly.": {
+    English: "Security Warning: Ensure you implement proper authentication (JWT/API Keys) if exposing this endpoint publicly.",
+    Spanish: "Advertencia de seguridad: asegúrese de implementar la autenticación adecuada (JWT/claves API) si expone este punto final públicamente.",
+    French: "Avertissement de sécurité : assurez-vous d'implémenter une autenticación adecuada (JWT/clés API) si vous exposez ce point de terminaison publiquement.",
+    German: "Sicherheitshinweis: Stellen Sie sicher, dass Sie eine ordnungsgemäße Authentifizierung (JWT/API-Schlüssel) implementieren, wenn Sie diesen Endpunkt öffentlich verfügbar machen.",
+    Chinese: "安全警告：如果公开此端点，请确保实施适当的身份验证（JWT/API 密钥）。",
+    Japanese: "セキュリティ警告: このエンドポイントを公開する場合は、適切な認証 (JWT/API キー) を実装してください。",
+    Hindi: "सुरक्षा चेतावनी: यदि इस एंडपॉइंट को सार्वजनिक रूप से प्रदर्शित किया जा रहा है, तो सुनिश्चित करें कि आप उचित प्रमाणीकरण (JWT/API कुंजियाँ) लागू करते हैं।",
+    Arabic: "تحذير أمني: تأكد من تنفيذ المصادقة المناسبة (JWT / مفاتيح API) إذا كنت تعرض نقطة النهاية هذه علنًا.",
+    Portuguese: "Aviso de Segurança: Certifique-se de implementar a autenticação adequada (JWT/Chaves de API) se expuser este endpoint publicamente.",
+    Russian: "Предупреждение о безопасности: убедитесь, что вы внедрили надлежащую аутентификацию (JWT/API-ключи), если выставляете эту конечную точку публично."
+  },
   "Total Feedback": {
     English: "Total Feedback", Spanish: "Comentarios totales", French: "Commentaires totaux", German: "Gesamtes Feedback", Chinese: "总反馈", Japanese: "総フィードバック", Hindi: "कुल प्रतिक्रिया", Arabic: "إجمالي الملاحظات", Portuguese: "Total de Feedback", Russian: "Всего отзывов"
   },

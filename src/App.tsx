@@ -5,12 +5,13 @@ import { History } from './components/History';
 import { FeedbackModal } from './components/FeedbackModal';
 import { Onboarding } from './components/Onboarding';
 import { CoachCard } from './components/CoachCard';
-import { analyzeFaceHealth, translateAnalysis, HealthAnalysis, generateCoachingMessage } from './services/auraService';
+import { analyzeFaceHealth, translateAnalysis, generateCoachingMessage } from './services/auraService';
+import { HealthAnalysis } from './types';
 import { Shield, Sparkles, Activity, LogIn, LogOut, Clock, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './lib/firebase';
 import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
-import { doc, setDoc, collection, addDoc, serverTimestamp, query, orderBy, limit, onSnapshot, getDoc, getDocFromServer } from 'firebase/firestore';
+import { doc, setDoc, collection, addDoc, serverTimestamp, query, orderBy, limit, onSnapshot, getDoc, getDocFromServer, updateDoc, increment } from 'firebase/firestore';
 import { useLanguage, languages } from './lib/i18n';
 
 import { AdminPanel } from './components/AdminPanel';
@@ -264,6 +265,17 @@ function AppContent() {
             createdAt: serverTimestamp()
           });
           setCurrentScanId(docRef.id);
+
+          // Increment global counter for admin panel
+          const statsRef = doc(db, 'stats', 'global');
+          try {
+            await updateDoc(statsRef, {
+              totalScans: increment(1)
+            });
+          } catch (e) {
+            // If doc doesn't exist, create it
+            await setDoc(statsRef, { totalScans: 1 }, { merge: true });
+          }
         } catch (err) {
           handleFirestoreError(err, OperationType.CREATE, scansPath);
         }

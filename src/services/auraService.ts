@@ -1,66 +1,6 @@
-import { GoogleGenAI } from "@google/genai";
-
-let aiClient: GoogleGenAI | null = null;
-
-function getAIClient(): GoogleGenAI {
-  if (!aiClient) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY environment variable is required");
-    }
-    aiClient = new GoogleGenAI({ apiKey });
-  }
-  return aiClient;
-}
-
-export interface HealthAnalysis {
-  summary: string;
-  overall_score: number;
-  language?: string;
-  indicators: {
-    label: string;
-    status: 'optimal' | 'fair' | 'attention_needed';
-    score: number;
-    confidence: number;
-    facial_signs: string[];
-    affected_regions: ('forehead' | 'eyes' | 'cheeks' | 'nose' | 'mouth' | 'jawline' | 'skin_overall')[];
-    systemic_implication: string;
-  }[];
-  recommendations: {
-    category: string;
-    tip: string;
-  }[];
-  products?: {
-    name: string;
-    type: 'SKINCARE' | 'SUPPLEMENT';
-    reason: string;
-    link: string;
-    brand?: string;
-    price?: string;
-  }[];
-  meals?: {
-    title: string;
-    description: string;
-    ingredients: string[];
-    image_keyword: string;
-    nutritional_info: {
-      calories: number;
-      protein: string;
-      carbs: string;
-      fats: string;
-    };
-  }[];
-  challenge: {
-    title: string;
-    description: string;
-    days: { day: number; task: string; completed?: boolean }[];
-  };
-  disclaimer: string;
-}
+import { HealthAnalysis } from "../types";
 
 export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage: string): Promise<HealthAnalysis> {
-  const model = "gemini-3-flash-preview";
-  
   const prompt = `
     You are an expert medical translator. Translate the following JSON object representing a biometric health analysis into ${targetLanguage}.
     
@@ -77,42 +17,27 @@ export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage
   `;
 
   try {
-    const response = await getAIClient().models.generateContent({
-      model,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-      }
+    const response = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
     });
 
-    const result = JSON.parse(response.text || "{}");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to translate results");
+    }
+
+    const data = await response.json();
+    const result = JSON.parse(data.text || "{}");
     return { ...result, language: targetLanguage } as HealthAnalysis;
   } catch (error: any) {
     console.error("Aura Translation Error:", error);
-    const errorMessage = (error?.message || "").toLowerCase();
-    const errorString = JSON.stringify(error).toLowerCase();
-    
-    if (
-      errorMessage.includes("429") || 
-      errorMessage.includes("quota") || 
-      errorMessage.includes("resource_exhausted") ||
-      errorMessage.includes("api key") ||
-      errorMessage.includes("api_key_invalid") ||
-      errorMessage.includes("invalid") ||
-      errorString.includes("429") ||
-      errorString.includes("quota") ||
-      errorString.includes("api_key_invalid") ||
-      errorString.includes("api key not valid") ||
-      errorString.includes("invalid_argument")
-    ) {
-      throw new Error("Daily AI analysis quota reached. Please try again tomorrow or use your own API key in the settings.");
-    }
-    throw new Error("Failed to translate results.");
+    throw error;
   }
 }
 
 export async function generateCoachingMessage(history: HealthAnalysis[], latest: HealthAnalysis, language: string): Promise<string> {
-  const model = "gemini-3-flash-preview";
   const prompt = `
     You are Aura, a persistent AI wellness coach. Your tone is motivational, scientific, and friendly.
     Analyze the user's latest health scan and their scan history to provide personalized, encouraging feedback.
@@ -127,11 +52,19 @@ export async function generateCoachingMessage(history: HealthAnalysis[], latest:
   `;
 
   try {
-    const response = await getAIClient().models.generateContent({
-      model,
-      contents: prompt,
+    const response = await fetch("/api/coach", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
     });
-    return response.text?.trim() || "Keep up the great work on your wellness journey!";
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to generate coaching message");
+    }
+
+    const data = await response.json();
+    return data.text?.trim() || "Keep up the great work on your wellness journey!";
   } catch (error: any) {
     console.error("Aura Coaching Error:", error);
     return "Keep up the great work on your wellness journey!";
@@ -139,9 +72,6 @@ export async function generateCoachingMessage(history: HealthAnalysis[], latest:
 }
 
 export async function analyzeFaceHealth(base64Image: string, language: string = 'English', focusArea: string = 'General Wellness'): Promise<HealthAnalysis> {
-  // Use Flash for General Wellness to save costs (~90% cheaper), Pro for specific health focus areas
-  const model = focusArea === 'General Wellness' ? "gemini-3-flash-preview" : "gemini-3.1-pro-preview";
-  
   const prompt = `
     You are a world-class AI Biometric Health Analyst specializing in non-invasive physiological assessment via facial mapping. Your task is to analyze the provided high-resolution facial image to detect subtle biometric markers that correlate with systemic health.
 
@@ -234,47 +164,23 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
     }
   `;
 
-  const imagePart = {
-    inlineData: {
-      mimeType: "image/jpeg",
-      data: base64Image,
-    },
-  };
-
   try {
-    const response = await getAIClient().models.generateContent({
-      model,
-      contents: { parts: [imagePart, { text: prompt }] },
-      config: {
-        responseMimeType: "application/json",
-      }
+    const response = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ base64Image, language, focusArea, prompt }),
     });
 
-    const result = JSON.parse(response.text || "{}");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to analyze facial health");
+    }
+
+    const data = await response.json();
+    const result = JSON.parse(data.text || "{}");
     return { ...result, language } as HealthAnalysis;
   } catch (error: any) {
-    console.error("Aura Analysis Error Details:", JSON.stringify(error, null, 2));
-    
-    // Check if it's a quota/rate limit error or API key error
-    const errorMessage = (error?.message || "").toLowerCase();
-    const errorString = JSON.stringify(error).toLowerCase();
-    
-    if (
-      errorMessage.includes("429") || 
-      errorMessage.includes("quota") || 
-      errorMessage.includes("resource_exhausted") ||
-      errorMessage.includes("api key") ||
-      errorMessage.includes("api_key_invalid") ||
-      errorMessage.includes("invalid") ||
-      errorString.includes("429") ||
-      errorString.includes("quota") ||
-      errorString.includes("api_key_invalid") ||
-      errorString.includes("api key not valid") ||
-      errorString.includes("invalid_argument")
-    ) {
-      throw new Error("Daily AI analysis quota reached. Please try again tomorrow or use your own API key in the settings.");
-    }
-    
-    throw new Error(`Failed to analyze facial health: ${error.message || "Unknown error"}`);
+    console.error("Aura Analysis Error:", error);
+    throw error;
   }
 }

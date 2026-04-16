@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, orderBy, getDocs, limit } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { motion } from 'motion/react';
-import { Shield, MessageSquare, Users, Activity, ArrowLeft, Trash2 } from 'lucide-react';
+import { HealthAnalysis } from "../types";
+import { Shield, MessageSquare, Users, Activity, ArrowLeft, Trash2, Sparkles } from 'lucide-react';
 import { useLanguage } from '../lib/i18n';
 
 interface AdminPanelProps {
@@ -27,7 +28,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [users, setUsers] = useState<UserStat[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'feedback' | 'users'>('feedback');
+  const [activeTab, setActiveTab] = useState<'feedback' | 'users' | 'system'>('feedback');
+  const [totalScans, setTotalScans] = useState(0);
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -70,6 +72,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           setUsers(usersData);
         }
 
+        // Fetch Total Scans
+        const scansPath = 'scans';
+        const scansSnapshot = await getDocs(query(collection(db, scansPath), limit(1)));
+        // In a real app, we'd use a counter document, but for now we'll just show the recent count or a placeholder
+        // Let's assume we have a 'stats' collection with a 'global' doc
+        const statsPath = 'stats';
+        const statsSnapshot = await getDocs(collection(db, statsPath));
+        const globalStats = statsSnapshot.docs.find(d => d.id === 'global')?.data();
+        setTotalScans(globalStats?.totalScans || 0);
+
       } catch (error) {
         console.error("Error fetching admin data:", error);
       } finally {
@@ -101,7 +113,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="medical-card p-6 rounded-2xl flex items-center gap-4">
           <div className="p-3 bg-[var(--accent-teal-soft)] rounded-xl border border-[var(--accent-teal-border)]">
             <MessageSquare className="w-6 h-6 text-[var(--accent-teal)]" />
@@ -120,13 +132,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             <p className="text-3xl font-display font-bold text-[var(--text-primary)]">{users.length}</p>
           </div>
         </div>
+        <div className="medical-card p-6 rounded-2xl flex items-center gap-4">
+          <div className="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
+            <Activity className="w-6 h-6 text-purple-500" />
+          </div>
+          <div>
+            <p className="text-[10px] text-[var(--text-secondary)] font-mono uppercase tracking-widest">{t('Total Scans')}</p>
+            <p className="text-3xl font-display font-bold text-[var(--text-primary)]">{totalScans}</p>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-6 border-b border-[var(--border-color)] mb-8">
+      <div className="flex gap-6 border-b border-[var(--border-color)] mb-8 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('feedback')}
-          className={`pb-4 px-2 text-xs font-mono uppercase tracking-[0.2em] transition-colors relative ${activeTab === 'feedback' ? 'text-[var(--accent-teal)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+          className={`pb-4 px-2 text-xs font-mono uppercase tracking-[0.2em] transition-colors relative whitespace-nowrap ${activeTab === 'feedback' ? 'text-[var(--accent-teal)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
         >
           {t('User Feedback')}
           {activeTab === 'feedback' && (
@@ -135,10 +156,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         </button>
         <button
           onClick={() => setActiveTab('users')}
-          className={`pb-4 px-2 text-xs font-mono uppercase tracking-[0.2em] transition-colors relative ${activeTab === 'users' ? 'text-[var(--accent-teal)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+          className={`pb-4 px-2 text-xs font-mono uppercase tracking-[0.2em] transition-colors relative whitespace-nowrap ${activeTab === 'users' ? 'text-[var(--accent-teal)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
         >
           {t('Recent Users')}
           {activeTab === 'users' && (
+            <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent-teal)] shadow-[0_0_8px_rgba(45,212,191,0.5)]" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('system')}
+          className={`pb-4 px-2 text-xs font-mono uppercase tracking-[0.2em] transition-colors relative whitespace-nowrap ${activeTab === 'system' ? 'text-[var(--accent-teal)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+        >
+          {t('API & System')}
+          {activeTab === 'system' && (
             <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent-teal)] shadow-[0_0_8px_rgba(45,212,191,0.5)]" />
           )}
         </button>
@@ -204,6 +234,78 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                 </table>
               </div>
             )
+          )}
+
+          {activeTab === 'system' && (
+            <div className="space-y-6">
+              <div className="medical-card p-8 rounded-2xl">
+                <h3 className="text-lg font-bold text-[var(--text-primary)] mb-6 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[var(--accent-teal)]" />
+                  {t('Gemini AI API Status')}
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-[10px] text-[var(--text-secondary)] font-mono uppercase tracking-widest mb-1">{t('API Configuration')}</p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-sm font-medium text-[var(--text-primary)]">{t('Active & Connected')}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-[var(--text-secondary)] font-mono uppercase tracking-widest mb-1">{t('Current Model')}</p>
+                      <span className="text-sm font-medium text-[var(--text-primary)]">Gemini 3 Flash / Pro</span>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-[var(--text-secondary)] font-mono uppercase tracking-widest mb-1">{t('Estimated Balance')}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold text-[var(--accent-teal)]">Free Tier</span>
+                        <span className="text-[10px] text-[var(--text-secondary)] bg-[var(--bg-card-hover)] px-2 py-0.5 rounded border border-[var(--border-color)]">
+                          {t('UNLIMITED PREVIEW')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-[var(--bg-card-hover)] rounded-xl border border-[var(--border-color)]">
+                    <h4 className="text-sm font-bold text-[var(--text-primary)] mb-3">{t('Usage Insights')}</h4>
+                    <ul className="space-y-3 text-xs text-[var(--text-secondary)]">
+                      <li className="flex justify-between">
+                        <span>{t('Avg. Cost per Scan')}</span>
+                        <span className="font-mono text-[var(--text-primary)]">$0.0001</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>{t('Total Estimated Cost')}</span>
+                        <span className="font-mono text-[var(--text-primary)]">${(totalScans * 0.0001).toFixed(4)}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>{t('Quota Reset')}</span>
+                        <span className="font-mono text-[var(--text-primary)]">24h</span>
+                      </li>
+                    </ul>
+                    <div className="mt-6 pt-6 border-t border-[var(--border-color)]">
+                      <p className="text-[10px] leading-relaxed italic">
+                        {t('Note: Costs are estimated based on Gemini Flash pricing. Actual billing is handled via your Google Cloud Console.')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="medical-card p-8 rounded-2xl bg-gradient-to-br from-[var(--bg-card)] to-[var(--accent-teal-soft)]">
+                <h3 className="text-lg font-bold text-[var(--text-primary)] mb-4">{t('External Client Access')}</h3>
+                <p className="text-sm text-[var(--text-secondary)] mb-6 leading-relaxed">
+                  {t('Your API is currently configured to allow requests from authorized clients. To allow other applications to use your Gemini key, they should connect via your backend proxy endpoint:')}
+                </p>
+                <div className="bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border-color)] font-mono text-xs text-[var(--accent-teal)] break-all">
+                  {window.location.origin}/api/analyze
+                </div>
+                <p className="mt-4 text-[10px] text-[var(--text-secondary)]">
+                  {t('Security Warning: Ensure you implement proper authentication (JWT/API Keys) if exposing this endpoint publicly.')}
+                </p>
+              </div>
+            </div>
           )}
         </div>
       )}

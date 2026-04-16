@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { HealthAnalysis } from '../services/auraService';
+import { HealthAnalysis } from '../types';
 import { cn } from '../lib/utils';
 import { useLanguage } from '../lib/i18n';
 
