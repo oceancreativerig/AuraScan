@@ -28,8 +28,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [users, setUsers] = useState<UserStat[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'feedback' | 'users' | 'system'>('feedback');
+  const [activeTab, setActiveTab] = useState<'feedback' | 'users'>('feedback');
   const [totalScans, setTotalScans] = useState(0);
+  const [dailyScans, setDailyScans] = useState(0);
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -79,6 +80,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           setTotalScans(statsDoc.data().totalScans || 0);
         }
 
+        // Fetch Daily Scans
+        const today = new Date().toISOString().split('T')[0];
+        const dailyStatsRef = doc(db, 'stats', `daily_${today}`);
+        const dailyDoc = await getDoc(dailyStatsRef);
+        if (dailyDoc.exists()) {
+          setDailyScans(dailyDoc.data().count || 0);
+        }
+
       } catch (error) {
         console.error("Error fetching admin data:", error);
       } finally {
@@ -88,6 +97,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
 
     fetchAdminData();
   }, []);
+
+  const FREE_TIER_LIMIT = 1500; // Gemini Flash Free Tier RPD
+  const remainingQuota = Math.max(0, FREE_TIER_LIMIT - dailyScans);
 
   return (
     <motion.div
@@ -110,14 +122,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="medical-card p-6 rounded-2xl flex items-center gap-4">
           <div className="p-3 bg-[var(--accent-teal-soft)] rounded-xl border border-[var(--accent-teal-border)]">
             <MessageSquare className="w-6 h-6 text-[var(--accent-teal)]" />
           </div>
           <div>
-            <p className="text-[10px] text-[var(--text-secondary)] font-mono uppercase tracking-widest">{t('Total Feedback')}</p>
-            <p className="text-3xl font-display font-bold text-[var(--text-primary)]">{feedbacks.length}</p>
+            <p className="text-[10px] text-[var(--text-secondary)] font-mono uppercase tracking-widest">{t('Feedback')}</p>
+            <p className="text-2xl font-display font-bold text-[var(--text-primary)]">{feedbacks.length}</p>
           </div>
         </div>
         <div className="medical-card p-6 rounded-2xl flex items-center gap-4">
@@ -125,8 +137,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             <Users className="w-6 h-6 text-sky-500" />
           </div>
           <div>
-            <p className="text-[10px] text-[var(--text-secondary)] font-mono uppercase tracking-widest">{t('Recent Users')}</p>
-            <p className="text-3xl font-display font-bold text-[var(--text-primary)]">{users.length}</p>
+            <p className="text-[10px] text-[var(--text-secondary)] font-mono uppercase tracking-widest">{t('Users')}</p>
+            <p className="text-2xl font-display font-bold text-[var(--text-primary)]">{users.length}</p>
           </div>
         </div>
         <div className="medical-card p-6 rounded-2xl flex items-center gap-4">
@@ -135,9 +147,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           </div>
           <div>
             <p className="text-[10px] text-[var(--text-secondary)] font-mono uppercase tracking-widest">{t('Total Scans')}</p>
-            <p className="text-3xl font-display font-bold text-[var(--text-primary)]">{totalScans}</p>
+            <p className="text-2xl font-display font-bold text-[var(--text-primary)]">{totalScans}</p>
           </div>
         </div>
+        <div className="medical-card p-6 rounded-2xl flex items-center gap-4 border-teal-500/30 bg-teal-500/5">
+          <div className="p-3 bg-teal-500/10 rounded-xl border border-teal-500/20">
+            <Sparkles className="w-6 h-6 text-teal-500" />
+          </div>
+          <div>
+            <p className="text-[10px] text-[var(--text-secondary)] font-mono uppercase tracking-widest">{t('API Today')}</p>
+            <div className="flex items-baseline gap-1">
+              <p className="text-2xl font-display font-bold text-[var(--text-primary)]">{dailyScans}</p>
+              <p className="text-[10px] text-[var(--text-secondary)] font-mono">/ {FREE_TIER_LIMIT}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quota Progress */}
+      <div className="medical-card p-6 rounded-2xl mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-[var(--accent-teal)]" />
+            <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-primary)]">{t('Daily API Quota Balance')}</span>
+          </div>
+          <span className="text-xs font-mono text-[var(--text-secondary)]">{t('Remaining')}: {remainingQuota}</span>
+        </div>
+        <div className="h-2 w-full bg-[var(--bg-card-hover)] rounded-full overflow-hidden border border-[var(--border-color)]">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${(dailyScans / FREE_TIER_LIMIT) * 100}%` }}
+            className="h-full bg-gradient-to-r from-teal-500 to-emerald-500"
+          />
+        </div>
+        <p className="mt-3 text-[10px] text-[var(--text-secondary)] italic">
+          {t('Note: Based on Gemini Flash Free Tier limit of 1,500 requests per day.')}
+        </p>
       </div>
 
       {/* Tabs */}

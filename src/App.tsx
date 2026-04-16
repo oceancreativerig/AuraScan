@@ -26,7 +26,6 @@ function AppContent() {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isPro, setIsPro] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { language, setLanguage, t } = useLanguage();
@@ -80,21 +79,6 @@ function AppContent() {
       }
       setError(message);
       setState('ERROR');
-    }
-  };
-
-  const handleUpgrade = async () => {
-    if (!user) {
-      handleLogin();
-      return;
-    }
-    try {
-      const userRef = doc(db, 'users', user.uid);
-      await setDoc(userRef, { isPro: true }, { merge: true });
-      setIsPro(true);
-      alert(t("Welcome to AuraScan Pro!"));
-    } catch (err) {
-      console.error("Upgrade error:", err);
     }
   };
 
@@ -171,11 +155,9 @@ function AppContent() {
               handleFirestoreError(err, OperationType.CREATE, userPath);
             }
             setIsAdmin(currentUser.email === 'oceancreativerig@gmail.com');
-            setIsPro(false);
           } else {
             const userData = userSnap.data();
             setIsAdmin(userData.role === 'admin' || currentUser.email === 'oceancreativerig@gmail.com');
-            setIsPro(userData.isPro || false);
           }
 
           // Fetch latest scan for the daily insight
@@ -202,7 +184,6 @@ function AppContent() {
         setScanHistory([]);
         setCoachingMessage(null);
         setIsAdmin(false);
-        setIsPro(false);
       }
     });
     return () => {
@@ -268,13 +249,24 @@ function AppContent() {
 
           // Increment global counter for admin panel
           const statsRef = doc(db, 'stats', 'global');
+          const today = new Date().toISOString().split('T')[0];
+          const dailyStatsRef = doc(db, 'stats', `daily_${today}`);
+
           try {
             await updateDoc(statsRef, {
               totalScans: increment(1)
             });
           } catch (e) {
-            // If doc doesn't exist, create it
             await setDoc(statsRef, { totalScans: 1 }, { merge: true });
+          }
+
+          try {
+            await updateDoc(dailyStatsRef, {
+              count: increment(1),
+              date: today
+            });
+          } catch (e) {
+            await setDoc(dailyStatsRef, { count: 1, date: today }, { merge: true });
           }
         } catch (err) {
           handleFirestoreError(err, OperationType.CREATE, scansPath);
@@ -369,15 +361,6 @@ function AppContent() {
           {authReady && (
             user ? (
               <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
-                {!isPro && (
-                  <button
-                    onClick={handleUpgrade}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-teal-400 to-emerald-500 text-slate-950 hover:shadow-[0_0_20px_rgba(45,212,191,0.4)] transition-all text-sm font-bold shadow-xl"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    {t('Upgrade to Pro')}
-                  </button>
-                )}
                 {isAdmin && (
                   <button
                     onClick={() => setState('ADMIN')}
@@ -659,10 +642,8 @@ function AppContent() {
             <Results 
               key="results" 
               analysis={analysis} 
-              isPro={isPro}
               onReset={reset} 
               onUpdateChallenge={handleUpdateChallenge}
-              onUpgrade={handleUpgrade}
             />
           )}
 

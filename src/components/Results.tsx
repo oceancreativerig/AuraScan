@@ -41,21 +41,15 @@ import { useLanguage } from '../lib/i18n';
 
 interface ResultsProps {
   analysis: HealthAnalysis;
-  isPro?: boolean;
   onReset: () => void;
   onUpdateChallenge?: (dayIndex: number, completed: boolean) => void;
-  onUpgrade?: () => void;
 }
 
-export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUpdateChallenge, onUpgrade }) => {
+export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateChallenge }) => {
   const { t } = useLanguage();
   const [selectedProduct, setSelectedProduct] = useState<typeof analysis.products extends (infer T)[] ? T : never | null>(null);
 
   const handleExport = () => {
-    if (!isPro) {
-      onUpgrade?.();
-      return;
-    }
     window.print();
   };
   React.useEffect(() => {
@@ -403,15 +397,9 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
               <ShoppingBag className="w-5 h-5 text-[var(--accent-teal)]" />
               {t('Recommended products for you')}
             </h3>
-            {!isPro && (
-              <span className="text-[10px] font-mono bg-amber-500/10 text-amber-500 px-3 py-1 rounded-full uppercase tracking-[0.2em] flex items-center gap-1.5 border border-amber-500/20">
-                <Lock className="w-3 h-3" />
-                {t('Pro Feature')}
-              </span>
-            )}
           </div>
 
-          <div className={`space-y-4 ${!isPro ? 'blur-sm pointer-events-none select-none' : ''}`}>
+          <div className="space-y-4">
             {analysis.products?.map((product, idx) => (
               <div key={idx} className="p-6 bg-[var(--bg-card-hover)] rounded-2xl border border-[var(--border-color)] group hover:border-[var(--accent-teal-border)] transition-all hover:shadow-2xl">
                 <div className="flex justify-between items-start mb-3">
@@ -442,17 +430,6 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
               </div>
             ))}
           </div>
-
-          {!isPro && (
-            <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-main)]/20 backdrop-blur-[2px] z-10">
-              <button
-                onClick={onUpgrade}
-                className="px-8 py-3 bg-[var(--accent-teal)] text-white font-bold rounded-full shadow-lg hover:opacity-90 transition-all text-sm"
-              >
-                {t('Unlock Recommendations')}
-              </button>
-            </div>
-          )}
         </motion.div>
 
         {/* Personalized Nutrition */}
@@ -466,15 +443,9 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
               <Utensils className="w-5 h-5 text-sky-500" />
               {t('Personalized Nutrition')}
             </h3>
-            {!isPro && (
-              <span className="text-[10px] font-mono bg-amber-500/10 text-amber-500 px-3 py-1 rounded-full uppercase tracking-[0.2em] flex items-center gap-1.5 border border-amber-500/20">
-                <Lock className="w-3 h-3" />
-                {t('Pro Feature')}
-              </span>
-            )}
           </div>
 
-          <div className={`space-y-6 ${!isPro ? 'blur-sm pointer-events-none select-none' : ''}`}>
+          <div className="space-y-6">
             {analysis.meals?.map((meal, idx) => (
               <div key={idx} className="bg-[var(--bg-card-hover)] rounded-2xl border border-[var(--border-color)] overflow-hidden group hover:border-[var(--accent-teal-border)] transition-all shadow-xl">
                 <div className="h-44 w-full relative overflow-hidden">
@@ -525,17 +496,6 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
               </div>
             ))}
           </div>
-
-          {!isPro && (
-            <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-main)]/20 backdrop-blur-[2px] z-10">
-              <button
-                onClick={onUpgrade}
-                className="px-8 py-3 bg-[var(--accent-teal)] text-white font-bold rounded-full shadow-lg hover:opacity-90 transition-all text-sm"
-              >
-                {t('Unlock Meal Plans')}
-              </button>
-            </div>
-          )}
         </motion.div>
       </div>
 
@@ -559,7 +519,6 @@ export const Results: React.FC<ResultsProps> = ({ analysis, isPro, onReset, onUp
           <span className="relative z-10 flex items-center justify-center gap-3">
             <Download className="w-5 h-5" />
             {t('Export Report')}
-            {!isPro && <Lock className="w-3 h-3 text-amber-500" />}
           </span>
         </button>
         <button
