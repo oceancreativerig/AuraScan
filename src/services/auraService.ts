@@ -1,5 +1,7 @@
 import { HealthAnalysis } from "../types";
 import { GoogleGenAI } from "@google/genai";
+import { db, auth } from "../lib/firebase";
+import { doc, setDoc, updateDoc, increment, serverTimestamp, collection, addDoc } from "firebase/firestore";
 
 // Initialize Gemini
 // In AI Studio, process.env.GEMINI_API_KEY is injected via vite.config.ts
@@ -7,10 +9,49 @@ import { GoogleGenAI } from "@google/genai";
 const apiKey = process.env.GEMINI_API_KEY || "";
 const ai = new GoogleGenAI({ apiKey });
 
+const getEnvironment = () => {
+  if (typeof window === 'undefined') return 'server';
+  const host = window.location.hostname;
+  if (host.includes('asia-southeast1.run.app')) return 'ai-studio';
+  if (host.includes('vercel.app')) return 'vercel';
+  if (host.includes('github.app') || host.includes('github.io')) return 'github';
+  return 'other';
+};
+
+async function trackApiUsage(operation: 'analysis' | 'translation' | 'coaching') {
+  try {
+    const env = getEnvironment();
+    const statsRef = doc(db, 'admin', 'stats');
+    
+    console.log(`[Aura] Tracking API usage: ${operation} on ${env}`);
+
+    // Update global stats using merge to handle non-existent document
+    await setDoc(statsRef, {
+      totalCalls: increment(1),
+      [`calls_${operation}`]: increment(1),
+      [`env_${env}`]: increment(1),
+      lastCallAt: serverTimestamp()
+    }, { merge: true });
+
+    // Log individual call for detailed tracking
+    await addDoc(collection(db, 'api_logs'), {
+      operation,
+      environment: env,
+      userId: auth.currentUser?.uid || 'anonymous',
+      timestamp: serverTimestamp(),
+      hostname: typeof window !== 'undefined' ? window.location.hostname : 'server'
+    });
+  } catch (error) {
+    console.error("Failed to track API usage:", error);
+  }
+}
+
 export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage: string): Promise<HealthAnalysis> {
   if (!apiKey || apiKey === "undefined") {
     throw new Error("Gemini API Key is missing. Please set GEMINI_API_KEY in your environment.");
   }
+
+  await trackApiUsage('translation');
 
   const prompt = `
     You are an expert medical translator. Translate the following JSON object representing a biometric health analysis into ${targetLanguage}.
@@ -47,8 +88,10 @@ export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage
 export async function generateCoachingMessage(history: HealthAnalysis[], latest: HealthAnalysis, language: string): Promise<string> {
   if (!apiKey || apiKey === "undefined") return "Keep up the great work on your wellness journey!";
 
+  await trackApiUsage('coaching');
+
   const prompt = `
-    You are Aura, a persistent AI wellness coach. Your tone is motivational, scientific, and friendly.
+    You are Aura, the user's ultimate Health Coach Bestie. Your tone is super conversational, supportive, and uses "regular talking language" (like a friend would text). Avoid overly clinical jargon.
     Analyze the user's latest health scan and their scan history to provide personalized, encouraging feedback.
     Language: ${language}.
     
@@ -56,7 +99,7 @@ export async function generateCoachingMessage(history: HealthAnalysis[], latest:
     History: ${JSON.stringify(history)}
     
     Provide a short, punchy, and humanized coaching message (max 2 sentences).
-    Example: "Your fatigue markers dropped 12%. Keep this sleep cycle."
+    Example: "Omg, your stress markers are way down! Whatever you're doing, keep it up bestie! ✨"
     Return ONLY the message text.
   `;
 
@@ -77,88 +120,74 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
     throw new Error("Gemini API Key is missing. Please set GEMINI_API_KEY in your environment.");
   }
 
+  await trackApiUsage('analysis');
+
   const prompt = `
-    You are a world-class AI Biometric Health Analyst specializing in non-invasive physiological assessment via facial mapping. Your task is to analyze the provided high-resolution facial image to detect subtle biometric markers that correlate with systemic health.
+    You are Aura, the user's ultimate Health Coach Bestie. Your task is to analyze the provided facial image to detect health markers, but explain them in "regular talking language" that's easy to understand. Think of yourself as a super-smart friend who knows everything about health but explains it simply.
+
+    ### TONE & LANGUAGE PROTOCOL:
+    1. **Conversational First:** Use super friendly, supportive, and regular talking language. Avoid sounding like a cold medical report.
+    2. **Simple Explanations:** Instead of "Periorbital puffiness indicating renal stress," say "Your eyes look a bit puffy today, which might mean your kidneys are working overtime or you need more water, bestie! 💧"
+    3. **Bestie Vibes:** Use encouraging phrases, lots of emojis, and focus on actionable, easy-to-understand advice. If you see something that needs attention, say it gently like a friend would.
+    4. **Language Requirement:** You MUST return all text fields in the following language: ${language}.
 
     ### RIGOROUS ACCURACY PROTOCOL:
     1. **Visual Evidence Only:** Base your findings strictly on visible markers in the image. Do not hallucinate.
     2. **Confidence Scoring:** For every indicator, provide a confidence score (0.0 to 1.0). If lighting is poor or features are obscured, lower the confidence significantly.
-    3. **Micro-Marker Detection:** Look for minute details: capillary breakage, pore size distribution, subtle skin tone shifts (dyschromia), and periorbital texture.
+    3. **Micro-Marker Detection:** Look for minute details: capillary breakage, pore size distribution, subtle skin tone shifts, and texture.
     4. **Systemic Correlation:** Link facial markers to internal physiological systems (Endocrine, Digestive, Cardiovascular, Renal, Hepatic).
-
-    ### LANGUAGE REQUIREMENT:
-    You MUST return all text fields (summary, label, facial_signs, systemic_implication, tip, disclaimer, challenge title/description/task) in the following language: ${language}.
 
     ### FOCUS AREA:
     The user has requested a specific focus on: **${focusArea}**.
-    Ensure that your analysis heavily weights this area. Provide exactly 5 key health indicators. At least 2 or 3 of these indicators MUST directly address the requested focus area based on facial markers.
+    Ensure that your analysis heavily weights this area. Provide exactly 5 key health indicators.
 
     ### BIOMETRIC MAPPING PARAMETERS:
-    1. **Vascular & Oxygenation (Lip/Sclera/Cheek):**
-       - Check for Malar flush (Cardiovascular/Autoimmune).
-       - Check for Pallor (Anemia/Circulation).
-       - Check for Cyanotic hues (Oxygenation).
-       - Check for Scleral icterus (Hepatic).
-
-    2. **Metabolic & Endocrine (Jawline/Neck/Eyes):**
-       - Check for Acanthosis Nigricans (Insulin Resistance).
-       - Check for Xanthelasma (Lipid Metabolism).
-       - Check for Periorbital puffiness (Thyroid/Renal).
-       - Check for Hirsutism or specific acne patterns (Hormonal).
-
-    3. **Digestive & Gut-Skin Axis (Forehead/Mouth/Cheeks):**
-       - Check for Angular cheilitis (Vitamin B/Iron).
-       - Check for Forehead furrows (Digestive stress/Hydration).
-       - Check for Nasolabial fold depth (Respiratory/Digestive).
-
-    4. **Dermatological Integrity:**
-       - Check for Seborrheic distribution.
-       - Check for Photo-aging (UV damage).
-       - Check for Transepidermal water loss (TEWL) markers.
+    (Explain results in simple, catchy terms)
+    1. Vascular & Oxygenation (Lip/Sclera/Cheek) -> "Glow & Flow"
+    2. Metabolic & Endocrine (Jawline/Neck/Eyes) -> "Energy & Balance"
+    3. Digestive & Gut-Skin Axis (Forehead/Mouth/Cheeks) -> "Gut-Skin Connection"
+    4. Dermatological Integrity -> "Skin Strength"
 
     ### 7-DAY CHALLENGE:
-    Identify the most critical finding (the indicator with the lowest score). Generate a personalized 7-day wellness challenge that is DIRECTLY linked to improving this specific indicator.
-    - The 'title' should explicitly mention the area being improved.
-    - The 'description' should explain how these tasks address the critical finding.
-    - Each day should have a small, actionable task that helps improve that specific health marker.
+    Identify the most critical finding. Generate a personalized 7-day wellness challenge that feels like a "Fun Quest" or a "Mini-Game" to level up their health. 🎮🌈
+    - The 'title' should be catchy and fun.
+    - The 'description' should be super encouraging and bestie-like.
+    - Each day should have a small, actionable task that feels like "leveling up."
 
     ### RESPONSE REQUIREMENTS:
     - Return ONLY valid JSON.
     - Provide exactly 5 indicators in the 'indicators' array.
-    - Be clinically objective but maintain a wellness-focused tone.
     - If the image is unclear, lower the 'confidence' score accordingly.
     
     ### BUSINESS INTEGRATION:
-    1. **Recommended Products:** Suggest 2-3 specific types of products (e.g., "Hyaluronic Acid Serum", "Zinc Supplement") that would help the user based on their results. Include a realistic brand name and price.
-    2. **Personalized Nutrition:** Provide 2 simple meal ideas that target the critical findings. For each meal, provide:
-       - A 'image_keyword' string containing 2-3 comma-separated tags for finding a relevant photo (e.g., "salmon,grilled,asparagus" or "smoothie,berry,spinach"). ALWAYS include "food" as one of the tags.
-       - Detailed 'nutritional_info' including calories, protein, carbs, and fats.
+    1. **Recommended Products:** Suggest 2-3 specific types of products that would help the user. Explain WHY in simple terms.
+    2. **Personalized Nutrition:** Provide 2 simple meal ideas that target the critical findings. Explain why they are good for the user like a nutritionist friend would.
 
     ### JSON STRUCTURE:
     {
-      "summary": "...",
+      "summary": "A friendly, conversational summary of the overall scan results.",
       "overall_score": 0,
       "indicators": [
         {
-          "label": "...",
+          "label": "A simple, catchy name for the indicator",
           "status": "optimal|fair|attention_needed",
           "score": 0-100,
           "confidence": 0.0-1.0,
-          "facial_signs": ["...", "..."],
+          "facial_signs": ["Simple description of what you see", "..."],
           "affected_regions": ["forehead", "eyes", "cheeks", "nose", "mouth", "jawline", "skin_overall"],
-          "systemic_implication": "..."
+          "systemic_implication": "A simple explanation of what this means for their health"
         }
       ],
       "recommendations": [
-        { "category": "...", "tip": "..." }
+        { "category": "...", "tip": "A fun, actionable tip" }
       ],
       "products": [
-        { "name": "...", "type": "SKINCARE|SUPPLEMENT", "reason": "...", "link": "#", "brand": "...", "price": "..." }
+        { "name": "...", "type": "SKINCARE|SUPPLEMENT", "reason": "Simple reason why this is good for them", "link": "#", "brand": "...", "price": "..." }
       ],
       "meals": [
         { 
           "title": "...", 
-          "description": "...", 
+          "description": "Why this meal is a game-changer for them", 
           "ingredients": ["...", "..."],
           "image_keyword": "...",
           "nutritional_info": { "calories": 0, "protein": "...", "carbs": "...", "fats": "..." }

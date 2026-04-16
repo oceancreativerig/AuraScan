@@ -158,9 +158,19 @@ service cloud.firestore {
       allow create: if isAuthenticated();
     }
 
+    match /admin/stats {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /api_logs/{logId} {
+      allow create: if true;
+      allow read: if isAdmin();
+    }
+
     match /stats/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow read: if true;
+      allow write: if true;
     }
   }
 }

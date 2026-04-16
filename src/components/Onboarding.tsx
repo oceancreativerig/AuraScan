@@ -16,27 +16,27 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
       icon: (
         <div className="flex items-center gap-2">
           <h2 className="text-4xl font-display font-bold tracking-tighter">
-            <span className="text-teal-600">Aura</span>
-            <span className="text-slate-900">Scan</span>
+            <span className="text-[var(--accent-teal)]">Aura</span>
+            <span className="text-[var(--text-primary)]">Scan</span>
           </h2>
-          <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+          <div className="w-2 h-2 rounded-full bg-[var(--accent-teal)] animate-pulse" />
         </div>
       ),
       title: t('Welcome to AuraScan'),
       description: t('Your professional AI biometric health companion. Let\'s get you started with a quick overview of how we help you track your wellness.'),
     },
     {
-      icon: <Camera className="w-12 h-12 text-teal-600" />,
+      icon: <Camera className="w-12 h-12 text-[var(--accent-teal)]" />,
       title: t('The Scanning Process'),
       description: t('Position your face in good lighting. AuraScan uses advanced computer vision to map 468+ landmarks for precise biometric analysis.'),
     },
     {
-      icon: <BarChart3 className="w-12 h-12 text-sky-600" />,
+      icon: <BarChart3 className="w-12 h-12 text-sky-500" />,
       title: t('Result Interpretation'),
       description: t('Receive instant insights on hydration, stress, and vitality markers, correlated with evidence-based wellness recommendations.'),
     },
     {
-      icon: <Sparkles className="w-12 h-12 text-indigo-600" />,
+      icon: <Sparkles className="w-12 h-12 text-[var(--accent-pink)]" />,
       title: t('Unlock AuraScan Pro'),
       description: t('Upgrade to Pro for personalized 7-day wellness challenges, detailed historical tracking, and advanced health insights.'),
     },
@@ -77,7 +77,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
             {steps.map((_, i) => (
               <div
                 key={i}
-                className={`w-2 h-2 rounded-full transition-colors ${i === step ? 'bg-teal-600' : 'bg-[var(--border-color)]'}`}
+                className={`w-2 h-2 rounded-full transition-colors ${i === step ? 'bg-[var(--accent-teal)]' : 'bg-[var(--border-color)]'}`}
               />
             ))}
           </div>
@@ -101,7 +101,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
             ) : (
               <button
                 onClick={onComplete}
-                className="px-8 py-3 rounded-full bg-teal-600 text-white font-bold hover:bg-teal-500 transition-colors shadow-lg"
+                className="px-8 py-3 rounded-full bg-[var(--accent-teal)] text-white dark:text-black font-bold hover:opacity-90 transition-colors shadow-lg"
               >
                 {t('Get Started')}
               </button>

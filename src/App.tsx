@@ -7,7 +7,7 @@ import { Onboarding } from './components/Onboarding';
 import { CoachCard } from './components/CoachCard';
 import { analyzeFaceHealth, translateAnalysis, generateCoachingMessage } from './services/auraService';
 import { HealthAnalysis } from './types';
-import { Shield, Sparkles, Activity, LogIn, LogOut, Clock, Sun, Moon } from 'lucide-react';
+import { Shield, Sparkles, Activity, LogIn, LogOut, Clock, Sun, Moon, ChevronRight, Zap, Brain } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './lib/firebase';
 import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
@@ -28,7 +28,23 @@ function AppContent() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [userLevel, setUserLevel] = useState(1);
+  const [userXP, setUserXP] = useState(0);
+  const [totalScans, setTotalScans] = useState(0);
   const { language, setLanguage, t } = useLanguage();
+
+  const XP_PER_LEVEL = 100;
+  const XP_PER_SCAN = 25;
+
+  useEffect(() => {
+    if (totalScans > 0) {
+      const totalXP = totalScans * XP_PER_SCAN;
+      const level = Math.floor(totalXP / XP_PER_LEVEL) + 1;
+      const xp = totalXP % XP_PER_LEVEL;
+      setUserLevel(level);
+      setUserXP(xp);
+    }
+  }, [totalScans]);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -143,7 +159,8 @@ function AppContent() {
           if (!userSnap || !userSnap.exists()) {
             const userData: any = {
               uid: currentUser.uid,
-              createdAt: serverTimestamp()
+              createdAt: serverTimestamp(),
+              totalScans: 0
             };
             if (currentUser.email) userData.email = currentUser.email;
             if (currentUser.displayName) userData.displayName = currentUser.displayName;
@@ -155,9 +172,11 @@ function AppContent() {
               handleFirestoreError(err, OperationType.CREATE, userPath);
             }
             setIsAdmin(currentUser.email === 'oceancreativerig@gmail.com');
+            setTotalScans(0);
           } else {
             const userData = userSnap.data();
             setIsAdmin(userData.role === 'admin' || currentUser.email === 'oceancreativerig@gmail.com');
+            setTotalScans(userData.totalScans || 0);
           }
 
           // Fetch latest scan for the daily insight
@@ -165,7 +184,7 @@ function AppContent() {
           const q = query(
             collection(db, 'users', currentUser.uid, 'scans'),
             orderBy('createdAt', 'desc'),
-            limit(1)
+            limit(10)
           );
           unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
             if (!snapshot.empty) {
@@ -184,6 +203,7 @@ function AppContent() {
         setScanHistory([]);
         setCoachingMessage(null);
         setIsAdmin(false);
+        setTotalScans(0);
       }
     });
     return () => {
@@ -246,6 +266,17 @@ function AppContent() {
             createdAt: serverTimestamp()
           });
           setCurrentScanId(docRef.id);
+
+          // Increment user's totalScans
+          const userRef = doc(db, 'users', user.uid);
+          try {
+            await updateDoc(userRef, {
+              totalScans: increment(1)
+            });
+            setTotalScans(prev => prev + 1);
+          } catch (e) {
+            console.error("Failed to update user totalScans:", e);
+          }
 
           // Increment global counter for admin panel
           const statsRef = doc(db, 'stats', 'global');
@@ -361,6 +392,21 @@ function AppContent() {
           {authReady && (
             user ? (
               <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+                {/* Level Badge */}
+                <div className="flex items-center gap-3 bg-[var(--bg-card)] border border-[var(--accent-teal-border)] px-4 py-2 rounded-full shadow-[0_0_15px_rgba(45,212,191,0.2)]">
+                  <div className="flex flex-col items-start">
+                    <span className="text-[8px] font-mono text-[var(--accent-teal)] uppercase tracking-widest leading-none mb-1">Level</span>
+                    <span className="text-sm font-bold leading-none">{userLevel}</span>
+                  </div>
+                  <div className="w-20 h-1.5 bg-[var(--bg-card-hover)] rounded-full overflow-hidden border border-[var(--border-color)]">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(userXP / XP_PER_LEVEL) * 100}%` }}
+                      className="h-full bg-[var(--accent-teal)] shadow-[0_0_10px_rgba(45,212,191,0.5)]"
+                    />
+                  </div>
+                </div>
+
                 {isAdmin && (
                   <button
                     onClick={() => setState('ADMIN')}
@@ -405,45 +451,37 @@ function AppContent() {
         {/* Header */}
         {state !== 'HISTORY' && state !== 'ADMIN' && (
           <header className="text-center mb-10 md:mb-16 mt-2 md:mt-4">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center gap-6 mb-8"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-[10px] font-mono tracking-[0.3em] uppercase">
-              <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-              {t('AI-Powered Biometrics')}
-            </div>
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 20 }}
-            className="text-7xl md:text-9xl font-display font-bold tracking-tighter mb-4 md:mb-6 flex items-center justify-center gap-2"
-          >
-            <span className="bg-clip-text text-transparent bg-gradient-to-br from-[var(--accent-teal)] via-[var(--text-primary)] to-[var(--text-secondary)]">
-              Aura
-            </span>
-            <span className="relative">
-              <span className="bg-clip-text text-transparent bg-gradient-to-tr from-[var(--text-primary)] to-[var(--accent-teal)]">
-                Scan
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center gap-6 mb-8"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--accent-teal-soft)] border border-[var(--accent-teal-border)] text-[var(--accent-teal)] text-[10px] font-mono tracking-[0.3em] uppercase shadow-[0_0_15px_rgba(45,212,191,0.1)]">
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-teal)] animate-pulse" />
+                {t('AuraScan Arena v2.0')}
+              </div>
+            </motion.div>
+            <motion.h1
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 20 }}
+              className="text-7xl md:text-9xl font-display font-extrabold tracking-tighter mb-4 md:mb-6 flex items-center justify-center gap-2"
+            >
+              <span className="bg-clip-text text-transparent bg-gradient-to-br from-[var(--accent-teal)] via-[var(--text-primary)] to-[var(--accent-pink)]">
+                Aura
               </span>
-              <motion.div 
-                animate={{ opacity: [0.3, 1, 0.3] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute -top-2 -right-4 w-2 h-2 bg-[var(--accent-teal)] rounded-full blur-[2px]" 
-              />
-            </span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-[var(--text-secondary)] max-w-xl mx-auto text-base md:text-xl font-light leading-relaxed px-4"
-          >
-            {t('Advanced facial analysis for full-body wellness insights and personalized health recommendations.')}
-          </motion.p>
-        </header>
+              <span className="relative">
+                <span className="bg-clip-text text-transparent bg-gradient-to-tr from-[var(--text-primary)] to-[var(--accent-teal)]">
+                  Scan
+                </span>
+                <motion.div 
+                  animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.5, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute -top-2 -right-4 w-3 h-3 bg-[var(--accent-teal)] rounded-full blur-[2px] shadow-[0_0_10px_var(--accent-teal)]" 
+                />
+              </span>
+            </motion.h1>
+          </header>
         )}
 
         <AnimatePresence mode="wait">
@@ -453,153 +491,107 @@ function AppContent() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
-              className="flex flex-col items-center gap-8 py-12"
+              className="w-full max-w-4xl mx-auto space-y-12"
             >
-              {/* Daily Insight Card */}
-              {latestScan && (
-                <div className="flex flex-col gap-4 w-full max-w-md">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="medical-card p-6 relative overflow-hidden cursor-pointer group border-teal-500/20"
-                    onClick={() => {
-                      setAnalysis(latestScan);
-                      setState('RESULTS');
-                    }}
-                  >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 blur-[40px] rounded-full group-hover:bg-teal-500/20 transition-all" />
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-[var(--accent-teal-soft)] rounded-lg">
-                        <Sparkles className="w-4 h-4 text-[var(--accent-teal)]" />
-                      </div>
-                      <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--accent-teal)]">{t('Daily Wellness Insight')}</span>
-                    </div>
-                    <p className="text-[var(--text-primary)] text-sm leading-relaxed mb-4">
-                      {t('Based on your last scan, focus on')} <span className="text-[var(--accent-teal)] font-bold">{latestScan.indicators?.sort((a, b) => a.score - b.score)[0]?.label || t('wellness')}</span> {t('today.')}
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-[var(--accent-teal)] to-[var(--accent-pink)] rounded-[3rem] blur opacity-10 group-hover:opacity-20 transition duration-1000" />
+                
+                <div className="relative medical-card p-8 md:p-12 text-center space-y-8">
+                  <div className="space-y-4">
+                    <h2 className="text-4xl md:text-6xl font-display font-bold tracking-tight text-[var(--text-primary)]">
+                      {t('Ready to')} <span className="neon-text-teal">{t('Level Up')}</span>?
+                    </h2>
+                    <p className="text-[var(--text-secondary)] text-lg max-w-xl mx-auto font-light">
+                      {t('Step into the arena. One quick scan, and we\'ll map your biometric stats like a pro gamer.')}
                     </p>
-                    <div className="p-3 bg-[var(--bg-card-hover)] rounded-xl border border-[var(--border-color)]">
-                      <p className="text-[var(--text-secondary)] text-xs italic">"{latestScan.recommendations[0].tip}"</p>
-                    </div>
-                  </motion.div>
-                  {coachingMessage && <CoachCard message={coachingMessage} />}
-                </div>
-              )}
+                  </div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex flex-col items-center gap-4 w-full max-w-md"
-              >
-                <div className="w-full flex flex-col gap-2">
-                  <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-secondary)] ml-1">{t('Select Focus Area')}</label>
-                  <div className="relative group">
-                    <select
-                      value={focusArea}
-                      onChange={(e) => setFocusArea(e.target.value)}
-                      className="w-full appearance-none bg-[var(--bg-card)] backdrop-blur-md border-2 border-[var(--border-color)] rounded-2xl px-6 py-4 pr-12 text-base font-medium text-[var(--text-primary)] hover:border-[var(--accent-teal)] transition-all cursor-pointer focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-[var(--accent-teal)] shadow-2xl"
+                  <div className="flex flex-col items-center gap-6">
+                    <div className="w-full max-w-sm space-y-2 text-left">
+                      <label className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-secondary)] ml-1">{t('Choose Your Quest Focus')}</label>
+                      <div className="relative group/select">
+                        <select
+                          value={focusArea}
+                          onChange={(e) => setFocusArea(e.target.value)}
+                          className="w-full appearance-none bg-[var(--bg-card-hover)] border border-[var(--border-color)] rounded-2xl px-6 py-4 pr-12 text-base font-medium text-[var(--text-primary)] hover:border-[var(--accent-teal-border)] transition-all cursor-pointer focus:outline-none shadow-xl"
+                        >
+                          {focusAreas.map(area => (
+                            <option key={area} value={area} className="bg-[var(--bg-card)] text-[var(--text-primary)]">{t(area)}</option>
+                          ))}
+                        </select>
+                        <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)] group-hover/select:text-[var(--accent-teal)] transition-all">
+                          <ChevronRight className="w-5 h-5 rotate-90" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
+                      <button
+                        onClick={() => setState('SCANNING')}
+                        className="btn-primary w-full sm:w-auto px-12 py-5 group"
+                      >
+                        <span className="flex items-center justify-center gap-3 text-lg">
+                          <Zap className="w-6 h-6 group-hover:scale-125 transition-transform" />
+                          {t('Start Quest')}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => setShowOnboarding(true)}
+                        className="btn-secondary w-full sm:w-auto px-12 py-5"
+                      >
+                        {t('How to Play')}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Daily Insight Card */}
+                  {latestScan && coachingMessage && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-6 glass-panel border-[var(--accent-pink-border)] bg-[var(--accent-pink-soft)] text-left relative overflow-hidden group/insight"
                     >
-                      {focusAreas.map(area => (
-                        <option key={area} value={area} className="bg-[var(--bg-card)] text-[var(--text-primary)]">{t(area)}</option>
-                      ))}
-                    </select>
-                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)] group-hover:text-[var(--accent-teal)] transition-all">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                    </div>
-                  </div>
+                      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover/insight:opacity-10 transition-opacity">
+                        <Brain className="w-24 h-24 text-[var(--accent-pink)]" />
+                      </div>
+                      <div className="flex items-start gap-4 relative z-10">
+                        <div className="p-3 bg-[var(--accent-pink-soft)] rounded-2xl border border-[var(--accent-pink-border)]">
+                          <Brain className="w-6 h-6 text-[var(--accent-pink)]" />
+                        </div>
+                        <div>
+                          <h4 className="text-[var(--accent-pink)] text-[10px] font-mono uppercase tracking-[0.3em] mb-2">{t('Daily Insight')}</h4>
+                          <p className="text-lg text-[var(--text-primary)] font-medium leading-relaxed italic">
+                            "{coachingMessage}"
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
-
-                <button
-                  onClick={() => setState('SCANNING')}
-                  className="group relative w-full px-12 py-5 bg-[var(--text-primary)] text-[var(--bg-card)] font-bold text-lg rounded-full overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-2xl"
-                >
-                  <span className="relative z-10 flex items-center justify-center gap-3">
-                    {t('Start Health Scan')}
-                    <Activity className="w-6 h-6 group-hover:animate-pulse" />
-                  </span>
-                </button>
-              </motion.div>
-
-              <motion.p 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="text-[var(--text-secondary)] text-sm flex items-center gap-2"
-              >
-                <Shield className="w-4 h-4" />
-                {t('Requires camera access for facial analysis')}
-              </motion.p>
-
-              {/* Accuracy Guide */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="max-w-md w-full p-6 medical-card mt-4"
-              >
-                <h4 className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--accent-teal)] mb-4 flex items-center gap-2">
-                  <Sparkles className="w-3 h-3" />
-                  {t('Accuracy Tip: Perfect Lighting')}
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[var(--text-primary)] text-sm font-medium">{t('Face the Light')}</span>
-                    <span className="text-[var(--text-secondary)] text-xs">{t('Position yourself towards a window or lamp.')}</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[var(--text-primary)] text-sm font-medium">{t('No Shadows')}</span>
-                    <span className="text-[var(--text-secondary)] text-xs">{t('Ensure even lighting across your entire face.')}</span>
-                  </div>
-                </div>
-              </motion.div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full mt-12">
-                <FeatureCard
-                  icon={<Shield className="w-8 h-8 text-[var(--accent-teal)]" />}
-                  title={t('Secure Analysis')}
-                  description={t('Your biometric data is processed securely and never stored on our servers.')}
-                  delay={0.5}
-                />
-                <FeatureCard
-                  icon={<Activity className="w-8 h-8 text-sky-400" />}
-                  title={t('Real-time Insights')}
-                  description={t('Get instant feedback on hydration, stress, and vitality markers.')}
-                  delay={0.6}
-                />
-                <FeatureCard
-                  icon={<Sparkles className="w-8 h-8 text-purple-400" />}
-                  title={t('AI Wellness')}
-                  description={t('Personalized recommendations powered by advanced machine learning.')}
-                  delay={0.7}
-                />
               </div>
 
-              {/* How it Works */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="max-w-4xl w-full mt-20 text-center"
-              >
-                <h3 className="text-3xl font-display font-bold text-[var(--text-primary)] mb-12 tracking-tight">{t('How AuraScan Works')}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-12">
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-[var(--accent-teal-soft)] flex items-center justify-center text-[var(--accent-teal)] font-mono text-xl border border-[var(--accent-teal-border)] shadow-xl">01</div>
-                    <h4 className="font-bold text-[var(--text-primary)] text-lg">{t('Facial Mapping')}</h4>
-                    <p className="text-sm text-[var(--text-secondary)] font-light leading-relaxed">{t('Our AI identifies 468+ biometric landmarks to assess micro-expressions and skin markers.')}</p>
-                  </div>
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-sky-500/10 flex items-center justify-center text-sky-400 font-mono text-xl border border-sky-500/20 shadow-xl">02</div>
-                    <h4 className="font-bold text-[var(--text-primary)] text-lg">{t('Systemic Analysis')}</h4>
-                    <p className="text-sm text-[var(--text-secondary)] font-light leading-relaxed">{t('Markers are correlated with systemic health indicators like hydration, stress, and metabolism.')}</p>
-                  </div>
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-400 font-mono text-xl border border-purple-500/20 shadow-xl">03</div>
-                    <h4 className="font-bold text-[var(--text-primary)] text-lg">{t('Wellness Plan')}</h4>
-                    <p className="text-sm text-[var(--text-secondary)] font-light leading-relaxed">{t('Receive a personalized 7-day challenge and evidence-based lifestyle recommendations.')}</p>
-                  </div>
-                </div>
-              </motion.div>
+              {/* Game Features Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                  { icon: <Activity className="w-6 h-6 text-[var(--accent-teal)]" />, title: t('Biometric Mapping'), desc: t('Scan 50+ facial markers to reveal your hidden health stats.') },
+                  { icon: <Zap className="w-6 h-6 text-[var(--accent-amber)]" />, title: t('Instant XP'), desc: t('Get immediate feedback and level up your wellness journey.') },
+                  { icon: <Sparkles className="w-6 h-6 text-[var(--accent-pink)]" />, title: t('Daily Quests'), desc: t('Complete AI-generated challenges to boost your health score.') }
+                ].map((feature, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + i * 0.1 }}
+                    className="medical-card p-6 space-y-4 hover:scale-105 transition-transform group"
+                  >
+                    <div className="p-3 bg-[var(--bg-card-hover)] rounded-2xl border border-[var(--border-color)] w-fit group-hover:border-[var(--accent-teal-border)] transition-colors">
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">{feature.title}</h3>
+                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed font-light">{feature.desc}</p>
+                  </motion.div>
+                ))}
+              </div>
             </motion.div>
           )}
 

@@ -348,7 +348,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
   };
 
   return (
-    <div className="relative w-full max-w-sm mx-auto aspect-[3/4] sm:aspect-[9/16] bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border-4 sm:border-[8px] border-[var(--border-color)] shadow-2xl">
+    <div className="relative w-full max-w-sm mx-auto aspect-[3/4] sm:aspect-[9/16] bg-black rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border-4 sm:border-[8px] border-[var(--bg-card)] shadow-[0_0_50px_rgba(0,0,0,0.5)]">
       <video
         ref={videoRef}
         autoPlay
@@ -371,13 +371,18 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
         )}
       />
 
+      {/* Scanning Grid Overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className="w-full h-full bg-[linear-gradient(rgba(45,212,191,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,0.1)_1px,transparent_1px)] bg-[size:20px_20px]" />
+      </div>
+
       {/* Face Guide Oval */}
       {!isAnalyzing && !error && isModelLoaded && (
         <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-center">
           <div className={cn(
-            "w-[70%] aspect-[3/4] rounded-[100%] border-2 border-dashed transition-all duration-500",
-            faceStatus === 'optimal' ? "border-teal-400/80 bg-teal-400/5 shadow-[0_0_30px_rgba(45,212,191,0.2)]" : 
-            faceStatus === 'none' ? "border-slate-500/30" : "border-rose-400/50 bg-rose-400/5"
+            "w-[75%] aspect-[3/4] rounded-[100%] border-2 border-dashed transition-all duration-500",
+            faceStatus === 'optimal' ? "border-[var(--accent-teal)] bg-[var(--accent-teal-soft)] shadow-[0_0_40px_rgba(45,212,191,0.2)]" : 
+            faceStatus === 'none' ? "border-white/10" : "border-[var(--accent-pink)] bg-[var(--accent-pink-soft)]"
           )} />
         </div>
       )}
@@ -389,21 +394,21 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-              "px-4 py-2 rounded-full backdrop-blur-md border text-[10px] font-mono uppercase tracking-widest flex items-center gap-2",
+              "px-4 py-2 rounded-full backdrop-blur-xl border text-[10px] font-mono uppercase tracking-[0.2em] flex items-center gap-2",
               brightness < 70 || faceStatus !== 'optimal'
-                ? "bg-rose-500/20 border-rose-500/50 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.3)]" 
-                : "bg-[var(--accent-teal-soft)] border-[var(--accent-teal-border)] text-[var(--accent-teal)]"
+                ? "bg-[var(--accent-pink-soft)] border-[var(--accent-pink-border)] text-[var(--accent-pink)] shadow-[0_0_15px_rgba(244,114,182,0.3)]" 
+                : "bg-[var(--accent-teal-soft)] border-[var(--accent-teal-border)] text-[var(--accent-teal)] shadow-[0_0_15px_rgba(45,212,191,0.3)]"
             )}
           >
             <div className={cn(
               "w-2 h-2 rounded-full animate-pulse",
-              brightness < 70 || faceStatus !== 'optimal' ? "bg-rose-500" : "bg-[var(--accent-teal)]"
+              brightness < 70 || faceStatus !== 'optimal' ? "bg-[var(--accent-pink)]" : "bg-[var(--accent-teal)]"
             )} />
-            {brightness < 70 ? t("Warning: Environment too dark") : 
+            {brightness < 70 ? t("Environment too dark") : 
              faceStatus === 'none' ? t("Position face in guide") :
              faceStatus === 'too_far' ? t("Move closer") :
-             faceStatus === 'too_close' ? t("Move further back") :
-             t("Optimal position & lighting")}
+             faceStatus === 'too_close' ? t("Move back") :
+             t("Optimal position")}
           </motion.div>
 
           {/* Ambient Light Meter */}
@@ -412,11 +417,11 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
             animate={{ opacity: 1 }}
             className="flex flex-col items-center gap-1.5"
           >
-            <div className="flex items-center gap-2 text-[9px] font-mono text-white uppercase tracking-widest drop-shadow-md">
-              <Sun className={cn("w-3 h-3", brightness < 70 ? "text-rose-400" : "text-teal-400")} />
+            <div className="flex items-center gap-2 text-[9px] font-mono text-[var(--text-primary)] uppercase tracking-widest drop-shadow-md">
+              <Sun className={cn("w-3 h-3", brightness < 70 ? "text-rose-400" : "text-[var(--accent-teal)]")} />
               {t('Ambient Light')}
             </div>
-            <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden border border-white/10">
+            <div className="w-32 h-1 bg-[var(--border-color)] rounded-full overflow-hidden border border-[var(--border-color)]">
               <motion.div 
                 animate={{ 
                   width: `${Math.min(100, (brightness / 255) * 100)}%`,
@@ -526,7 +531,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
 
             <button
               onClick={startCamera}
-              className="w-full px-4 py-2.5 bg-[var(--accent-teal)] hover:opacity-90 text-white rounded-xl transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+              className="w-full px-4 py-2.5 bg-[var(--accent-teal)] hover:opacity-90 text-white dark:text-black rounded-xl transition-colors flex items-center justify-center gap-2 text-sm font-medium"
             >
               <RefreshCw className="w-4 h-4" />
               {t('Retry Camera')}
@@ -563,7 +568,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
           <div className="flex items-center gap-6">
             <button
               onClick={toggleCamera}
-              className="w-12 h-12 rounded-full bg-slate-900/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-slate-800/80 transition-all active:scale-90"
+              className="w-12 h-12 rounded-full bg-[var(--bg-card-hover)] backdrop-blur-md border border-[var(--border-color)] flex items-center justify-center text-[var(--text-primary)] hover:bg-[var(--bg-card)] transition-all active:scale-90"
               title={t('Switch Camera')}
             >
               <RefreshCw className="w-5 h-5" />
@@ -573,15 +578,15 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
               onClick={captureFrame}
               className={cn(
                 "group relative flex items-center justify-center w-16 h-16 rounded-full shadow-xl transition-all",
-                brightness < 70 || faceStatus !== 'optimal' ? "bg-slate-800 cursor-not-allowed" : "bg-white hover:scale-110 active:scale-95"
+                brightness < 70 || faceStatus !== 'optimal' ? "bg-[var(--bg-card-hover)] cursor-not-allowed" : "bg-[var(--text-primary)] hover:scale-110 active:scale-95"
               )}
               disabled={brightness < 70 || faceStatus !== 'optimal'}
             >
               <div className={cn(
                 "absolute inset-0 rounded-full border-4 animate-ping",
-                brightness < 70 || faceStatus !== 'optimal' ? "border-rose-500/10" : "border-teal-400/30 group-hover:border-teal-400/60"
+                brightness < 70 || faceStatus !== 'optimal' ? "border-[var(--accent-pink-border)]" : "border-[var(--accent-teal-border)] group-hover:border-[var(--accent-teal)]"
               )} />
-              <Camera className={cn("w-8 h-8", brightness < 70 || faceStatus !== 'optimal' ? "text-slate-600" : "text-slate-900")} />
+              <Camera className={cn("w-8 h-8", brightness < 70 || faceStatus !== 'optimal' ? "text-[var(--text-secondary)]" : "text-[var(--bg-card)]")} />
             </button>
 
             <div className="w-12" /> {/* Spacer to balance the switch button */}

@@ -58,18 +58,18 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'optimal': return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]';
-      case 'fair': return 'text-amber-500 bg-amber-500/10 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]';
-      case 'attention_needed': return 'text-rose-500 bg-rose-500/10 border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]';
+      case 'optimal': return 'text-[var(--accent-teal)] bg-[var(--accent-teal-soft)] border-[var(--accent-teal-border)] shadow-[0_0_20px_rgba(45,212,191,0.1)]';
+      case 'fair': return 'text-[var(--accent-amber)] bg-[var(--accent-amber-soft)] border-[var(--accent-amber-border)] shadow-[0_0_20px_rgba(251,191,36,0.1)]';
+      case 'attention_needed': return 'text-[var(--accent-pink)] bg-[var(--accent-pink-soft)] border-[var(--accent-pink-border)] shadow-[0_0_20px_rgba(244,114,182,0.1)]';
       default: return 'text-[var(--text-secondary)] bg-[var(--bg-card-hover)] border-[var(--border-color)]';
     }
   };
 
   const getProgressBarColor = (status: string) => {
     switch (status) {
-      case 'optimal': return 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]';
-      case 'fair': return 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]';
-      case 'attention_needed': return 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]';
+      case 'optimal': return 'bg-[var(--accent-teal)] shadow-[0_0_10px_rgba(45,212,191,0.5)]';
+      case 'fair': return 'bg-[var(--accent-amber)] shadow-[0_0_10px_rgba(251,191,36,0.5)]';
+      case 'attention_needed': return 'bg-[var(--accent-pink)] shadow-[0_0_10px_rgba(244,114,182,0.5)]';
       default: return 'bg-slate-600';
     }
   };
@@ -455,7 +455,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-main)] via-[var(--bg-main)]/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                   <div className="absolute bottom-5 left-5 right-5">
                     <h4 className="text-white font-bold text-xl leading-tight tracking-tight drop-shadow-md">{meal.title}</h4>
                   </div>
