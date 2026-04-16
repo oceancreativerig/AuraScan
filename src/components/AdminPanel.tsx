@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, orderBy, getDocs, limit } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, limit, doc, getDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { motion } from 'motion/react';
 import { HealthAnalysis } from "../types";
@@ -72,15 +72,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           setUsers(usersData);
         }
 
-        // Fetch Total Scans
-        const scansPath = 'scans';
-        const scansSnapshot = await getDocs(query(collection(db, scansPath), limit(1)));
-        // In a real app, we'd use a counter document, but for now we'll just show the recent count or a placeholder
-        // Let's assume we have a 'stats' collection with a 'global' doc
-        const statsPath = 'stats';
-        const statsSnapshot = await getDocs(collection(db, statsPath));
-        const globalStats = statsSnapshot.docs.find(d => d.id === 'global')?.data();
-        setTotalScans(globalStats?.totalScans || 0);
+        // Fetch Total Scans from stats/global
+        const statsRef = doc(db, 'stats', 'global');
+        const statsDoc = await getDoc(statsRef);
+        if (statsDoc.exists()) {
+          setTotalScans(statsDoc.data().totalScans || 0);
+        }
 
       } catch (error) {
         console.error("Error fetching admin data:", error);
