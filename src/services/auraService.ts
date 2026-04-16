@@ -1,6 +1,17 @@
 import { HealthAnalysis } from "../types";
+import { GoogleGenAI } from "@google/genai";
+
+// Initialize Gemini
+// In AI Studio, process.env.GEMINI_API_KEY is injected via vite.config.ts
+// In GitHub/Production, ensure GEMINI_API_KEY is set in environment variables
+const apiKey = process.env.GEMINI_API_KEY || "";
+const ai = new GoogleGenAI({ apiKey });
 
 export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage: string): Promise<HealthAnalysis> {
+  if (!apiKey || apiKey === "undefined") {
+    throw new Error("Gemini API Key is missing. Please set GEMINI_API_KEY in your environment.");
+  }
+
   const prompt = `
     You are an expert medical translator. Translate the following JSON object representing a biometric health analysis into ${targetLanguage}.
     
@@ -17,27 +28,25 @@ export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage
   `;
 
   try {
-    const response = await fetch("/api/translate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
+    const result = await ai.models.generateContent({
+      model: "gemini-flash-latest",
+      contents: prompt,
+      config: { responseMimeType: "application/json" }
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to translate results");
-    }
-
-    const data = await response.json();
-    const result = JSON.parse(data.text || "{}");
-    return { ...result, language: targetLanguage } as HealthAnalysis;
+    const parsed = JSON.parse(result.text || "{}");
+    return { ...parsed, language: targetLanguage } as HealthAnalysis;
   } catch (error: any) {
     console.error("Aura Translation Error:", error);
+    if (error.message?.includes("API key not valid")) {
+      throw new Error("The Gemini API key provided is invalid. Please check your GEMINI_API_KEY setting.");
+    }
     throw error;
   }
 }
 
 export async function generateCoachingMessage(history: HealthAnalysis[], latest: HealthAnalysis, language: string): Promise<string> {
+  if (!apiKey || apiKey === "undefined") return "Keep up the great work on your wellness journey!";
+
   const prompt = `
     You are Aura, a persistent AI wellness coach. Your tone is motivational, scientific, and friendly.
     Analyze the user's latest health scan and their scan history to provide personalized, encouraging feedback.
@@ -52,19 +61,11 @@ export async function generateCoachingMessage(history: HealthAnalysis[], latest:
   `;
 
   try {
-    const response = await fetch("/api/coach", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
+    const result = await ai.models.generateContent({
+      model: "gemini-flash-latest",
+      contents: prompt,
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to generate coaching message");
-    }
-
-    const data = await response.json();
-    return data.text?.trim() || "Keep up the great work on your wellness journey!";
+    return result.text?.trim() || "Keep up the great work on your wellness journey!";
   } catch (error: any) {
     console.error("Aura Coaching Error:", error);
     return "Keep up the great work on your wellness journey!";
@@ -72,6 +73,10 @@ export async function generateCoachingMessage(history: HealthAnalysis[], latest:
 }
 
 export async function analyzeFaceHealth(base64Image: string, language: string = 'English', focusArea: string = 'General Wellness'): Promise<HealthAnalysis> {
+  if (!apiKey || apiKey === "undefined") {
+    throw new Error("Gemini API Key is missing. Please set GEMINI_API_KEY in your environment.");
+  }
+
   const prompt = `
     You are a world-class AI Biometric Health Analyst specializing in non-invasive physiological assessment via facial mapping. Your task is to analyze the provided high-resolution facial image to detect subtle biometric markers that correlate with systemic health.
 
@@ -165,22 +170,25 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
   `;
 
   try {
-    const response = await fetch("/api/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ base64Image, language, focusArea, prompt }),
+    const imagePart = {
+      inlineData: {
+        mimeType: "image/jpeg",
+        data: base64Image,
+      },
+    };
+
+    const result = await ai.models.generateContent({
+      model: "gemini-flash-latest",
+      contents: { parts: [imagePart, { text: prompt }] },
+      config: { responseMimeType: "application/json" }
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to analyze facial health");
-    }
-
-    const data = await response.json();
-    const result = JSON.parse(data.text || "{}");
-    return { ...result, language } as HealthAnalysis;
+    const parsed = JSON.parse(result.text || "{}");
+    return { ...parsed, language } as HealthAnalysis;
   } catch (error: any) {
     console.error("Aura Analysis Error:", error);
+    if (error.message?.includes("API key not valid")) {
+      throw new Error("The Gemini API key provided is invalid. Please check your GEMINI_API_KEY setting.");
+    }
     throw error;
   }
 }
