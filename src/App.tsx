@@ -7,17 +7,67 @@ import { Onboarding } from './components/Onboarding';
 import { CoachCard } from './components/CoachCard';
 import { analyzeFaceHealth, translateAnalysis, generateCoachingMessage } from './services/auraService';
 import { HealthAnalysis } from './types';
-import { Shield, Sparkles, Activity, LogIn, LogOut, Clock, Sun, Moon, ChevronRight, Zap, Brain } from 'lucide-react';
+import { Shield, Sparkles, Activity, LogIn, LogOut, Clock, Sun, Moon, ChevronRight, Zap, Brain, ScanFace, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './lib/firebase';
 import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
 import { doc, setDoc, collection, addDoc, serverTimestamp, query, orderBy, limit, onSnapshot, getDoc, getDocFromServer, updateDoc, increment } from 'firebase/firestore';
 import { useLanguage, languages } from './lib/i18n';
+import { cn } from './lib/utils';
 
 import { AdminPanel } from './components/AdminPanel';
 import { ThemeProvider, useTheme } from './lib/ThemeContext';
+import { Footer } from './components/Footer';
+import { Legal, LegalType } from './components/Legal';
 
 type AppState = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'HISTORY' | 'ADMIN' | 'ERROR';
+
+function Logo({ className = "", t }: { className?: string; t: any }) {
+  return (
+    <div className={cn("flex flex-col items-center gap-6 md:gap-8", className)}>
+      <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 flex items-center justify-center">
+        {/* The Aura: Minimal Layered Rings */}
+        <div className="absolute inset-0 rounded-full border border-[var(--border-color)] opacity-20" />
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-2 rounded-full border-t border-l border-[var(--accent-teal)] opacity-40" 
+        />
+        <motion.div 
+          animate={{ rotate: -360 }}
+          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-[15%] rounded-full border-b border-r border-[var(--accent-pink)] opacity-30" 
+        />
+        
+        {/* Central Identicon: Geometric Bio-Mark */}
+        <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center shadow-xl overflow-hidden group/mark">
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-teal)]/10 to-transparent" />
+          <ScanFace className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-[var(--accent-teal)] transition-transform duration-700 group-hover/mark:scale-110" />
+          
+          {/* Subtle Scanning Line */}
+          <motion.div 
+            animate={{ top: ['-10%', '110%'] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute left-0 right-0 h-[1px] bg-[var(--accent-teal)]/50 shadow-[0_0_8px_var(--accent-teal)]"
+          />
+        </div>
+      </div>
+      
+      <div className="text-center">
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-display font-bold tracking-[-0.05em] text-[var(--text-primary)] mb-2">
+          Aura<span className="text-[var(--accent-teal)]">Scan</span>
+        </h1>
+        <div className="flex items-center justify-center gap-3">
+          <div className="h-px w-4 bg-[var(--border-color)]" />
+          <span className="text-[10px] md:text-xs font-mono uppercase tracking-[0.4em] text-[var(--text-secondary)] font-medium">
+            {t('Professional Biometrics')}
+          </span>
+          <div className="h-px w-4 bg-[var(--border-color)]" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function AppContent() {
   const [state, setState] = useState<AppState>('IDLE');
@@ -30,6 +80,7 @@ function AppContent() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userLevel, setUserLevel] = useState(1);
   const [userXP, setUserXP] = useState(0);
+  const [legalModal, setLegalModal] = useState<{ isOpen: boolean; type: LegalType }>({ isOpen: false, type: 'privacy' });
   const [totalScans, setTotalScans] = useState(0);
   const { language, setLanguage, t } = useLanguage();
 
@@ -349,26 +400,30 @@ function AppContent() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
       </div>
 
-      <main className="relative z-10 container mx-auto px-4 py-6 md:py-12 flex flex-col items-center min-h-screen">
+      <main className="relative z-10 container mx-auto px-4 py-8 md:py-16 flex flex-col items-center min-h-screen">
         {/* Top Navigation */}
-        <nav className="w-full flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 md:mb-12">
-          <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
-            <button
-              onClick={() => setState('IDLE')}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] hover:bg-[var(--bg-card-hover)] transition-all text-sm font-medium shadow-xl text-[var(--text-primary)]"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-              {t('Home')}
-            </button>
-            
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all shadow-lg"
-              title={theme === 'light' ? t('Switch to Dark Mode') : t('Switch to Light Mode')}
-            >
-              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-            </button>
+        <nav className="w-full flex flex-col sm:flex-row justify-between items-center gap-6 mb-12 md:mb-20">
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setState('IDLE')}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[var(--bg-card)] backdrop-blur-xl border border-[var(--border-color)] hover:bg-[var(--bg-card-hover)] transition-all text-xs font-semibold shadow-2xl text-[var(--text-primary)] active:scale-95"
+              >
+                <div className="p-1 bg-[var(--accent-teal-soft)] rounded-lg">
+                  <Activity className="w-3.5 h-3.5 text-[var(--accent-teal)]" />
+                </div>
+                {t('Home')}
+              </button>
+              
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2.5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all shadow-xl active:scale-90"
+                title={theme === 'light' ? t('Switch to Dark Mode') : t('Switch to Light Mode')}
+              >
+                {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5 shadow-[0_0_10px_var(--accent-amber-soft)]" />}
+              </button>
+            </div>
 
             <div className="flex flex-col gap-1">
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-secondary)] ml-1">{t('Language')}</span>
@@ -391,45 +446,52 @@ function AppContent() {
 
           {authReady && (
             user ? (
-              <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
-                {/* Level Badge */}
-                <div className="flex items-center gap-3 bg-[var(--bg-card)] border border-[var(--accent-teal-border)] px-4 py-2 rounded-full shadow-[0_0_15px_rgba(45,212,191,0.2)]">
+              <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto justify-center sm:justify-start">
+                <div className="flex items-center gap-3 bg-[var(--bg-card)] border border-[var(--accent-teal-border)] px-4 py-2 rounded-2xl shadow-xl">
                   <div className="flex flex-col items-start">
                     <span className="text-[8px] font-mono text-[var(--accent-teal)] uppercase tracking-widest leading-none mb-1">Level</span>
                     <span className="text-sm font-bold leading-none">{userLevel}</span>
                   </div>
-                  <div className="w-20 h-1.5 bg-[var(--bg-card-hover)] rounded-full overflow-hidden border border-[var(--border-color)]">
+                  <div className="w-16 h-1 bg-[var(--bg-card-hover)] rounded-full overflow-hidden border border-[var(--border-color)]">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${(userXP / XP_PER_LEVEL) * 100}%` }}
-                      className="h-full bg-[var(--accent-teal)] shadow-[0_0_10px_rgba(45,212,191,0.5)]"
+                      className="h-full bg-[var(--accent-teal)]"
                     />
                   </div>
                 </div>
 
-                {isAdmin && (
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setState('ADMIN')}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-card)] border border-[var(--accent-teal-border)] text-[var(--accent-teal)] hover:bg-[var(--accent-teal-soft)] transition-all text-sm font-medium shadow-xl"
+                    onClick={() => setState('HISTORY')}
+                    className="p-2.5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:bg-[var(--bg-card-hover)] transition-all shadow-xl text-[var(--text-primary)] active:scale-95"
+                    title={t('History')}
                   >
-                    <Shield className="w-4 h-4" />
-                    {t('Admin')}
+                    <Clock className="w-5 h-5" />
                   </button>
-                )}
-                <button
-                  onClick={() => setState('HISTORY')}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] hover:bg-[var(--bg-card-hover)] transition-all text-sm font-medium shadow-xl text-[var(--text-primary)]"
-                >
-                  <Clock className="w-4 h-4" />
-                  {t('History')}
-                </button>
-                <div className="flex items-center gap-3 pl-4 border-l border-[var(--border-color)]">
-                  {user.photoURL && (
-                    <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-[var(--border-color)] shadow-xl" referrerPolicy="no-referrer" />
+                  
+                  {isAdmin && (
+                    <button
+                      onClick={() => setState('ADMIN')}
+                      className="p-2.5 rounded-2xl bg-[var(--bg-card)] border border-[var(--accent-teal-border)] text-[var(--accent-teal)] hover:bg-[var(--accent-teal-soft)] transition-all shadow-xl active:scale-95"
+                      title={t('Admin')}
+                    >
+                      <Shield className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 bg-[var(--bg-card)] border border-[var(--border-color)] pl-3 pr-4 py-1.5 rounded-2xl shadow-xl">
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-[var(--border-color)]" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-[var(--accent-teal-soft)] flex items-center justify-center text-[var(--accent-teal)] border border-[var(--accent-teal-border)]">
+                      <Users className="w-4 h-4" />
+                    </div>
                   )}
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all text-sm"
+                    className="flex items-center gap-2 text-rose-500 hover:text-rose-600 transition-all text-xs font-bold uppercase tracking-wider active:scale-95"
                   >
                     <LogOut className="w-4 h-4" />
                     {t('Logout')}
@@ -450,37 +512,19 @@ function AppContent() {
 
         {/* Header */}
         {state !== 'HISTORY' && state !== 'ADMIN' && (
-          <header className="text-center mb-10 md:mb-16 mt-2 md:mt-4">
+          <header className="text-center mb-16 md:mb-24 mt-4 md:mt-8">
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center gap-6 mb-8"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center gap-8"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--accent-teal-soft)] border border-[var(--accent-teal-border)] text-[var(--accent-teal)] text-[10px] font-mono tracking-[0.3em] uppercase shadow-[0_0_15px_rgba(45,212,191,0.1)]">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--accent-teal-soft)] border border-[var(--accent-teal-border)] text-[var(--accent-teal)] text-[10px] font-mono tracking-[0.3em] uppercase shadow-[0_0_15px_rgba(45,212,191,0.1)] mb-4">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-teal)] animate-pulse" />
                 {t('AuraScan Arena v2.0')}
               </div>
+              
+              <Logo t={t} />
             </motion.div>
-            <motion.h1
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 20 }}
-              className="text-7xl md:text-9xl font-display font-extrabold tracking-tighter mb-4 md:mb-6 flex items-center justify-center gap-2"
-            >
-              <span className="bg-clip-text text-transparent bg-gradient-to-br from-[var(--accent-teal)] via-[var(--text-primary)] to-[var(--accent-pink)]">
-                Aura
-              </span>
-              <span className="relative">
-                <span className="bg-clip-text text-transparent bg-gradient-to-tr from-[var(--text-primary)] to-[var(--accent-teal)]">
-                  Scan
-                </span>
-                <motion.div 
-                  animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.5, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute -top-2 -right-4 w-3 h-3 bg-[var(--accent-teal)] rounded-full blur-[2px] shadow-[0_0_10px_var(--accent-teal)]" 
-                />
-              </span>
-            </motion.h1>
           </header>
         )}
 
@@ -496,12 +540,12 @@ function AppContent() {
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-[var(--accent-teal)] to-[var(--accent-pink)] rounded-[3rem] blur opacity-10 group-hover:opacity-20 transition duration-1000" />
                 
-                <div className="relative medical-card p-8 md:p-12 text-center space-y-8">
+                <div className="relative medical-card p-6 md:p-12 text-center space-y-8">
                   <div className="space-y-4">
-                    <h2 className="text-4xl md:text-6xl font-display font-bold tracking-tight text-[var(--text-primary)]">
+                    <h2 className="text-3xl md:text-6xl font-display font-bold tracking-tight text-[var(--text-primary)] leading-[1.1]">
                       {t('Ready to')} <span className="neon-text-teal">{t('Level Up')}</span>?
                     </h2>
-                    <p className="text-[var(--text-secondary)] text-lg max-w-xl mx-auto font-light">
+                    <p className="text-[var(--text-secondary)] text-sm md:text-lg max-w-xl mx-auto font-light leading-relaxed">
                       {t('Step into the arena. One quick scan, and we\'ll map your biometric stats like a pro gamer.')}
                     </p>
                   </div>
@@ -661,46 +705,16 @@ function AppContent() {
           )}
         </AnimatePresence>
 
-        {/* Footer */}
-        <footer className="mt-auto pt-20 pb-12 w-full max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12 border-t border-[var(--border-color)] pt-12">
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-2">
-                <h3 className="text-2xl font-display font-bold tracking-tight">
-                  <span className="text-[var(--accent-teal)]">Aura</span>
-                  <span className="text-[var(--text-primary)]">Scan</span>
-                </h3>
-                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-teal)] animate-pulse" />
-              </div>
-              <p className="text-sm text-[var(--text-secondary)] font-light leading-relaxed">
-                {t('Professional-grade biometric analysis for the modern wellness journey. Empowering individuals with data-driven health insights.')}
-              </p>
-            </div>
-            <div className="flex flex-col gap-4">
-              <h4 className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-secondary)]">{t('Legal')}</h4>
-              <nav className="flex flex-col gap-2">
-                <button className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-all text-left">{t('Privacy Policy')}</button>
-                <button className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-all text-left">{t('Terms of Service')}</button>
-                <button className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-all text-left">{t('Medical Disclaimer')}</button>
-              </nav>
-            </div>
-            <div className="flex flex-col gap-4">
-              <h4 className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-secondary)]">{t('Support')}</h4>
-              <nav className="flex flex-col gap-2">
-                <button className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-all text-left">{t('Help Center')}</button>
-                <button className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-all text-left">{t('Contact Us')}</button>
-                <button className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-teal)] transition-all text-left">{t('API Documentation')}</button>
-              </nav>
-            </div>
-          </div>
-          <div className="text-center text-[var(--text-secondary)] text-[10px] uppercase tracking-[0.4em] font-mono opacity-50">
-            {t('© 2026 AuraScan Biometrics • For Informational Purposes Only')}
-          </div>
-        </footer>
+        <Footer onOpenLegal={(type) => setLegalModal({ isOpen: true, type })} />
       </main>
 
       <FeedbackModal />
       {showOnboarding && <Onboarding onComplete={handleCompleteOnboarding} />}
+      <Legal 
+        isOpen={legalModal.isOpen} 
+        type={legalModal.type} 
+        onClose={() => setLegalModal({ ...legalModal, isOpen: false })} 
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Camera, BarChart3, Sparkles, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Camera, BarChart3, Sparkles, X, ChevronRight, ChevronLeft, ScanFace } from 'lucide-react';
 import { useLanguage } from '../lib/i18n';
 
 interface OnboardingProps {
@@ -14,12 +14,19 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   const steps = [
     {
       icon: (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-center gap-4 py-4">
+          <div className="relative flex items-center justify-center w-16 h-16">
+            <motion.div 
+              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 3, repeat: Infinity }}
+              className="absolute inset-0 rounded-full border border-[var(--accent-teal)]/30"
+            />
+            <ScanFace className="w-8 h-8 text-[var(--accent-teal)]" />
+          </div>
           <h2 className="text-4xl font-display font-bold tracking-tighter">
             <span className="text-[var(--accent-teal)]">Aura</span>
             <span className="text-[var(--text-primary)]">Scan</span>
           </h2>
-          <div className="w-2 h-2 rounded-full bg-[var(--accent-teal)] animate-pulse" />
         </div>
       ),
       title: t('Welcome to AuraScan'),

@@ -3,7 +3,7 @@ import { collection, query, orderBy, getDocs, limit, doc, getDoc, onSnapshot, ad
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { motion } from 'motion/react';
 import { HealthAnalysis } from "../types";
-import { Shield, MessageSquare, Users, Activity, ArrowLeft, Trash2, Sparkles, RefreshCw } from 'lucide-react';
+import { Shield, MessageSquare, Users, Activity, ArrowLeft, Trash2, Sparkles, RefreshCw, Zap } from 'lucide-react';
 import { useLanguage } from '../lib/i18n';
 
 interface AdminPanelProps {
@@ -356,6 +356,61 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
 
           {activeTab === 'usage' && (
             <div className="space-y-8">
+              {/* Daily Quota Monitor */}
+              <div className="medical-card p-6 md:p-8 rounded-[2rem] border-2 border-[var(--accent-teal)]/30 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-card-hover)] relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent-teal)]/5 blur-[80px] rounded-full -mr-32 -mt-32" />
+                
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-[var(--accent-teal-soft)] rounded-xl text-[var(--accent-teal)] border border-[var(--accent-teal-border)]">
+                        <Zap className="w-5 h-5 fill-current" />
+                      </div>
+                      <h3 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
+                        {t('Free Tier Pulse')}
+                      </h3>
+                    </div>
+                    <div>
+                      <p className="text-[var(--text-secondary)] text-sm max-w-md leading-relaxed font-light">
+                        {t('Monitoring your Gemini Flash Free Tier limits. This tracks API calls shared across your Vercel, GitHub, and AI Studio deployments. Global limits apply across all your Google AI Studio projects.')}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Shield className="w-3 h-3 text-[var(--accent-teal)]" />
+                        <span className="text-[10px] font-mono text-[var(--accent-teal)] uppercase tracking-wider">{t('Secure Tracking Active')}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 max-w-sm space-y-3">
+                    <div className="flex justify-between items-end mb-1">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-mono text-[var(--text-secondary)] uppercase tracking-[0.2em]">{t('Today\'s Usage')}</span>
+                        <span className="text-3xl font-display font-bold text-[var(--accent-teal)]">
+                          {(apiStats as any)?.[`daily_${new Date().toISOString().split('T')[0]}`] || 0}
+                          <span className="text-lg text-[var(--text-secondary)] font-normal ml-2">/ 1,500</span>
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-[var(--accent-teal)] font-bold px-2 py-1 bg-[var(--accent-teal-soft)] rounded-md border border-[var(--accent-teal-border)]">
+                        {Math.round((( (apiStats as any)?.[`daily_${new Date().toISOString().split('T')[0]}`] || 0) / 1500) * 100)}%
+                      </span>
+                    </div>
+                    <div className="h-3 w-full bg-[var(--border-color)] rounded-full overflow-hidden p-0.5 border border-[var(--border-color)]">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(100, (((apiStats as any)?.[`daily_${new Date().toISOString().split('T')[0]}`] || 0) / 1500) * 100)}%` }}
+                        className="h-full bg-gradient-to-r from-[var(--accent-teal)] to-[var(--accent-pink)] rounded-full relative shadow-[0_0_15px_var(--accent-teal-soft)]"
+                      >
+                        <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.2)_50%,transparent_100%)] animate-pulse" />
+                      </motion.div>
+                    </div>
+                    <div className="flex justify-between text-[9px] font-mono text-[var(--text-secondary)] uppercase tracking-widest pt-1 px-1">
+                      <span>0 Req/Day</span>
+                      <span className="text-[var(--accent-pink-soft)]">Critical Limit: 1,500 Req/Day</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Debug Info */}
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -452,7 +507,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                     {apiLogs.map((log) => (
                       <tr key={log.id} className="hover:bg-[var(--bg-card)] transition-colors">
                         <td className="px-6 py-5 text-[var(--text-secondary)] font-mono text-xs">
-                          {log.timestamp?.toDate ? log.timestamp.toDate().toLocaleTimeString() : 'N/A'}
+                          {log.timestamp?.toDate ? log.timestamp.toDate().toLocaleString() : 'N/A'}
                         </td>
                         <td className="px-6 py-5">
                           <span className={`text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest border ${

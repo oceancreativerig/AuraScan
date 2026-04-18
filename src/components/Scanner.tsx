@@ -348,15 +348,15 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
   };
 
   return (
-    <div className="relative w-full max-w-sm mx-auto aspect-[3/4] sm:aspect-[9/16] bg-black rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border-4 sm:border-[8px] border-[var(--bg-card)] shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+    <div className="relative w-full max-w-sm mx-auto aspect-[9/16] bg-black rounded-[2.5rem] overflow-hidden border-4 sm:border-[8px] border-[var(--bg-card)] shadow-[0_0_60px_rgba(0,0,0,0.6)] group">
       <video
         ref={videoRef}
         autoPlay
         playsInline
         muted
         className={cn(
-          "w-full h-full object-cover transition-opacity duration-500",
-          isAnalyzing ? "opacity-40 grayscale" : "opacity-100"
+          "w-full h-full object-cover transition-all duration-700",
+          isAnalyzing ? "opacity-30 grayscale scale-110" : "opacity-100 scale-100"
         )}
       />
       
@@ -372,36 +372,40 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
       />
 
       {/* Scanning Grid Overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="w-full h-full bg-[linear-gradient(rgba(45,212,191,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,0.1)_1px,transparent_1px)] bg-[size:20px_20px]" />
+      <div className="absolute inset-0 pointer-events-none opacity-[0.05] sm:opacity-10">
+        <div className="w-full h-full bg-[linear-gradient(rgba(45,212,191,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,0.1)_1px,transparent_1px)] bg-[size:30px_30px]" />
       </div>
 
       {/* Face Guide Oval */}
       {!isAnalyzing && !error && isModelLoaded && (
-        <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-center">
-          <div className={cn(
-            "w-[75%] aspect-[3/4] rounded-[100%] border-2 border-dashed transition-all duration-500",
-            faceStatus === 'optimal' ? "border-[var(--accent-teal)] bg-[var(--accent-teal-soft)] shadow-[0_0_40px_rgba(45,212,191,0.2)]" : 
-            faceStatus === 'none' ? "border-white/10" : "border-[var(--accent-pink)] bg-[var(--accent-pink-soft)]"
-          )} />
+        <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-center p-8">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={cn(
+              "w-full aspect-[4/5] sm:aspect-[3/4] rounded-[100%] border-2 border-dashed transition-all duration-500",
+              faceStatus === 'optimal' ? "border-[var(--accent-teal)] bg-[var(--accent-teal-soft)] shadow-[0_0_50px_rgba(45,212,191,0.25)] scale-105" : 
+              faceStatus === 'none' ? "border-white/20" : "border-[var(--accent-pink)] bg-[var(--accent-pink-soft)] scale-95"
+            )} 
+          />
         </div>
       )}
 
       {/* Status Overlay */}
       {!isAnalyzing && !error && isModelLoaded && (
-        <div className="absolute top-12 left-0 right-0 flex flex-col items-center gap-2 z-30 px-4">
+        <div className="absolute top-8 sm:top-12 left-0 right-0 flex flex-col items-center gap-3 z-30 px-6">
           <motion.div 
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-              "px-4 py-2 rounded-full backdrop-blur-xl border text-[10px] font-mono uppercase tracking-[0.2em] flex items-center gap-2",
+              "px-5 py-2.5 rounded-2xl backdrop-blur-2xl border text-[10px] font-mono uppercase tracking-[0.2em] flex items-center gap-3 transition-colors",
               brightness < 70 || faceStatus !== 'optimal'
-                ? "bg-[var(--accent-pink-soft)] border-[var(--accent-pink-border)] text-[var(--accent-pink)] shadow-[0_0_15px_rgba(244,114,182,0.3)]" 
-                : "bg-[var(--accent-teal-soft)] border-[var(--accent-teal-border)] text-[var(--accent-teal)] shadow-[0_0_15px_rgba(45,212,191,0.3)]"
+                ? "bg-[var(--accent-pink-soft)] border-[var(--accent-pink-border)] text-[var(--accent-pink)] shadow-[0_0_20px_rgba(244,114,182,0.4)]" 
+                : "bg-[var(--accent-teal-soft)] border-[var(--accent-teal-border)] text-[var(--accent-teal)] shadow-[0_0_20px_rgba(45,212,191,0.4)]"
             )}
           >
             <div className={cn(
-              "w-2 h-2 rounded-full animate-pulse",
+              "w-2.5 h-2.5 rounded-full animate-pulse",
               brightness < 70 || faceStatus !== 'optimal' ? "bg-[var(--accent-pink)]" : "bg-[var(--accent-teal)]"
             )} />
             {brightness < 70 ? t("Environment too dark") : 
@@ -415,19 +419,19 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col items-center gap-1.5"
+            className="flex flex-col items-center gap-2 bg-black/20 backdrop-blur-md px-4 py-2 rounded-xl border border-white/5"
           >
-            <div className="flex items-center gap-2 text-[9px] font-mono text-[var(--text-primary)] uppercase tracking-widest drop-shadow-md">
-              <Sun className={cn("w-3 h-3", brightness < 70 ? "text-rose-400" : "text-[var(--accent-teal)]")} />
-              {t('Ambient Light')}
+            <div className="flex items-center gap-2 text-[9px] font-mono text-white/70 uppercase tracking-widest">
+              <Sun className={cn("w-3.5 h-3.5 transition-colors", brightness < 70 ? "text-rose-400" : "text-[var(--accent-teal)]")} />
+              {t('LUMINANCE_LEVEL')}
             </div>
-            <div className="w-32 h-1 bg-[var(--border-color)] rounded-full overflow-hidden border border-[var(--border-color)]">
+            <div className="w-24 h-1 bg-white/10 rounded-full overflow-hidden">
               <motion.div 
                 animate={{ 
                   width: `${Math.min(100, (brightness / 255) * 100)}%`,
                   backgroundColor: brightness < 70 ? '#f43f5e' : brightness < 150 ? '#fbbf24' : '#2dd4bf'
                 }}
-                className="h-full shadow-[0_0_8px_rgba(45,212,191,0.5)]"
+                className="h-full shadow-[0_0_10px_rgba(45,212,191,0.6)]"
               />
             </div>
           </motion.div>

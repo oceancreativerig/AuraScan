@@ -22,14 +22,16 @@ async function trackApiUsage(operation: 'analysis' | 'translation' | 'coaching')
   try {
     const env = getEnvironment();
     const statsRef = doc(db, 'admin', 'stats');
+    const today = new Date().toISOString().split('T')[0];
     
-    console.log(`[Aura] Tracking API usage: ${operation} on ${env}`);
+    console.log(`[Aura] Tracking API usage: ${operation} on ${env} for ${today}`);
 
     // Update global stats using merge to handle non-existent document
     await setDoc(statsRef, {
       totalCalls: increment(1),
       [`calls_${operation}`]: increment(1),
       [`env_${env}`]: increment(1),
+      [`daily_${today}`]: increment(1),
       lastCallAt: serverTimestamp()
     }, { merge: true });
 
