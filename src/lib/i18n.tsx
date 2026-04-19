@@ -145,8 +145,32 @@ export const translations: Translations = {
   "Failed to load AI models. Please refresh.": {
     English: "Failed to load AI models. Please refresh.", Spanish: "Error al cargar modelos de IA. Por favor, actualiza.", French: "Échec du chargement des modèles IA. Veuillez rafraîchir.", German: "Fehler beim Laden der KI-Modelle. Bitte aktualisieren.", Chinese: "加载AI模型失败。请刷新。", Japanese: "AIモデルの読み込みに失敗しました。更新してください。", Hindi: "एआई मॉडल लोड करने में विफल। कृपया रीफ्रेश करें।", Arabic: "فشل تحميل نماذج الذكاء الاصطناعي. يرجى التحديث.", Portuguese: "Falha ao carregar modelos de IA. Atualize a página.", Russian: "Не удалось загрузить ИИ-модели. Пожалуйста, обновите страницу."
   },
-  "Retry Camera": {
-    English: "Retry Camera", Spanish: "Reintentar cámara", French: "Réessayer la caméra", German: "Kamera erneut versuchen", Chinese: "重试相机", Japanese: "カメラを再試行", Hindi: "कैमरा पुनः प्रयास करें", Arabic: "إعادة محاولة الكاميرا", Portuguese: "Tentar Câmera Novamente", Russian: "Повторить попытку камеры"
+  "Simulate Demo Scan": {
+    English: "Simulate Demo Scan", Spanish: "Simular escaneo de demostración", French: "Simuler un scan de démonstration", German: "Demo-Scan simulieren", Chinese: "模拟演示扫描", Japanese: "デモスキャンをシミュレート", Hindi: "डेमो स्कैन का अनुकरण करें", Arabic: "محاكاة مسح تجريبي", Portuguese: "Simular Scan de Demonstração", Russian: "Симулировать демонстрационное сканирование"
+  },
+  "Scan Restricted: Camera permission was denied. To continue, please enable camera access in your browser settings (look for the camera icon in the address bar) and click Retry.": {
+    English: "Scan Restricted: Camera permission was denied. To continue, please enable camera access in your browser settings (look for the camera icon in the address bar) and click Retry.",
+    Spanish: "Escaneo restringido: se denegó el permiso de la cámara. Habilite el acceso en la configuración y haga clic en Reintentar.",
+    French: "Scan restreint : l'autorisation de la caméra a été refusée. Veuillez activer l'accès dans les paramètres et cliquer sur Réessayer.",
+    German: "Scan eingeschränkt: Kameraberechtigung wurde verweigert. Bitte aktivieren Sie den Zugriff in den Einstellungen und klicken Sie auf Wiederholen.",
+    Chinese: "扫描受限：相机权限被拒绝。请在浏览器设置中启用相机访问，然后点击重试。",
+    Japanese: "スキャンが制限されています：カメラの権限が拒否されました。ブラウザの設定でカメラへのアクセスを有効にし、再試行をクリックしてください。",
+    Hindi: "स्कैन प्रतिबंधित: कैमरा अनुमति अस्वीकृत कर दी गई थी। जारी रखने के लिए, कृपया ब्राउज़र सेटिंग्स में कैमरा एक्सेस सक्षम करें और पुनः प्रयास करें।",
+    Arabic: "المسح مقيد: تم رفض إذن الكاميرا. للمتابعة ، يرجى تمكين الوصول إلى الكاميرا في إعدادات المتصفح والنقر فوق إعادة المحاولة.",
+    Portuguese: "Scan Restrito: A permissão da câmera foi negada. Para continuar, habilite o acesso à câmera nas configurações do navegador e clique em Tentar Novamente.",
+    Russian: "Сканирование ограничено: в разрешении на использование камеры отказано. Чтобы продолжить, включите доступ к камере в настройках браузера и нажмите «Повторить»."
+  },
+  "AuraScan requires deep biometric sensor access which is restricted in this preview. Please use the button below to 'Open in New Tab' for full access, or upload a high-quality photo manually.": {
+    English: "AuraScan requires deep biometric sensor access which is restricted in this preview. Please use the button below to 'Open in New Tab' for full access, or upload a high-quality photo manually.",
+    Spanish: "AuraScan requiere acceso al sensor biométrico. Usa 'Abrir en nueva pestaña' o sube una foto.",
+    French: "AuraScan nécessite un accès au capteur biométrique. Utilisez 'Ouvrir dans un nouvel onglet' ou téléchargez une photo.",
+    German: "AuraScan erfordert Zugriff auf biometrische Sensoren. 'In neuem Tab öffnen' oder Foto hochladen.",
+    Chinese: "AuraScan 需要深层生物识别传感器访问权限，该权限在预览中受限。请使用下方的“在新标签页中打开”按钮以获得完整访问权限，或手动上传高质量照片。",
+    Japanese: "AuraScanにはバイオメトリックセンサーへのフルアクセスが必要ですが、プレビューでは制限されています。下のボタンから「新しいタブで開く」か、手動で写真をアップロードしてください。",
+    Hindi: "AuraScan के लिए गहरे बायोमेट्रिक सेंसर एक्सेस की आवश्यकता होती है जो इस पूर्वावलोकन में प्रतिबंधित है। कृपया पूर्ण पहुंच के लिए नीचे दिए गए बटन का उपयोग करें, या मैन्युअल रूप से एक फोटो अपलोड करें।",
+    Arabic: "يتطلب AuraScan وصولاً عميقًا إلى المستشعر البيومتري وهو مقيد في هذه المعاينة. يرجى استخدام الزر أدناه لـ 'فتح في علامة تبويب جديدة' للوصول الكامل ، أو تحميل صورة عالية الجودة يدويًا.",
+    Portuguese: "O AuraScan requer acesso profundo ao sensor biométrico, o que é restrito nesta visualização. Use o botão abaixo para 'Abrir em nova guia' ou envie uma foto manualmente.",
+    Russian: "AuraScan требует глубокого доступа к биометрическим датчикам, который ограничен в этом режиме. Используйте кнопку «Открыть в новой вкладке» для полного доступа или загрузите фото вручную."
   },
   "Too dark for accurate scan": {
     English: "Too dark for accurate scan", Spanish: "Demasiado oscuro para un escaneo preciso", French: "Trop sombre pour un scan précis", German: "Zu dunkel für einen genauen Scan", Chinese: "太暗，无法进行准确扫描", Japanese: "暗すぎて正確なスキャンができません", Hindi: "सटीक स्कैन के लिए बहुत अंधेरा", Arabic: "مظلم جدًا لإجراء فحص دقيق", Portuguese: "Muito escuro para um scan preciso", Russian: "Слишком темно для точного сканирования"

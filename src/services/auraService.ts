@@ -1,4 +1,4 @@
-import { HealthAnalysis } from "../types";
+import { HealthAnalysis, ScanType, ExternalHealthData } from "../types";
 import { GoogleGenAI } from "@google/genai";
 import { db, auth } from "../lib/firebase";
 import { doc, setDoc, updateDoc, increment, serverTimestamp, collection, addDoc } from "firebase/firestore";
@@ -117,7 +117,13 @@ export async function generateCoachingMessage(history: HealthAnalysis[], latest:
   }
 }
 
-export async function analyzeFaceHealth(base64Image: string, language: string = 'English', focusArea: string = 'General Wellness'): Promise<HealthAnalysis> {
+export async function analyzeFaceHealth(
+  base64Image: string, 
+  language: string = 'English', 
+  focusArea: string = 'General Wellness',
+  scanType: ScanType = 'general',
+  externalData?: ExternalHealthData
+): Promise<HealthAnalysis> {
   if (!apiKey || apiKey === "undefined") {
     throw new Error("Gemini API Key is missing. Please set GEMINI_API_KEY in your environment.");
   }
@@ -125,92 +131,130 @@ export async function analyzeFaceHealth(base64Image: string, language: string = 
   await trackApiUsage('analysis');
 
   const prompt = `
-    You are Aura, the user's ultimate Health Coach Bestie. Your task is to analyze the provided facial image to detect health markers, but explain them in "regular talking language" that's easy to understand. Think of yourself as a super-smart friend who knows everything about health but explains it simply.
+    You are Aura, the user's ultimate Health Coach Bestie. 
+    CURRENT CONTEXT:
+    - Scan Type: ${scanType} (Morning Kickstart / Evening Review / General)
+    - External Vitality Data: ${externalData ? JSON.stringify(externalData) : 'None provided'}
+    - Focus Area: ${focusArea}
+    - Language: ${language}
 
-    ### TONE & LANGUAGE PROTOCOL:
-    1. **Conversational First:** Use super friendly, supportive, and regular talking language. Avoid sounding like a cold medical report.
-    2. **Simple Explanations:** Instead of "Periorbital puffiness indicating renal stress," say "Your eyes look a bit puffy today, which might mean your kidneys are working overtime or you need more water, bestie! 💧"
-    3. **Bestie Vibes:** Use encouraging phrases, lots of emojis, and focus on actionable, easy-to-understand advice. If you see something that needs attention, say it gently like a friend would.
-    4. **Language Requirement:** You MUST return all text fields in the following language: ${language}.
+    ### CORE DIRECTIVE:
+    Integrate the facial analysis with the current context. 
+    - If ${scanType} is 'morning', focus on readiness, energy levels, and a morning "Action Plan".
+    - If ${scanType} is 'evening', focus on recovery, inflammation markers, and "Evening Wind-down".
+    - Factor in the External Vitality Data (like steps or sleep) to validate what you see on the face. (e.g., if sleep was low and eyes look puffy, explain the connection).
 
-    ### RIGOROUS ACCURACY PROTOCOL:
-    1. **Visual Evidence Only:** Base your findings strictly on visible markers in the image. Do not hallucinate.
-    2. **Confidence Scoring:** For every indicator, provide a confidence score (0.0 to 1.0). If lighting is poor or features are obscured, lower the confidence significantly.
-    3. **Micro-Marker Detection:** Look for minute details: capillary breakage, pore size distribution, subtle skin tone shifts, and texture.
-    4. **Systemic Correlation:** Link facial markers to internal physiological systems (Endocrine, Digestive, Cardiovascular, Renal, Hepatic).
-
-    ### FOCUS AREA:
-    The user has requested a specific focus on: **${focusArea}**.
-    Ensure that your analysis heavily weights this area. Provide exactly 5 key health indicators.
+    ### RIGOROUS ACCURACY PROTOCOL (CRITICAL):
+    1. **Early Warning Detection:** Look for subtle signs of chronic fatigue, early-stage dehydration, micronutrient deficiencies (e.g., Vitamin B12/Iron markers), and hormonal fluctuations. 
+    2. **Visual Evidence Only:** Base findings strictly on visible markers (capillary congestion, facial asymmetry, skin turgor, eye coloration, hyperpigmentation patterns).
+    3. **Confidence Scoring:** For every indicator, provide a confidence score (0.0 to 1.0). If lighting is poor or features are obscured, lower the confidence and specifically mention "Scan Environment Optimization" in the summary.
+    4. **Systemic Deep-Dive:** Map markers to specific systems: Cardiovascular (lip color/micro-vessels), Renal (periorbital region), Hepatic (sclera/cheek pigmentation), and Endocrine (jawline/forehead texture).
+    
+    ### FORMATTING & TONE:
+    1. **Markdown Summary:** Use **Bold**, *Italics*, and Bullet points in the 'summary' field.
+    2. **Tone:** Supportive, high-energy Bestie vibes, but with professional biomedical depth.
+    3. **Actionability:** Recommendations MUST be highly specific (e.g., instead of "Drink more water," say "Increase hydration by 500ml today with added electrolytes to improve skin turgor").
 
     ### BIOMETRIC MAPPING PARAMETERS:
-    (Explain results in simple, catchy terms)
-    1. Vascular & Oxygenation (Lip/Sclera/Cheek) -> "Glow & Flow"
-    2. Metabolic & Endocrine (Jawline/Neck/Eyes) -> "Energy & Balance"
-    3. Digestive & Gut-Skin Axis (Forehead/Mouth/Cheeks) -> "Gut-Skin Connection"
-    4. Dermatological Integrity -> "Skin Strength"
+    (Explain results in simple, catchy terms but with underlying medical rigor)
+    1. Vascular & Oxygenation (Lip/Sclera/Cheek) -> "Glow & Flow" (Bloodflow & Cell Health)
+    2. Metabolic & Endocrine (Jawline/Neck/Eyes) -> "Energy & Balance" (Hormones & Stress)
+    3. Digestive & Gut-Skin Axis (Forehead/Mouth/Cheeks) -> "Inner Harmony" (Gut Health & Inflammation)
+    4. Dermatological Integrity -> "Dermal Shield" (Skin Barrier & Resilience)
 
     ### 7-DAY CHALLENGE:
-    Identify the most critical finding. Generate a personalized 7-day wellness challenge that feels like a "Fun Quest" or a "Mini-Game" to level up their health. 🎮🌈
-    - The 'title' should be catchy and fun.
-    - The 'description' should be super encouraging and bestie-like.
-    - Each day should have a small, actionable task that feels like "leveling up."
+    Generate a personalizeable 7-day wellness quest that targets the #1 vulnerability found in the scan.
 
-    ### RESPONSE REQUIREMENTS:
-    - Return ONLY valid JSON.
-    - Provide exactly 5 indicators in the 'indicators' array.
-    - If the image is unclear, lower the 'confidence' score accordingly.
-    
-    ### BUSINESS INTEGRATION:
-    1. **Recommended Products:** Suggest 2-3 specific types of products that would help the user. Explain WHY in simple terms.
-    2. **Personalized Nutrition:** Provide 2 simple meal ideas that target the critical findings. Explain why they are good for the user like a nutritionist friend would.
+    ### RECOMMENDATIONS, PRODUCTS & NUTRITION (CRITICAL):
+    1. **Recommendations:** Provide 3-5 highly specific, actionable tips. Each tip must belong to a category: 'Nutrition', 'Hydration', 'Sleep', 'Exercise', 'Stress Management', 'Skincare', or 'Lifestyle'.
+    2. **Products:** Recommend 2-3 products (Skincare or Supplements) that directly address the 'fair' or 'attention_needed' indicators. Include a realistic 'brand' (or 'Aura Specialty'), a 'reason' why it helps the specific facial marker, and a generic 'link' (e.g., placeholder or affiliate-style).
+    3. **Personalized Nutrition:** Provide 2-3 specific meal ideas. Each meal MUST have:
+       - 'title': Catchy, healthy name.
+       - 'description': Why this specific meal helps the user based on their scan.
+       - 'image_keyword': 2-3 words for a high-quality food image (e.g., 'salmon-avocado-salad').
+       - 'ingredients': List of key functional ingredients.
+       - 'nutritional_info': Realistic calories, protein, carbs, and fats.
 
-    ### JSON STRUCTURE:
+    ### JSON STRUCTURE (STRICT):
     {
-      "summary": "A friendly, conversational summary of the overall scan results.",
+      "summary": "Immersive, markdown-formatted overview of current vitality state.",
       "overall_score": 0,
+      "daily_readiness": {
+        "score": 0-100,
+        "label": "e.g., Peak Performance | Recovery Mode | High Vitality",
+        "description": "Short reasoning for today's readiness score."
+      },
       "indicators": [
         {
-          "label": "A simple, catchy name for the indicator",
+          "label": "Catchy name",
           "status": "optimal|fair|attention_needed",
           "score": 0-100,
           "confidence": 0.0-1.0,
-          "facial_signs": ["Simple description of what you see", "..."],
+          "facial_signs": ["Specific markers seen, e.g., 'Minor vascular congestion under lower eyelids'"],
           "affected_regions": ["forehead", "eyes", "cheeks", "nose", "mouth", "jawline", "skin_overall"],
-          "systemic_implication": "A simple explanation of what this means for their health"
+          "systemic_implication": "Deep explanation of internal connection",
+          "technical_insight": "A brief medical/dermatological term for the finding"
         }
       ],
       "recommendations": [
-        { "category": "...", "tip": "A fun, actionable tip" }
+        { "category": "category", "tip": "specific actionable tip" }
       ],
       "products": [
-        { "name": "...", "type": "SKINCARE|SUPPLEMENT", "reason": "Simple reason why this is good for them", "link": "#", "brand": "...", "price": "..." }
+        { "name": "name", "type": "SKINCARE|SUPPLEMENT", "reason": "why this helps the facial signs", "link": "link", "brand": "brand", "price": "$0.00" }
       ],
       "meals": [
-        { 
-          "title": "...", 
-          "description": "Why this meal is a game-changer for them", 
-          "ingredients": ["...", "..."],
-          "image_keyword": "...",
-          "nutritional_info": { "calories": 0, "protein": "...", "carbs": "...", "fats": "..." }
+        {
+          "title": "meal name",
+          "description": "why this helps your biometric state",
+          "ingredients": ["item1", "item2"],
+          "image_keyword": "keywords-for-image",
+          "nutritional_info": { "calories": 0, "protein": "0g", "carbs": "0g", "fats": "0g" }
         }
       ],
       "challenge": { ... },
-      "disclaimer": "..."
+      "disclaimer": "Standard biometric disclaimer."
     }
   `;
 
-  try {
-    const imagePart = {
-      inlineData: {
-        mimeType: "image/jpeg",
-        data: base64Image,
-      },
-    };
+    try {
+    const isDemo = base64Image === 'DEMO_MODE_SIMULATION';
+    
+    let content;
+    if (isDemo) {
+      content = { 
+        parts: [{ 
+          text: `
+            ${prompt}
+            
+            DEMO MODE ENABLED: No real image provided. 
+            Generate a high-fidelity synthetic demo report for a person who is slightly dehydrated but otherwise high vitality. 
+            
+            REQUIRED DEMO DATA:
+            - **Summary:** High-energy bestie vibes mentioning "glowing skin but slight thirst".
+            - **Indicators:** Include "Hydration Depth" (score: 65, attention_needed) and "Vitamin B12 Vitality" (score: 92, optimal).
+            - **Recommendations:** Include specific water intake with electrolytes.
+            - **Products:** Recommend a "Hydra-Boost Serum" and "Daily Vitality Multi-Vitamins".
+            - **Meals:** Include a "Vibrant Salmon Quinoa Bowl" with "spinach-salmon-lemon" keywords.
+            - **Challenge:** A "7-Day Glow-Up" challenge focused on water and rest.
+            
+            Keep the report professional, actionable, and in the "Bestie" tone. 
+            The purpose is to demonstrate AuraScan's full feature set.
+          ` 
+        }] 
+      };
+    } else {
+      const imagePart = {
+        inlineData: {
+          mimeType: "image/jpeg",
+          data: base64Image,
+        },
+      };
+      content = { parts: [imagePart, { text: prompt }] };
+    }
 
     const result = await ai.models.generateContent({
       model: "gemini-flash-latest",
-      contents: { parts: [imagePart, { text: prompt }] },
+      contents: content,
       config: { responseMimeType: "application/json" }
     });
     const parsed = JSON.parse(result.text || "{}");

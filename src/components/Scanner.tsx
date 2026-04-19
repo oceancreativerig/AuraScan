@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, RefreshCw, ShieldAlert, Loader2, Upload, ExternalLink, Sun } from 'lucide-react';
+import { Camera, RefreshCw, ShieldAlert, Loader2, Upload, ExternalLink, Sun, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FaceLandmarker } from '@mediapipe/tasks-vision';
 import { getFaceLandmarker } from '../services/visionService';
@@ -89,8 +89,10 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
       
       let errorMessage = t("Camera access denied. Please ensure you have granted permission in your browser settings.");
       
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        errorMessage = t("Camera permission was denied. Please click the camera icon in your browser address bar to allow access, then click Retry.");
+      const isDenied = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError' || err.message?.toLowerCase().includes('denied');
+      
+      if (isDenied) {
+        errorMessage = t("Scan Restricted: Camera permission was denied. To continue, please enable camera access in your browser settings (look for the camera icon in the address bar) and click Retry.");
       } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
         errorMessage = t("No camera found on this device.");
       } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
@@ -98,8 +100,8 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
       }
 
       const isIframe = window.self !== window.top;
-      if (isIframe && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
-        errorMessage = t("Camera access is restricted in the preview iframe. Please click 'Open in New Tab' below to use your camera, or upload a photo manually.");
+      if (isIframe && (isDenied || err.name === 'SecurityError')) {
+        errorMessage = t("AuraScan requires deep biometric sensor access which is restricted in this preview. Please use the button below to 'Open in New Tab' for full access, or upload a high-quality photo manually.");
       }
 
       setError(errorMessage);
@@ -372,8 +374,25 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
       />
 
       {/* Scanning Grid Overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.05] sm:opacity-10">
-        <div className="w-full h-full bg-[linear-gradient(rgba(45,212,191,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,0.1)_1px,transparent_1px)] bg-[size:30px_30px]" />
+      <div className="absolute inset-0 pointer-events-none z-10">
+        {/* Dynamic Biometric Stream Background */}
+        <div className="absolute inset-0 opacity-20 sm:opacity-30 bg-[linear-gradient(rgba(45,212,191,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        
+        <div className="absolute inset-0 overflow-hidden">
+          {isAnalyzing ? (
+             <div className="absolute inset-0 bg-[var(--accent-teal)]/5 animate-pulse" />
+          ) : (
+            [...Array(5)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ x: '-100%', y: `${20 + i * 15}%` }}
+                animate={{ x: '100%' }}
+                transition={{ duration: 10 + i * 2, repeat: Infinity, ease: "linear", delay: i * 2 }}
+                className="absolute h-[1px] w-full bg-gradient-to-r from-transparent via-[var(--accent-teal)]/20 to-transparent"
+              />
+            ))
+          )}
+        </div>
       </div>
 
       {/* Face Guide Oval */}
@@ -539,6 +558,14 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
             >
               <RefreshCw className="w-4 h-4" />
               {t('Retry Camera')}
+            </button>
+
+            <button
+              onClick={() => onCapture('DEMO_MODE_SIMULATION')}
+              className="w-full px-4 py-2.5 bg-[var(--accent-pink-soft)] text-[var(--accent-pink)] border border-[var(--accent-pink-border)] rounded-xl hover:bg-[var(--accent-pink)] hover:text-white transition-all flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <Activity className="w-4 h-4" />
+              {t('Simulate Demo Scan')}
             </button>
             
             <div className="relative w-full">

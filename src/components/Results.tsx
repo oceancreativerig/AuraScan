@@ -34,6 +34,7 @@ import {
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import Markdown from 'react-markdown';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { HealthAnalysis } from '../types';
 import { cn } from '../lib/utils';
@@ -42,10 +43,22 @@ import { useLanguage } from '../lib/i18n';
 interface ResultsProps {
   analysis: HealthAnalysis;
   onReset: () => void;
-  onUpdateChallenge?: (dayIndex: number, completed: boolean) => void;
+  onUpdateChallenge?: (scanId: string, dayIndex: number, completed: boolean) => void;
+  activeChallengeScanId?: string | null;
+  scanHistory?: (HealthAnalysis & { id: string })[];
+  onSetActiveChallenge?: (id: string) => void;
+  currentScanId?: string | null;
 }
 
-export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateChallenge }) => {
+export const Results: React.FC<ResultsProps> = ({ 
+  analysis, 
+  onReset, 
+  onUpdateChallenge,
+  activeChallengeScanId,
+  scanHistory,
+  onSetActiveChallenge,
+  currentScanId
+}) => {
   const { t } = useLanguage();
   const [selectedProduct, setSelectedProduct] = useState<typeof analysis.products extends (infer T)[] ? T : never | null>(null);
 
@@ -104,25 +117,25 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
     return <Zap className="w-5 h-5 text-cyan-400" />;
   };
 
-  const radarData = analysis.indicators.map(ind => ({
+  const radarData = (analysis.indicators || []).map(ind => ({
     subject: (ind.label || '').split(' ')[0], // Shorten label for radar chart
-    score: ind.score,
+    score: ind.score || 0,
     fullMark: 100,
   }));
 
-  const lowConfidence = analysis.indicators.some(ind => (ind.confidence || 1) < 0.7);
+  const lowConfidence = (analysis.indicators || []).some(ind => (ind.confidence || 1) < 0.7);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-4xl mx-auto space-y-6 md:space-y-8 pb-10 md:pb-20"
+      className="w-full max-w-5xl mx-auto space-y-8 md:space-y-16 pb-12 md:pb-24"
     >
       {lowConfidence && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-4"
+          className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-4 mx-4 md:mx-0"
         >
           <div className="p-2 bg-amber-500/20 rounded-lg">
             <AlertCircle className="w-5 h-5 text-amber-500" />
@@ -136,82 +149,155 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
         </motion.div>
       )}
 
-      {/* Header Summary */}
-      <div className="medical-card p-6 md:p-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-[80px] rounded-full pointer-events-none" />
-        <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-center relative z-10">
-          
-          <div className="flex flex-col items-center">
-            <div className="relative w-48 h-48 md:w-64 md:h-64 mb-4">
+      {/* Hero Header: Vitality Status */}
+      <div className="relative pt-12 md:pt-20 pb-8 md:pb-12 px-4 md:px-0 text-center overflow-hidden">
+        {/* Vitality Orb Background Glows */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl h-full pointer-events-none">
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.1, 0.2, 0.1]
+            }}
+            transition={{ duration: 8, repeat: Infinity }}
+            className="absolute inset-0 bg-gradient-to-r from-[var(--accent-teal)] via-sky-500 to-[var(--accent-pink)] blur-[120px] rounded-full" 
+          />
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center gap-8 md:gap-12">
+          {/* Main Visual: Vitality Orb */}
+          <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
+            {/* Background Rings */}
+            <div className="absolute inset-0 border border-[var(--border-color)] rounded-full opacity-20" />
+            <div className="absolute inset-4 border border-[var(--border-color)] rounded-full opacity-10" />
+            
+            {/* Pulsing Orb Core */}
+            <motion.div 
+              animate={{ 
+                scale: [1, 1.05, 1],
+                boxShadow: [
+                  "0 0 40px rgba(45,212,191,0.2)",
+                  "0 0 80px rgba(45,212,191,0.4)",
+                  "0 0 40px rgba(45,212,191,0.2)"
+                ]
+              }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute inset-8 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] rounded-full border-2 border-[var(--accent-teal-border)] flex items-center justify-center overflow-hidden"
+            >
+              {/* Inner Liquid/Wave Effect */}
+              <motion.div 
+                animate={{ 
+                  y: [20, -20, 20],
+                  rotate: [0, 360]
+                }}
+                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                style={{ 
+                  top: `${100 - analysis.overall_score}%`,
+                  height: '200%',
+                  width: '200%'
+                }}
+                className="absolute left-[-50%] bg-[var(--accent-teal)]/10 rounded-[40%] blur-3xl"
+              />
+              
+              <div className="relative z-10 flex flex-col items-center">
+                <motion.span 
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-7xl md:text-8xl font-display font-bold text-[var(--text-primary)] tracking-tighter"
+                >
+                  {analysis.overall_score}
+                </motion.span>
+                <div className="flex flex-col items-center gap-1">
+                  <div className="flex items-center gap-2 px-3 py-1 bg-[var(--accent-teal-soft)] border border-[var(--accent-teal-border)] rounded-full">
+                    <Activity className="w-3 h-3 text-[var(--accent-teal)]" />
+                    <span className="text-[10px] font-mono font-bold text-[var(--accent-teal)] uppercase tracking-widest">{t('VITALITY XP')}</span>
+                  </div>
+                  {analysis.daily_readiness && (
+                    <div className="text-[9px] font-mono font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] mt-2 group-hover:text-[var(--accent-teal)] transition-colors">
+                      {analysis.daily_readiness.label}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Orbiting Elements (Radar Indicators) */}
+            <div className="absolute inset-0">
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                  <PolarGrid stroke="currentColor" className="text-[var(--border-color)]" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: 'currentColor', fontSize: 10 }} className="text-[var(--text-secondary)]" />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                <RadarChart cx="50%" cy="50%" outerRadius="85%" data={radarData}>
+                  <PolarGrid stroke="currentColor" className="text-[var(--border-color)] opacity-20" />
+                  <PolarAngleAxis dataKey="subject" tick={false} />
                   <Radar
                     name="Score"
                     dataKey="score"
-                    stroke="#2dd4bf"
-                    strokeWidth={2}
-                    fill="#2dd4bf"
-                    fillOpacity={0.2}
+                    stroke="var(--accent-teal)"
+                    strokeWidth={1}
+                    fill="var(--accent-teal)"
+                    fillOpacity={0.05}
                   />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
-            
-            {/* Overall Score Circular Gauge */}
-            <div className="relative w-28 h-28 md:w-32 md:h-32 flex-shrink-0 flex items-center justify-center -mt-8 md:-mt-4">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" className="text-[var(--bg-card-hover)]" />
-                <motion.circle 
-                  cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" 
-                  strokeDasharray="283"
-                  initial={{ strokeDashoffset: 283 }}
-                  animate={{ strokeDashoffset: 283 - (283 * (analysis.overall_score || 0)) / 100 }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                  className={cn(
-                    "drop-shadow-[0_0_8px_rgba(45,212,191,0.5)]",
-                    analysis.overall_score >= 80 ? "text-teal-500" : analysis.overall_score >= 50 ? "text-amber-500" : "text-rose-500"
-                  )}
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4xl font-display font-bold text-[var(--text-primary)] tracking-tighter">{analysis.overall_score}</span>
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-secondary)]">{t('Score')}</span>
-              </div>
-            </div>
           </div>
 
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-[var(--accent-teal-soft)] rounded-xl border border-[var(--accent-teal-border)]">
-                <HeartPulse className="w-6 h-6 text-[var(--accent-teal)]" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-display font-bold text-[var(--text-primary)] tracking-tight">{t('Analysis Complete')}</h2>
-                <p className="text-[var(--accent-teal)] text-[10px] font-mono uppercase tracking-[0.3em]">{t('AuraScan Biometric Report')}</p>
+          <div className="max-w-2xl space-y-6">
+            <div className="space-y-2">
+              <h2 className="text-4xl md:text-6xl font-display font-bold text-[var(--text-primary)] tracking-tight leading-tight">
+                {t('Biometric')} <span className="neon-text-teal">{t('Profile')}</span> Ready
+              </h2>
+              <div className="flex items-center justify-center gap-4">
+                <div className="h-px w-12 bg-gradient-to-r from-transparent to-[var(--border-color)]" />
+                <span className="text-[var(--accent-teal)] text-[10px] font-mono uppercase tracking-[0.4em] font-bold">{t('ID: Aura-7749-X')}</span>
+                <div className="h-px w-12 bg-gradient-to-l from-transparent to-[var(--border-color)]" />
               </div>
             </div>
-            <p className="text-[var(--text-secondary)] text-lg leading-relaxed italic font-light border-l-2 border-[var(--accent-teal-border)] pl-6 py-2">
-              "{analysis.summary}"
-            </p>
+            
+            <div className="relative p-7 md:p-10 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-2xl group overflow-hidden">
+               <div className="absolute top-0 right-0 w-48 h-48 bg-[var(--accent-teal)]/5 blur-[50px] rounded-full pointer-events-none" />
+               <div className="absolute bottom-0 left-0 w-32 h-32 bg-[var(--accent-pink)]/5 blur-[40px] rounded-full pointer-events-none" />
+               
+               {/* Visual Markers for "Intelligence" */}
+               <div className="flex items-center gap-2 mb-6 opacity-40 group-hover:opacity-100 transition-opacity">
+                 <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[var(--border-color)]" />
+                 <Brain className="w-4 h-4 text-[var(--accent-teal)]" />
+                 <Sparkles className="w-4 h-4 text-[var(--accent-pink)]" />
+                 <Zap className="w-4 h-4 text-[var(--accent-amber)]" />
+                 <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[var(--border-color)]" />
+               </div>
+
+               <div className="markdown-body text-[var(--text-secondary)] text-lg md:text-xl leading-relaxed font-light relative z-10 text-left">
+                <Markdown
+                  components={{
+                    p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed italic">{children}</p>,
+                    strong: ({ children }) => <strong className="font-bold text-[var(--text-primary)] neon-text-teal">{children}</strong>,
+                    ul: ({ children }) => <ul className="list-disc list-inside mb-4 space-y-2">{children}</ul>,
+                    li: ({ children }) => <li className="pl-2">{children}</li>,
+                  }}
+                >
+                  {analysis.summary}
+                </Markdown>
+              </div>
+
+               <div className="mt-8 flex justify-center gap-1 opacity-20">
+                 {[...Array(3)].map((_, i) => (
+                   <div key={i} className="w-1.5 h-1.5 rounded-full bg-[var(--accent-teal)]" />
+                 ))}
+               </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Indicators Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        {analysis.indicators.map((indicator, idx) => (
+        {(analysis.indicators || []).map((indicator, idx) => (
           <motion.div
-            key={indicator.label}
+            key={indicator.label || idx}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.1 }}
             className={cn(
               "p-5 md:p-6 rounded-3xl border transition-all duration-300 hover:shadow-md flex flex-col justify-between",
-              getStatusColor(indicator.status)
+              getStatusColor(indicator.status || 'unknown')
             )}
           >
             <div>
@@ -220,7 +306,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col items-end">
                     <span className="text-[10px] font-mono text-[var(--text-secondary)] uppercase tracking-widest">{t('Confidence')}</span>
-                    <span className="text-xs font-mono text-[var(--accent-teal)]">{Math.round(indicator.confidence * 100)}%</span>
+                    <span className="text-xs font-mono text-[var(--accent-teal)]">{Math.round((indicator.confidence || 0) * 100)}%</span>
                   </div>
                   <div className="p-2 rounded-xl bg-[var(--bg-card-hover)] border border-[var(--border-color)]">
                     {getIndicatorIcon(indicator.label, indicator.status)}
@@ -230,30 +316,43 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
               
               {/* Facial Signs Badges */}
               <div className="flex flex-wrap gap-2 mb-4">
-                {indicator.facial_signs?.map((sign, i) => (
+                {(indicator.facial_signs || []).map((sign, i) => (
                   <span key={i} className="px-2 py-1 text-[9px] uppercase tracking-[0.2em] font-mono bg-[var(--bg-card-hover)] text-[var(--text-secondary)] rounded-md border border-[var(--border-color)]">
                     {sign}
                   </span>
                 ))}
               </div>
 
-              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-6 font-light">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-4 font-light">
                 {indicator.systemic_implication}
               </p>
+
+              {/* Professional Insight Box */}
+              {indicator.technical_insight && (
+                <div className="mb-6 p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] group-hover:border-[var(--accent-teal-border)] transition-all flex flex-col gap-2">
+                  <div className="flex items-center gap-2 opacity-50">
+                    <Stethoscope className="w-3.5 h-3.5 text-[var(--accent-teal)]" />
+                    <span className="text-[9px] font-mono uppercase tracking-[0.2em] font-bold">{t('Biometric Marker')}</span>
+                  </div>
+                  <p className="text-[10px] text-[var(--text-secondary)] font-mono italic leading-relaxed">
+                    {indicator.technical_insight}
+                  </p>
+                </div>
+              )}
             </div>
             
             {/* Progress Bar */}
             <div className="mt-auto pt-4 border-t border-[var(--border-color)]">
               <div className="flex justify-between text-[10px] font-mono uppercase tracking-[0.2em] mb-2 opacity-70">
-                <span>{t(indicator.status.replace('_', ' '))}</span>
-                <span className="text-[var(--text-primary)]">{indicator.score}/100</span>
+                <span>{t((indicator.status || 'unknown').replace('_', ' '))}</span>
+                <span className="text-[var(--text-primary)]">{indicator.score || 0}/100</span>
               </div>
               <div className="h-1.5 w-full bg-[var(--bg-card-hover)] rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${indicator.score}%` }}
+                  animate={{ width: `${indicator.score || 0}%` }}
                   transition={{ duration: 1, delay: 0.5 + idx * 0.1, ease: "easeOut" }}
-                  className={cn("h-full rounded-full", getProgressBarColor(indicator.status))}
+                  className={cn("h-full rounded-full", getProgressBarColor(indicator.status || 'unknown'))}
                 />
               </div>
             </div>
@@ -261,92 +360,127 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
         ))}
       </div>
 
-      {/* 7-Day Challenge */}
-      {analysis.challenge && (
-        <div className="medical-card p-6 md:p-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-[80px] rounded-full pointer-events-none" />
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
-            <div className="flex-1">
-              <h3 className="text-2xl md:text-3xl font-display font-bold text-[var(--text-primary)] flex items-center gap-3 tracking-tight">
-                <div className="p-2 bg-[var(--accent-teal-soft)] rounded-xl border border-[var(--accent-teal-border)]">
-                  <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-[var(--accent-teal)]" />
+      {/* 7-Day Challenge Section */}
+      {(() => {
+        const activeChallengeScan = scanHistory?.find(s => (s as any).id === activeChallengeScanId) || (currentScanId === activeChallengeScanId ? analysis : null);
+        const hasActiveAndDifferent = activeChallengeScanId && activeChallengeScanId !== currentScanId;
+        const currentChallenge = analysis.challenge || { title: 'Wellness Quest', description: 'Personalized quest loading...', days: [] };
+        
+        // Decide which challenge to display primarily
+        const displayChallenge = activeChallengeScan ? (activeChallengeScan.challenge || currentChallenge) : currentChallenge;
+        const displayScanId = activeChallengeScan ? (activeChallengeScan as any).id || currentScanId : currentScanId;
+
+        return (
+          <div className="space-y-6">
+            {/* Ongoing Quest Awareness */}
+            {hasActiveAndDifferent && (
+              <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-[var(--accent-pink-soft)] border border-[var(--accent-pink-border)] rounded-2xl gap-4">
+                <div className="flex items-center gap-3">
+                  <Flame className="w-5 h-5 text-[var(--accent-pink)] animate-pulse" />
+                  <span className="text-xs font-medium text-[var(--text-primary)]">
+                    {t('You have an ongoing 7-day challenge from a previous scan.')}
+                  </span>
                 </div>
-                {analysis.challenge.title}
-              </h3>
-              <p className="text-[var(--text-secondary)] text-sm mt-2 max-w-xl font-light">{analysis.challenge.description}</p>
-            </div>
-            
-            {/* Progress Tracker */}
-            <div className="flex flex-col items-end gap-2 bg-[var(--bg-card-hover)] p-4 rounded-2xl border border-[var(--border-color)] w-full md:w-auto">
-              <div className="flex justify-between w-full items-center gap-4">
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-secondary)]">{t('Progress')}</span>
-                <span className="text-sm font-bold text-[var(--accent-teal)]">
-                  {analysis.challenge?.days?.filter(d => d.completed).length || 0} / 7
-                </span>
+                <button 
+                  onClick={() => onSetActiveChallenge && onSetActiveChallenge(currentScanId || '')}
+                  className="px-4 py-2 bg-[var(--bg-card)] border border-[var(--accent-pink-border)] text-[var(--accent-pink)] text-[10px] font-bold uppercase tracking-wider rounded-xl hover:bg-[var(--accent-pink-soft)] transition-all"
+                >
+                  {t('Switch to New Quest')}
+                </button>
               </div>
-              <div className="flex gap-1.5">
-                {analysis.challenge?.days?.map((day, idx) => (
-                  <div 
-                    key={idx} 
+            )}
+
+            <div className="medical-card p-6 md:p-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-[80px] rounded-full pointer-events-none" />
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-[var(--accent-teal-soft)] rounded-xl border border-[var(--accent-teal-border)]">
+                      <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-[var(--accent-teal)]" />
+                    </div>
+                    <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--accent-teal)] font-bold">
+                      {activeChallengeScanId === currentScanId || !activeChallengeScanId ? t('Today\'s Recommendation') : t('Current Active Program')}
+                    </span>
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-display font-bold text-[var(--text-primary)] tracking-tight">
+                    {displayChallenge.title}
+                  </h3>
+                  <p className="text-[var(--text-secondary)] text-sm mt-2 max-w-xl font-light">{displayChallenge.description}</p>
+                </div>
+                
+                {/* Progress Tracker */}
+                <div className="flex flex-col items-end gap-2 bg-[var(--bg-card-hover)] p-4 rounded-2xl border border-[var(--border-color)] w-full md:w-auto">
+                  <div className="flex justify-between w-full items-center gap-4">
+                    <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-secondary)]">{t('Overall Progress')}</span>
+                    <span className="text-sm font-bold text-[var(--accent-teal)]">
+                      {(displayChallenge.days || []).filter(d => d.completed).length} / 7
+                    </span>
+                  </div>
+                  <div className="flex gap-1.5">
+                    {(displayChallenge.days || []).map((day, idx) => (
+                      <div 
+                        key={idx} 
+                        className={cn(
+                          "h-1.5 w-5 rounded-full transition-all duration-500",
+                          day.completed ? "bg-[var(--accent-teal)] shadow-[0_0_8px_rgba(45,212,191,0.5)]" : "bg-[var(--border-color)]"
+                        )}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                {(displayChallenge.days || []).map((day, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.6 + idx * 0.05 }}
+                    onClick={() => onUpdateChallenge && onUpdateChallenge(displayScanId || '', idx, !day.completed)}
                     className={cn(
-                      "h-1.5 w-5 rounded-full transition-all duration-500",
-                      day.completed ? "bg-[var(--accent-teal)] shadow-[0_0_8px_rgba(45,212,191,0.5)]" : "bg-[var(--border-color)]"
+                      "p-5 rounded-2xl border transition-all group cursor-pointer relative overflow-hidden",
+                      day.completed 
+                        ? "bg-[var(--accent-teal-soft)] border-[var(--accent-teal-border)] shadow-xl" 
+                        : "bg-[var(--bg-card-hover)] border-[var(--border-color)] hover:border-[var(--accent-teal-border)]"
                     )}
-                  />
+                  >
+                    {day.completed && (
+                      <div className="absolute -right-4 -top-4 w-16 h-16 bg-teal-500/20 rounded-full blur-xl pointer-events-none" />
+                    )}
+                    <div className="flex items-center justify-between mb-4 relative z-10">
+                      <span className={cn(
+                        "text-[10px] font-mono transition-colors tracking-[0.2em]",
+                        day.completed ? "text-[var(--accent-teal)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--accent-teal)]"
+                      )}>
+                        {t('DAY')} 0{day.day}
+                      </span>
+                      <div className={cn(
+                        "w-6 h-6 rounded-full border flex items-center justify-center transition-all",
+                        day.completed 
+                          ? "bg-[var(--accent-teal)] border-[var(--accent-teal)] text-[var(--bg-card)]" 
+                          : "border-[var(--border-color)] group-hover:border-[var(--accent-teal)] bg-[var(--bg-card)]"
+                      )}>
+                        {day.completed ? (
+                          <CheckCircle2 className="w-4 h-4" />
+                        ) : (
+                          <div className="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-[var(--accent-teal)] transition-colors" />
+                        )}
+                      </div>
+                    </div>
+                    <p className={cn(
+                      "text-sm leading-relaxed transition-colors relative z-10",
+                      day.completed ? "text-[var(--text-primary)] font-medium" : "text-[var(--text-secondary)] font-light group-hover:text-[var(--text-primary)]"
+                    )}>
+                      {day.task}
+                    </p>
+                  </motion.div>
                 ))}
               </div>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-            {analysis.challenge?.days?.map((day, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.6 + idx * 0.05 }}
-                onClick={() => onUpdateChallenge && onUpdateChallenge(idx, !day.completed)}
-                className={cn(
-                  "p-5 rounded-2xl border transition-all group cursor-pointer relative overflow-hidden",
-                  day.completed 
-                    ? "bg-[var(--accent-teal-soft)] border-[var(--accent-teal-border)] shadow-xl" 
-                    : "bg-[var(--bg-card-hover)] border-[var(--border-color)] hover:border-[var(--accent-teal-border)]"
-                )}
-              >
-                {day.completed && (
-                  <div className="absolute -right-4 -top-4 w-16 h-16 bg-teal-500/20 rounded-full blur-xl pointer-events-none" />
-                )}
-                <div className="flex items-center justify-between mb-4 relative z-10">
-                  <span className={cn(
-                    "text-[10px] font-mono transition-colors tracking-[0.2em]",
-                    day.completed ? "text-[var(--accent-teal)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--accent-teal)]"
-                  )}>
-                    {t('DAY')} 0{day.day}
-                  </span>
-                  <div className={cn(
-                    "w-6 h-6 rounded-full border flex items-center justify-center transition-all",
-                    day.completed 
-                      ? "bg-[var(--accent-teal)] border-[var(--accent-teal)] text-[var(--bg-card)]" 
-                      : "border-[var(--border-color)] group-hover:border-[var(--accent-teal)] bg-[var(--bg-card)]"
-                  )}>
-                    {day.completed ? (
-                      <CheckCircle2 className="w-4 h-4" />
-                    ) : (
-                      <div className="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-[var(--accent-teal)] transition-colors" />
-                    )}
-                  </div>
-                </div>
-                <p className={cn(
-                  "text-sm leading-relaxed transition-colors relative z-10",
-                  day.completed ? "text-[var(--text-primary)] font-medium" : "text-[var(--text-secondary)] font-light group-hover:text-[var(--text-primary)]"
-                )}>
-                  {day.task}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Recommendations */}
       <div className="medical-card p-6 md:p-8 relative overflow-hidden">
@@ -358,8 +492,8 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
           {t('Personalized Recommendations')}
         </h3>
         <div className="space-y-3 md:space-y-4 relative z-10">
-          {analysis.recommendations.length > 0 ? (
-            analysis.recommendations.map((rec, idx) => (
+          {(analysis.recommendations || []).length > 0 ? (
+            (analysis.recommendations || []).map((rec, idx) => (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, x: -20 }}
@@ -401,31 +535,46 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
 
           <div className="space-y-4">
             {analysis.products?.map((product, idx) => (
-              <div key={idx} className="p-6 bg-[var(--bg-card-hover)] rounded-2xl border border-[var(--border-color)] group hover:border-[var(--accent-teal-border)] transition-all hover:shadow-2xl">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <span className="text-[10px] font-mono text-[var(--accent-teal)] uppercase tracking-[0.3em] mb-1.5 block">{product.brand || t('Premium Choice')}</span>
-                    <h4 className="font-bold text-[var(--text-primary)] text-xl tracking-tight">{product.name}</h4>
+              <div key={idx} className="bg-[var(--bg-card-hover)] rounded-3xl border border-[var(--border-color)] overflow-hidden group hover:border-[var(--accent-teal-border)] transition-all hover:shadow-2xl">
+                <div className="h-40 w-full relative overflow-hidden">
+                  <img 
+                    src={`https://loremflickr.com/600/400/${encodeURIComponent((product.type || 'wellness').toLowerCase())},product/all?lock=${(product.name || '').length + idx}`} 
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card-hover)] via-transparent to-transparent" />
+                  <div className="absolute top-4 left-4 bg-[var(--bg-card)]/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-[var(--border-color)]">
+                     <span className="text-[10px] font-mono text-[var(--accent-teal)] uppercase tracking-widest">{product.brand || t('Aura Select')}</span>
                   </div>
                 </div>
-                <p className="text-sm text-[var(--text-secondary)] mb-5 leading-relaxed font-light">{product.reason}</p>
-                <div className="flex gap-3">
-                  <a 
-                    href={`https://www.google.com/search?q=${encodeURIComponent(product.name)}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex-1 px-4 py-3 bg-[var(--text-primary)] text-[var(--bg-card)] text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-xl"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    {t('get it')}
-                  </a>
-                  <button 
-                    onClick={() => setSelectedProduct(product)}
-                    className="px-4 py-3 bg-[var(--bg-card-hover)] border border-[var(--border-color)] text-[var(--text-secondary)] text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-[var(--bg-card)] transition-all"
-                  >
-                    {t('Details')}
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                <div className="p-6">
+                  <div className="flex justify-between items-start gap-2 mb-2">
+                    <h4 className="font-bold text-[var(--text-primary)] text-xl tracking-tight leading-tight">{product.name}</h4>
+                    {product.price && (
+                      <span className="text-sm font-mono font-bold text-[var(--accent-teal)] bg-[var(--accent-teal-soft)] px-2 py-0.5 rounded-lg border border-[var(--accent-teal-border)]">
+                        {product.price}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-[var(--text-secondary)] mb-6 leading-relaxed font-light line-clamp-2">{product.reason}</p>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setSelectedProduct(product)}
+                      className="flex-1 px-4 py-3 bg-[var(--text-primary)] text-[var(--bg-card)] text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-xl"
+                    >
+                      <Info className="w-4 h-4" />
+                      {t('View Product')}
+                    </button>
+                    <a 
+                      href={`https://www.google.com/search?q=${encodeURIComponent(product.name)}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="p-3 bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)] rounded-xl hover:border-[var(--accent-teal-border)] transition-all"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}
@@ -450,7 +599,7 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
               <div key={idx} className="bg-[var(--bg-card-hover)] rounded-2xl border border-[var(--border-color)] overflow-hidden group hover:border-[var(--accent-teal-border)] transition-all shadow-xl">
                 <div className="h-44 w-full relative overflow-hidden">
                   <img 
-                    src={`https://loremflickr.com/600/400/${encodeURIComponent((meal.image_keyword || meal.title || 'food').replace(/-/g, ','))}/all?lock=${meal.title.length + idx}`} 
+                    src={`https://loremflickr.com/600/400/${encodeURIComponent((meal.image_keyword || meal.title || 'food').replace(/-/g, ','))}/all?lock=${(meal.title || '').length + idx}`} 
                     alt={meal.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     referrerPolicy="no-referrer"
@@ -468,25 +617,25 @@ export const Results: React.FC<ResultsProps> = ({ analysis, onReset, onUpdateCha
                     <div className="grid grid-cols-4 gap-3 mb-5">
                       <div className="bg-[var(--bg-card)] p-2.5 rounded-xl border border-[var(--border-color)] text-center">
                         <span className="block text-[9px] text-[var(--text-secondary)] uppercase font-mono tracking-widest">{t('CAL')}</span>
-                        <span className="text-xs font-bold text-[var(--text-primary)]">{meal.nutritional_info.calories}</span>
+                        <span className="text-xs font-bold text-[var(--text-primary)]">{meal.nutritional_info.calories || 0}</span>
                       </div>
                       <div className="bg-[var(--bg-card)] p-2.5 rounded-xl border border-[var(--border-color)] text-center">
                         <span className="block text-[9px] text-[var(--text-secondary)] uppercase font-mono tracking-widest">{t('PRO')}</span>
-                        <span className="text-xs font-bold text-[var(--text-primary)]">{meal.nutritional_info.protein}</span>
+                        <span className="text-xs font-bold text-[var(--text-primary)]">{meal.nutritional_info.protein || '0g'}</span>
                       </div>
                       <div className="bg-[var(--bg-card)] p-2.5 rounded-xl border border-[var(--border-color)] text-center">
                         <span className="block text-[9px] text-[var(--text-secondary)] uppercase font-mono tracking-widest">{t('CARB')}</span>
-                        <span className="text-xs font-bold text-[var(--text-primary)]">{meal.nutritional_info.carbs}</span>
+                        <span className="text-xs font-bold text-[var(--text-primary)]">{meal.nutritional_info.carbs || '0g'}</span>
                       </div>
                       <div className="bg-[var(--bg-card)] p-2.5 rounded-xl border border-[var(--border-color)] text-center">
                         <span className="block text-[9px] text-[var(--text-secondary)] uppercase font-mono tracking-widest">{t('FAT')}</span>
-                        <span className="text-xs font-bold text-[var(--text-primary)]">{meal.nutritional_info.fats}</span>
+                        <span className="text-xs font-bold text-[var(--text-primary)]">{meal.nutritional_info.fats || '0g'}</span>
                       </div>
                     </div>
                   )}
 
                   <div className="flex flex-wrap gap-2">
-                    {meal.ingredients.map((ing, i) => (
+                    {(meal.ingredients || []).map((ing, i) => (
                       <span key={i} className="text-[10px] bg-[var(--bg-card)] border border-[var(--border-color)] px-3 py-1 rounded-lg text-[var(--text-secondary)] font-mono tracking-wider">
                         {ing}
                       </span>

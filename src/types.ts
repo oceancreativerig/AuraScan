@@ -1,7 +1,23 @@
+export type ScanType = 'general' | 'morning' | 'evening';
+
+export interface ExternalHealthData {
+  steps?: number;
+  sleepHours?: number;
+  heartRate?: number;
+  lastSynced?: number;
+}
+
 export interface HealthAnalysis {
   summary: string;
   overall_score: number;
   language?: string;
+  scan_type?: ScanType;
+  external_data_context?: ExternalHealthData;
+  daily_readiness?: {
+    score: number;
+    label: string;
+    description: string;
+  };
   indicators: {
     label: string;
     status: 'optimal' | 'fair' | 'attention_needed';
@@ -10,6 +26,7 @@ export interface HealthAnalysis {
     facial_signs: string[];
     affected_regions: ('forehead' | 'eyes' | 'cheeks' | 'nose' | 'mouth' | 'jawline' | 'skin_overall')[];
     systemic_implication: string;
+    technical_insight?: string;
   }[];
   recommendations: {
     category: string;

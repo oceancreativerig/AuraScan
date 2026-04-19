@@ -19,50 +19,49 @@ import { AdminPanel } from './components/AdminPanel';
 import { ThemeProvider, useTheme } from './lib/ThemeContext';
 import { Footer } from './components/Footer';
 import { Legal, LegalType } from './components/Legal';
+import { FamilyCircle } from './components/FamilyCircle';
+import { ExternalHealthData, ScanType } from './types';
 
-type AppState = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'HISTORY' | 'ADMIN' | 'ERROR';
+type AppState = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'HISTORY' | 'ADMIN' | 'ERROR' | 'FAMILY';
 
 function Logo({ className = "", t }: { className?: string; t: any }) {
   return (
     <div className={cn("flex flex-col items-center gap-6 md:gap-8", className)}>
-      <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 flex items-center justify-center">
-        {/* The Aura: Minimal Layered Rings */}
-        <div className="absolute inset-0 rounded-full border border-[var(--border-color)] opacity-20" />
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-2 rounded-full border-t border-l border-[var(--accent-teal)] opacity-40" 
-        />
-        <motion.div 
-          animate={{ rotate: -360 }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-[15%] rounded-full border-b border-r border-[var(--accent-pink)] opacity-30" 
-        />
+      <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32">
+        {/* Core Biometric Iris Icon */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-[var(--accent-teal)] to-sky-500 rounded-3xl rotate-45 opacity-10" />
+        <div className="absolute inset-2 border-2 border-[var(--accent-teal)]/30 rounded-full animate-[spin_10s_linear_infinite]" />
+        <div className="absolute inset-4 border border-[var(--accent-pink)]/20 rounded-full animate-[spin_15s_linear_infinite_reverse]" />
         
-        {/* Central Identicon: Geometric Bio-Mark */}
-        <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center shadow-xl overflow-hidden group/mark">
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-teal)]/10 to-transparent" />
-          <ScanFace className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-[var(--accent-teal)] transition-transform duration-700 group-hover/mark:scale-110" />
-          
-          {/* Subtle Scanning Line */}
-          <motion.div 
-            animate={{ top: ['-10%', '110%'] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute left-0 right-0 h-[1px] bg-[var(--accent-teal)]/50 shadow-[0_0_8px_var(--accent-teal)]"
-          />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="relative">
+            <ScanFace className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-[var(--accent-teal)]" />
+            <motion.div 
+              animate={{ 
+                height: ['0%', '100%', '0%'],
+                opacity: [0, 1, 0]
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute top-0 left-0 right-0 h-[2px] bg-white/30 mix-blend-overlay shadow-[0_0_10px_var(--accent-teal)]" 
+            />
+          </div>
         </div>
+
+        {/* Tactical Orbits */}
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-[var(--accent-pink)] rounded-full animate-pulse shadow-[0_0_15px_var(--accent-pink)]" />
+        <div className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-sky-400 rounded-full animate-pulse delay-500 shadow-[0_0_15px_rgb(56,189,248)]" />
       </div>
-      
+
       <div className="text-center">
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-display font-bold tracking-[-0.05em] text-[var(--text-primary)] mb-2">
-          Aura<span className="text-[var(--accent-teal)]">Scan</span>
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-display font-black tracking-[-0.05em] text-[var(--text-primary)]">
+          AURA<span className="font-light text-[var(--accent-teal)]">SCAN</span>
         </h1>
-        <div className="flex items-center justify-center gap-3">
-          <div className="h-px w-4 bg-[var(--border-color)]" />
-          <span className="text-[10px] md:text-xs font-mono uppercase tracking-[0.4em] text-[var(--text-secondary)] font-medium">
-            {t('Professional Biometrics')}
-          </span>
-          <div className="h-px w-4 bg-[var(--border-color)]" />
+        <div className="flex items-center justify-center gap-3 mt-1">
+          <div className="h-px w-4 bg-[var(--accent-teal)]/30" />
+          <p className="text-[10px] md:text-xs font-mono font-bold uppercase tracking-[0.4em] text-[var(--text-secondary)]">
+            {t('Biometric Intelligence')}
+          </p>
+          <div className="h-px w-4 bg-[var(--accent-teal)]/30" />
         </div>
       </div>
     </div>
@@ -82,6 +81,9 @@ function AppContent() {
   const [userXP, setUserXP] = useState(0);
   const [legalModal, setLegalModal] = useState<{ isOpen: boolean; type: LegalType }>({ isOpen: false, type: 'privacy' });
   const [totalScans, setTotalScans] = useState(0);
+  const [scanType, setScanType] = useState<ScanType>('general');
+  const [wearableSync, setWearableSync] = useState(false);
+  const [mockExternalData, setMockExternalData] = useState<ExternalHealthData | undefined>(undefined);
   const { language, setLanguage, t } = useLanguage();
 
   const XP_PER_LEVEL = 100;
@@ -163,6 +165,7 @@ function AppContent() {
 
   const [latestScan, setLatestScan] = useState<(HealthAnalysis & { id: string }) | null>(null);
   const [scanHistory, setScanHistory] = useState<(HealthAnalysis & { id: string })[]>([]);
+  const [activeChallengeScanId, setActiveChallengeScanId] = useState<string | null>(null);
   const [coachingMessage, setCoachingMessage] = useState<string | null>(null);
   const [focusArea, setFocusArea] = useState<string>('General Wellness');
 
@@ -239,9 +242,29 @@ function AppContent() {
           );
           unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
             if (!snapshot.empty) {
-              const scans = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as HealthAnalysis & { id: string }));
+              const scans = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return { 
+                  ...data, 
+                  id: doc.id,
+                  createdAt: data.createdAt?.toDate() || new Date()
+                } as any;
+              });
               setLatestScan(scans[0]);
               setScanHistory(scans);
+
+              // Find current active challenge (most recent scan within 7 days that has activity)
+              const now = new Date();
+              const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+              
+              const activeScan = scans.find(s => {
+                const date = s.createdAt;
+                return date >= sevenDaysAgo && s.challenge;
+              });
+
+              if (activeScan) {
+                setActiveChallengeScanId(activeScan.id);
+              }
             }
           }, (error) => {
             handleFirestoreError(error, OperationType.LIST, scansPath);
@@ -301,7 +324,17 @@ function AppContent() {
     setState('ANALYZING');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     try {
-      const result = await analyzeFaceHealth(base64Image, language, focusArea);
+      const result = await analyzeFaceHealth(
+        base64Image, 
+        language, 
+        focusArea, 
+        scanType, 
+        wearableSync ? { 
+          steps: Math.floor(Math.random() * 8000) + 2000, 
+          sleepHours: 7.2, 
+          heartRate: 68 
+        } : undefined
+      );
       setAnalysis(result);
       setState('RESULTS');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -363,18 +396,38 @@ function AppContent() {
     }
   };
 
-  const handleUpdateChallenge = async (dayIndex: number, completed: boolean) => {
-    if (!analysis) return;
-    
-    const updatedAnalysis = { ...analysis };
-    updatedAnalysis.challenge.days[dayIndex].completed = completed;
-    setAnalysis(updatedAnalysis);
+  const handleUpdateChallenge = async (scanId: string, dayIndex: number, completed: boolean) => {
+    let targetAnalysis: HealthAnalysis | null = null;
+    let isCurrent = false;
 
-    if (user && currentScanId) {
-      const scanPath = `users/${user.uid}/scans/${currentScanId}`;
+    if (currentScanId === scanId && analysis) {
+      targetAnalysis = { ...analysis };
+      isCurrent = true;
+    } else {
+      const histScan = scanHistory.find(s => s.id === scanId);
+      if (histScan) {
+        targetAnalysis = { ...histScan };
+      }
+    }
+
+    if (!targetAnalysis) return;
+    
+    const updatedAnalysis = { ...targetAnalysis };
+    if (!updatedAnalysis.challenge || !updatedAnalysis.challenge.days || !updatedAnalysis.challenge.days[dayIndex]) return;
+    
+    updatedAnalysis.challenge.days[dayIndex].completed = completed;
+    
+    if (isCurrent) {
+      setAnalysis(updatedAnalysis);
+    } else {
+      setScanHistory(prev => prev.map(s => s.id === scanId ? { ...s, challenge: updatedAnalysis.challenge } : s));
+    }
+
+    if (user) {
+      const scanPath = `users/${user.uid}/scans/${scanId}`;
       try {
-        const scanRef = doc(db, 'users', user.uid, 'scans', currentScanId);
-        await setDoc(scanRef, { challenge: updatedAnalysis.challenge }, { merge: true });
+        const scanRef = doc(db, 'users', user.uid, 'scans', scanId);
+        await updateDoc(scanRef, { challenge: updatedAnalysis.challenge });
       } catch (err) {
         handleFirestoreError(err, OperationType.UPDATE, scanPath);
       }
@@ -390,14 +443,80 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] font-sans selection:bg-teal-500/30 transition-colors duration-300 overflow-x-hidden">
+      <AnimatePresence>
+        {!authReady && (
+          <motion.div
+            key="splash"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-[var(--bg-main)] flex items-center justify-center"
+          >
+            <div className="flex flex-col items-center gap-8 text-center max-w-xs px-6">
+              <div className="relative w-24 h-24">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 border-2 border-t-[var(--accent-teal)] border-r-transparent border-b-transparent border-l-transparent rounded-full shadow-[0_0_15px_rgba(45,212,191,0.3)]"
+                />
+                <motion.div
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-4 border border-[var(--border-color)] group-hover:border-[var(--accent-teal-border)] transition-colors rounded-full flex items-center justify-center bg-[var(--bg-card-hover)]/30 backdrop-blur-sm"
+                >
+                  <Activity className="w-8 h-8 text-[var(--accent-teal)] animate-pulse" />
+                </motion.div>
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-sm font-mono uppercase tracking-[0.4em] text-[var(--text-primary)] animate-pulse">
+                  {t('Calibrating Aura Engine')}
+                </h3>
+                <p className="text-[10px] font-mono text-[var(--text-secondary)] uppercase tracking-widest opacity-60">
+                  {t('Initializing Biometric Neural Stream...')}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background Atmosphere */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-teal-500/10 blur-[120px] rounded-full animate-blob opacity-40" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-500/10 blur-[120px] rounded-full animate-blob animation-delay-2000 opacity-40" />
-        <div className="absolute top-[30%] right-[10%] w-[30%] h-[30%] bg-purple-500/5 blur-[100px] rounded-full animate-blob animation-delay-4000 opacity-30" />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden isolating">
+        {/* Primary Glows */}
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            x: [0, 50, 0],
+            y: [0, 30, 0]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[-10%] left-[-5%] w-[60%] h-[60%] bg-[var(--accent-teal)]/10 blur-[140px] rounded-full opacity-40" 
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.3, 1],
+            x: [0, -40, 0],
+            y: [0, -60, 0]
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute bottom-[-15%] right-[-10%] w-[70%] h-[70%] bg-[var(--accent-pink)]/10 blur-[140px] rounded-full opacity-40" 
+        />
         
-        {/* Grid Overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+        {/* Accent Floaters */}
+        <motion.div 
+          animate={{ 
+            y: [0, -100, 0],
+            opacity: [0.1, 0.3, 0.1]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[20%] right-[15%] w-32 h-32 bg-sky-400/20 blur-[60px] rounded-full"
+        />
+
+        {/* Dynamic Pattern Overlays */}
+        <div className="absolute inset-0 bg-[radial-gradient(var(--border-color)_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.15]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--border-color)_1px,transparent_1px),linear-gradient(to_bottom,var(--border-color)_1px,transparent_1px)] bg-[size:128px_128px] opacity-[0.05]" />
+        
+        {/* Vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,var(--bg-main)_100%)] opacity-60" />
       </div>
 
       <main className="relative z-10 container mx-auto px-4 py-8 md:py-16 flex flex-col items-center min-h-screen">
@@ -469,6 +588,14 @@ function AppContent() {
                   >
                     <Clock className="w-5 h-5" />
                   </button>
+
+                  <button
+                    onClick={() => setState('FAMILY')}
+                    className="p-2.5 rounded-2xl bg-[var(--bg-card)] border border-[var(--accent-pink-border)] text-[var(--accent-pink)] hover:bg-[var(--accent-pink-soft)] transition-all shadow-xl active:scale-95"
+                    title={t('Family Circle')}
+                  >
+                    <Users className="w-5 h-5" />
+                  </button>
                   
                   {isAdmin && (
                     <button
@@ -511,7 +638,7 @@ function AppContent() {
         </nav>
 
         {/* Header */}
-        {state !== 'HISTORY' && state !== 'ADMIN' && (
+        {state !== 'IDLE' && state !== 'HISTORY' && state !== 'ADMIN' && (
           <header className="text-center mb-16 md:mb-24 mt-4 md:mt-8">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -540,17 +667,76 @@ function AppContent() {
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-[var(--accent-teal)] to-[var(--accent-pink)] rounded-[3rem] blur opacity-10 group-hover:opacity-20 transition duration-1000" />
                 
-                <div className="relative medical-card p-6 md:p-12 text-center space-y-8">
-                  <div className="space-y-4">
-                    <h2 className="text-3xl md:text-6xl font-display font-bold tracking-tight text-[var(--text-primary)] leading-[1.1]">
-                      {t('Ready to')} <span className="neon-text-teal">{t('Level Up')}</span>?
+                <div className="relative medical-card p-6 md:p-12 text-center space-y-8 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-[40%] h-full bg-[var(--accent-teal)]/[0.02] -skew-x-12 translate-x-1/2" />
+                  
+                  {/* Hero Visual: Simple Clean Logo */}
+                  <div className="relative flex items-center justify-center py-4 md:py-8">
+                     <Logo t={t} />
+                  </div>
+
+                  <div className="space-y-4 max-w-2xl mx-auto relative z-10">
+                    <h2 className="text-4xl md:text-7xl font-display font-bold tracking-tight text-[var(--text-primary)] leading-[1.1]">
+                      {t('Your Biometric')} <span className="neon-text-teal">{t('Truth')}</span> {t('Revealed')}.
                     </h2>
-                    <p className="text-[var(--text-secondary)] text-sm md:text-lg max-w-xl mx-auto font-light leading-relaxed">
-                      {t('Step into the arena. One quick scan, and we\'ll map your biometric stats like a pro gamer.')}
+                    <p className="text-[var(--text-secondary)] text-sm md:text-xl max-w-xl mx-auto font-light leading-relaxed">
+                      {t('Step into the future of wellness tracking. Our AI-driven engine maps 50+ facial markers to generate your unique Vitality Score in seconds.')}
                     </p>
                   </div>
 
                   <div className="flex flex-col items-center gap-6">
+                    {/* Routine Selection */}
+                    <div className="grid grid-cols-3 gap-3 w-full max-w-sm mb-2">
+                       {([
+                         { id: 'morning', icon: <Sun className="w-4 h-4" />, label: t('Morning') },
+                         { id: 'general', icon: <Activity className="w-4 h-4" />, label: t('Daily') },
+                         { id: 'evening', icon: <Moon className="w-4 h-4" />, label: t('Evening') }
+                       ] as const).map((mode) => (
+                         <button
+                           key={mode.id}
+                           onClick={() => setScanType(mode.id)}
+                           className={cn(
+                             "flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all",
+                             scanType === mode.id 
+                               ? "bg-[var(--accent-teal-soft)] border-[var(--accent-teal-border)] text-[var(--accent-teal)] shadow-lg"
+                               : "bg-[var(--bg-card-hover)] border-[var(--border-color)] text-[var(--text-secondary)] opacity-60"
+                           )}
+                         >
+                           {mode.icon}
+                           <span className="text-[9px] font-mono uppercase font-bold">{mode.label}</span>
+                         </button>
+                       ))}
+                    </div>
+
+                    {/* Wearable Sync Toggle */}
+                    <div className="w-full max-w-sm">
+                       <button 
+                        onClick={() => setWearableSync(!wearableSync)}
+                        className={cn(
+                          "w-full p-4 rounded-2xl border flex items-center justify-between group transition-all",
+                          wearableSync 
+                            ? "bg-[var(--accent-amber-soft)] border-[var(--accent-amber-border)] text-[var(--accent-amber)]" 
+                            : "bg-[var(--bg-card-hover)] border-[var(--border-color)] text-[var(--text-secondary)] opacity-60"
+                        )}
+                       >
+                         <div className="flex items-center gap-3">
+                            <div className={cn("p-2 rounded-xl transition-colors", wearableSync ? "bg-[var(--accent-amber)]/20" : "bg-[var(--bg-card)]")}>
+                               <Zap className={cn("w-4 h-4", wearableSync && "animate-pulse")} />
+                            </div>
+                            <div className="text-left">
+                               <p className="text-[10px] font-mono uppercase tracking-[0.2em] font-bold">{t('Aura-Sync')}</p>
+                               <p className="text-[9px] opacity-70">{wearableSync ? t('Connected to Wearables') : t('Link Health Data')}</p>
+                            </div>
+                         </div>
+                         <div className={cn("w-10 h-5 rounded-full relative transition-colors", wearableSync ? "bg-[var(--accent-amber)]" : "bg-[var(--border-color)]")}>
+                            <motion.div 
+                              animate={{ x: wearableSync ? 20 : 2 }}
+                              className="absolute top-1 left-0 w-3 h-3 bg-white rounded-full shadow-sm"
+                            />
+                         </div>
+                       </button>
+                    </div>
+
                     <div className="w-full max-w-sm space-y-2 text-left">
                       <label className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-secondary)] ml-1">{t('Choose Your Quest Focus')}</label>
                       <div className="relative group/select">
@@ -639,6 +825,10 @@ function AppContent() {
             </motion.div>
           )}
 
+          {state === 'FAMILY' && (
+            <FamilyCircle onBack={() => setState('IDLE')} />
+          )}
+
           {(state === 'SCANNING' || state === 'ANALYZING') && (
             <motion.div
               key="scanner"
@@ -680,6 +870,10 @@ function AppContent() {
               analysis={analysis} 
               onReset={reset} 
               onUpdateChallenge={handleUpdateChallenge}
+              activeChallengeScanId={activeChallengeScanId}
+              scanHistory={scanHistory}
+              onSetActiveChallenge={(id) => setActiveChallengeScanId(id)}
+              currentScanId={currentScanId}
             />
           )}
 
