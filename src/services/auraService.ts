@@ -203,10 +203,12 @@ export async function analyzeFaceHealth(
     - Language: ${language}
 
     ### CORE DIRECTIVE:
-    Integrate the facial analysis with the current context. 
-    - If ${scanType} is 'morning', focus on readiness, energy levels, and a morning "Action Plan".
-    - If ${scanType} is 'evening', focus on recovery and relaxation.
-    - Factor in the External Vitality Data (like steps or sleep) to validate what you see on the face.
+    **EXCLUSIVITY RULE**: Your entire analysis, score calculation, and health coaching MUST be strictly tailored to the chosen Focus Area: **${focusArea}**. 
+    - Interpret every visible facial marker (eyes, skin texture, color, lines) primarily as it relates to ${focusArea}.
+    - The summary, indicators, and every single recommendation MUST be optimized for ${focusArea}.
+    - If ${scanType} is 'morning', focus on optimizing ${focusArea} for the day ahead.
+    - If ${scanType} is 'evening', focus on recovery and maintenance of ${focusArea}.
+    - Factor in the External Vitality Data to validate findings related to ${focusArea}.
     - IMPORTANT: Generate ALL text in this language: ${language}.
 
     ### SIMPLE TONE PROTOCOL (STRICT):
@@ -230,9 +232,13 @@ export async function analyzeFaceHealth(
     Generate a simple 7-day challenge that is easy to follow.
 
     ### RECOMMENDATIONS, PRODUCTS & NUTRITION:
-    1. **Recommendations (MANDATORY):** 5 simple, easy-to-do tips.
-    2. **Products (MANDATORY):** 3 helpful products. 
-    3. **Nutrition (MANDATORY):** 3 simple, healthy meals with clear ingredients.
+    1. **Recommendations (MANDATORY):** 5 simple tips that are 100% focused on improving or maintaining ${focusArea}.
+    2. **Products (MANDATORY):** 3 helpful products specifically for ${focusArea}. 
+    3. **Nutrition (MANDATORY):** 3 simple, healthy meals with clear ingredients that support ${focusArea}.
+
+    ### ANALYSIS DEPTH:
+    - **Focus Enforcement:** Do not give general advice. If the focus is "Immune System", do not talk about "Skin Aging" unless it's directly caused by immune stress.
+    - **Indicator Relevance:** Select facial indicators that provide the most insight into ${focusArea}.
 
     ### JSON STRUCTURE (STRICT):
     {
@@ -260,17 +266,31 @@ export async function analyzeFaceHealth(
         { "category": "category", "tip": "simple tip" }
       ],
       "products": [
-        { "name": "name", "type": "SKINCARE|SUPPLEMENT", "reason": "why this helps", "link": "link", "brand": "brand", "price": "$0.00" }
+        { 
+          "name": "name", 
+          "type": "SKINCARE|SUPPLEMENT", 
+          "reason": "why this helps", 
+          "link": "link", 
+          "brand": "brand", 
+          "price": "$0.00",
+          "image_keyword": "descriptive-keywords" 
+        }
       ],
       "meals": [
         {
           "title": "meal name",
           "description": "why this is good for you today",
           "ingredients": ["item1", "item2"],
-          "image_keyword": "keywords-for-image",
+          "image_keyword": "specific-dish-description-no-spaces-use-dashes",
           "nutritional_info": { "calories": 0, "protein": "0g", "carbs": "0g", "fats": "0g" }
         }
       ],
+
+    ### IMAGE KEYWORD PROTOCOL (CRITICAL):
+    1. **For Meals:** Use specific, appetizing descriptions (e.g., "avocado-toast-with-poached-egg", "vibrant-quinoa-salad-with-green-leaves").
+    2. **For Products:** Use descriptive terms (e.g., "herbal-vitamin-capsules-bottle", "natural-face-serum-glass-dropper").
+    3. **Avoid Generic Terms:** Do not use just "food" or "supplement". Be specific to ensure the visual matches the text perfectly.
+    4. **Format:** Use lowercase words separated by dashes.
       "challenge": { ... },
       "disclaimer": "This is for wellness guidance, not medical advice."
     }
@@ -293,8 +313,8 @@ export async function analyzeFaceHealth(
             - **Summary:** High-energy bestie vibes mentioning "glowing skin but slight thirst".
             - **Indicators:** Include "Hydration Depth" (score: 65, attention_needed) and "Vitamin B12 Vitality" (score: 92, optimal).
             - **Recommendations:** Include specific water intake with electrolytes.
-            - **Products:** Recommend a "Hydra-Boost Serum" and "Daily Vitality Multi-Vitamins".
-            - **Meals:** Include a "Vibrant Salmon Quinoa Bowl" with "spinach-salmon-lemon" keywords.
+            - **Products:** Recommend a "Hydra-Boost Serum" with "face-serum-dropper" keyword and "Daily Vitality Multi-Vitamins" with "vitamin-bottle" keyword.
+            - **Meals:** Include a "Vibrant Salmon Quinoa Bowl" with "spinach-salmon-lemon" as the image_keyword.
             - **Challenge:** A "7-Day Glow-Up" challenge focused on water and rest.
             
             Keep the report professional, actionable, and in the "Bestie" tone. 

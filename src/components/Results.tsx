@@ -699,7 +699,7 @@ export const Results: React.FC<ResultsProps> = ({
               <div key={idx} className="bg-[var(--bg-card-hover)] rounded-3xl border border-[var(--border-color)] overflow-hidden group hover:border-[var(--accent-teal-border)] transition-all hover:shadow-2xl">
                 <div className="h-40 w-full relative overflow-hidden">
                   <img 
-                    src={`https://loremflickr.com/600/400/${encodeURIComponent((product.type || 'wellness').toLowerCase())},product/all?lock=${(product.name || '').length + idx}`} 
+                    src={`https://loremflickr.com/600/400/${encodeURIComponent((product.image_keyword || product.type || 'wellness').toLowerCase().replace(/-/g, ','))},product/all?lock=${(product.name || '').length + idx}`} 
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     referrerPolicy="no-referrer"
@@ -760,7 +760,7 @@ export const Results: React.FC<ResultsProps> = ({
               <div key={idx} className="bg-[var(--bg-card-hover)] rounded-2xl border border-[var(--border-color)] overflow-hidden group hover:border-[var(--accent-teal-border)] transition-all shadow-xl">
                 <div className="h-44 w-full relative overflow-hidden">
                   <img 
-                    src={`https://loremflickr.com/600/400/${encodeURIComponent((meal.image_keyword || meal.title || 'food').replace(/-/g, ','))}/all?lock=${(meal.title || '').length + idx}`} 
+                    src={`https://loremflickr.com/600/400/${encodeURIComponent((meal.image_keyword || meal.title || 'healthy-meal').toLowerCase().replace(/-/g, ','))},food/all?lock=${(meal.title || '').length + idx}`} 
                     alt={meal.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     referrerPolicy="no-referrer"

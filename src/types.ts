@@ -40,6 +40,7 @@ export interface HealthAnalysis {
     link: string;
     brand?: string;
     price?: string;
+    image_keyword?: string;
   }[];
   meals?: {
     title: string;
