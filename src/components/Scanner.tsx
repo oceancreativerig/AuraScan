@@ -434,26 +434,48 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
              t("Optimal position")}
           </motion.div>
 
-          {/* Ambient Light Meter */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center gap-2 bg-black/20 backdrop-blur-md px-4 py-2 rounded-xl border border-white/5"
-          >
-            <div className="flex items-center gap-2 text-[9px] font-mono text-white/70 uppercase tracking-widest">
-              <Sun className={cn("w-3.5 h-3.5 transition-colors", brightness < 70 ? "text-rose-400" : "text-[var(--accent-teal)]")} />
-              {t('LUMINANCE_LEVEL')}
-            </div>
-            <div className="w-24 h-1 bg-white/10 rounded-full overflow-hidden">
-              <motion.div 
-                animate={{ 
-                  width: `${Math.min(100, (brightness / 255) * 100)}%`,
-                  backgroundColor: brightness < 70 ? '#f43f5e' : brightness < 150 ? '#fbbf24' : '#2dd4bf'
-                }}
-                className="h-full shadow-[0_0_10px_rgba(45,212,191,0.6)]"
-              />
-            </div>
-          </motion.div>
+          {/* Ambient Light & Integrity Meters */}
+          <div className="flex gap-4">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex flex-col items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl border border-white/5"
+            >
+              <div className="flex items-center gap-2 text-[9px] font-mono text-white/70 uppercase tracking-widest whitespace-nowrap">
+                <Sun className={cn("w-3.5 h-3.5 transition-colors", brightness < 70 ? "text-rose-400" : "text-[var(--accent-teal)]")} />
+                {t('LUMINANCE')}
+              </div>
+              <div className="w-20 h-1 bg-white/10 rounded-full overflow-hidden">
+                <motion.div 
+                  animate={{ 
+                    width: `${Math.min(100, (brightness / 255) * 100)}%`,
+                    backgroundColor: brightness < 70 ? '#f43f5e' : brightness < 150 ? '#fbbf24' : '#2dd4bf'
+                  }}
+                  className="h-full"
+                />
+              </div>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex flex-col items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl border border-white/5"
+            >
+              <div className="flex items-center gap-2 text-[9px] font-mono text-white/70 uppercase tracking-widest whitespace-nowrap">
+                <Activity className={cn("w-3.5 h-3.5 transition-colors", faceStatus !== 'optimal' ? "text-rose-400" : "text-[var(--accent-teal)]")} />
+                {t('BIOMETRIC_INTEGRITY')}
+              </div>
+              <div className="w-20 h-1 bg-white/10 rounded-full overflow-hidden">
+                <motion.div 
+                  animate={{ 
+                    width: `${faceStatus === 'optimal' ? 100 : faceStatus === 'none' ? 0 : 40}%`,
+                    backgroundColor: faceStatus === 'optimal' ? '#2dd4bf' : '#f43f5e'
+                  }}
+                  className="h-full"
+                />
+              </div>
+            </motion.div>
+          </div>
         </div>
       )}
 

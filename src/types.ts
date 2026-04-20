@@ -8,6 +8,7 @@ export interface ExternalHealthData {
 }
 
 export interface HealthAnalysis {
+  id?: string;
   summary: string;
   overall_score: number;
   language?: string;

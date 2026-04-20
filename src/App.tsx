@@ -22,7 +22,69 @@ import { Legal, LegalType } from './components/Legal';
 import { FamilyCircle } from './components/FamilyCircle';
 import { ExternalHealthData, ScanType } from './types';
 
-type AppState = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'HISTORY' | 'ADMIN' | 'ERROR' | 'FAMILY';
+type AppState = 'IDLE' | 'CALIBRATING' | 'SCANNING' | 'ANALYZING' | 'RESULTS' | 'HISTORY' | 'ADMIN' | 'ERROR' | 'FAMILY';
+
+function CalibrationGuide({ onReady, t }: { onReady: () => void; t: any }) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="w-full max-w-sm mx-auto bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative overflow-hidden"
+    >
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--accent-teal)] via-[var(--accent-pink)] to-sky-500" />
+      
+      <div className="flex flex-col items-center text-center gap-6">
+        <div className="w-16 h-16 rounded-3xl bg-[var(--accent-teal-soft)] flex items-center justify-center border border-[var(--accent-teal-border)]">
+          <Shield className="w-8 h-8 text-[var(--accent-teal)]" />
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex items-center justify-center gap-2 px-3 py-1 bg-[var(--bg-main)] border border-[var(--border-color)] rounded-full w-fit mx-auto">
+             <span className="w-2 h-2 rounded-full bg-[var(--accent-teal)] animate-pulse" />
+             <span className="text-[10px] font-mono font-bold text-[var(--accent-teal)] uppercase tracking-widest">{t('Calibration Step')}</span>
+          </div>
+          <h3 className="text-2xl font-display font-bold text-[var(--text-primary)] tracking-tight">
+            {t('Ensure Scientific Accuracy')}
+          </h3>
+        </div>
+
+        <div className="space-y-4 w-full text-left">
+          {[
+            { icon: Sun, title: t('Natural Light'), desc: t('Face a window or bright area. Avoid harsh shadows or backlighting.') },
+            { icon: Brain, title: t('Neutral Expression'), desc: t('Keep your face relaxed. Avoid smiling or squinting during the capture.') },
+            { icon: ScanFace, title: t('Lens Distance'), desc: t('Hold your device at eye level, approximately 30-40cm from your face.') }
+          ].map((item, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="flex gap-4 p-4 rounded-2xl bg-[var(--bg-card-hover)] border border-[var(--border-color)]"
+            >
+              <div className="p-2 h-fit bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)]">
+                <item.icon className="w-5 h-5 text-[var(--accent-teal)]" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-[var(--text-primary)] tracking-tight">{item.title}</h4>
+                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed font-light">{item.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={onReady}
+          className="w-full py-5 bg-[var(--text-primary)] text-[var(--bg-card)] rounded-[1.5rem] font-display font-bold text-lg shadow-xl hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all flex items-center justify-center gap-3 mt-4"
+        >
+          {t('Ready to Scan')}
+          <ChevronRight className="w-5 h-5" />
+        </motion.button>
+      </div>
+    </motion.div>
+  );
+}
 
 function Logo({ className = "", t }: { className?: string; t: any }) {
   return (
@@ -297,28 +359,34 @@ function AppContent() {
     }
   }, [latestScan, scanHistory, language]);
 
-  // Translate analysis when language changes or when viewing a past scan
+  // Translate analysis when language changes
   useEffect(() => {
+    let isMounted = true;
     const updateTranslations = async () => {
+      // 1. Current scan translation
       if (analysis && state === 'RESULTS' && analysis.language !== language) {
         try {
           const translated = await translateAnalysis(analysis, language);
-          setAnalysis({ ...translated, language });
+          if (isMounted) setAnalysis({ ...translated, language });
         } catch (err) {
-          console.error("Failed to translate analysis:", err);
+          console.error("Translation error:", err);
         }
       }
+      
+      // 2. Latest scan translation (for IDLE dashboard)
       if (latestScan && state === 'IDLE' && latestScan.language !== language) {
         try {
           const translated = await translateAnalysis(latestScan, language);
-          setLatestScan({ ...translated, language, id: latestScan.id });
+          if (isMounted) setLatestScan({ ...translated, language, id: latestScan.id });
         } catch (err) {
-          console.error("Failed to translate latest scan:", err);
+          console.error("Latest scan translation error:", err);
         }
       }
     };
+    
     updateTranslations();
-  }, [language, analysis, latestScan, state]);
+    return () => { isMounted = false; };
+  }, [language, state, analysis?.id, latestScan?.id]); // Refined dependencies
 
   const handleCapture = async (base64Image: string) => {
     setState('ANALYZING');
@@ -438,7 +506,7 @@ function AppContent() {
     setAnalysis(null);
     setCurrentScanId(null);
     setError(null);
-    setState('SCANNING');
+    setState('CALIBRATING');
   };
 
   return (
@@ -757,7 +825,7 @@ function AppContent() {
 
                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
                       <button
-                        onClick={() => setState('SCANNING')}
+                        onClick={() => setState('CALIBRATING')}
                         className="btn-primary w-full sm:w-auto px-12 py-5 group"
                       >
                         <span className="flex items-center justify-center gap-3 text-lg">
@@ -827,6 +895,10 @@ function AppContent() {
 
           {state === 'FAMILY' && (
             <FamilyCircle onBack={() => setState('IDLE')} />
+          )}
+
+          {state === 'CALIBRATING' && (
+            <CalibrationGuide onReady={() => setState('SCANNING')} t={t} />
           )}
 
           {(state === 'SCANNING' || state === 'ANALYZING') && (

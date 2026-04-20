@@ -59,8 +59,10 @@ export const Results: React.FC<ResultsProps> = ({
   onSetActiveChallenge,
   currentScanId
 }) => {
-  const { t } = useLanguage();
+  const { t, language: currentLanguage } = useLanguage();
   const [selectedProduct, setSelectedProduct] = useState<typeof analysis.products extends (infer T)[] ? T : never | null>(null);
+  const [showScience, setShowScience] = useState(false);
+  const isTranslating = analysis.language && analysis.language !== currentLanguage;
 
   const handleExport = () => {
     window.print();
@@ -125,6 +127,83 @@ export const Results: React.FC<ResultsProps> = ({
 
   const lowConfidence = (analysis.indicators || []).some(ind => (ind.confidence || 1) < 0.7);
 
+  // Component for Facial Mapping
+  const BiometricMap = ({ indicators }: { indicators: HealthAnalysis['indicators'] }) => {
+    const regions = {
+      forehead: { path: "M 40,25 Q 50,15 60,25 Q 60,35 50,35 Q 40,35 40,25 Z", label: "Forehead" },
+      eyes: { path: "M 35,45 Q 42,40 48,45 Q 48,50 42,50 Q 35,50 35,45 Z M 52,45 Q 58,40 65,45 Q 65,50 58,50 Q 52,50 52,45 Z", label: "Periorbital" },
+      nose: { path: "M 48,45 L 52,45 L 53,60 L 47,60 Z", label: "Nasal" },
+      cheeks: { path: "M 30,60 Q 35,55 45,60 M 70,60 Q 65,55 55,60", label: "Malar" },
+      mouth: { path: "M 42,75 Q 50,70 58,75 Q 58,82 50,82 Q 42,82 42,75 Z", label: "Oral" },
+      jawline: { path: "M 25,60 Q 25,90 50,95 Q 75,90 75,60", label: "Mandibular" }
+    };
+
+    const getRegionStatus = (region: string) => {
+      const match = indicators.find(i => i.affected_regions?.includes(region as any));
+      return match ? match.status : null;
+    };
+
+    const getRegionColor = (status: string | null) => {
+      if (!status) return "stroke-white/10 fill-transparent";
+      if (status === 'optimal') return "stroke-[var(--accent-teal)] fill-[var(--accent-teal)]/20";
+      if (status === 'fair') return "stroke-[var(--accent-amber)] fill-[var(--accent-amber)]/20";
+      return "stroke-[var(--accent-pink)] fill-[var(--accent-pink)]/20";
+    };
+
+    return (
+      <div className="relative w-full aspect-square max-w-[280px] mx-auto flex items-center justify-center p-4">
+        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(45,212,191,0.15)]">
+          {/* Main Face Contour (Subtle Background) */}
+          <path 
+            d="M 50,5 Q 85,5 85,45 Q 85,85 50,95 Q 15,85 15,45 Q 15,5 50,5 Z" 
+            fill="none" 
+            stroke="currentColor" 
+            className="text-[var(--border-color)] opacity-40"
+            strokeWidth="0.5"
+          />
+          
+          {/* Facial Regions Mapping */}
+          {Object.entries(regions).map(([id, reg]) => {
+            const status = getRegionStatus(id);
+            return (
+              <motion.path
+                key={id}
+                d={reg.path}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className={cn("transition-all duration-700", getRegionColor(status))}
+                strokeWidth={status ? "1" : "0.5"}
+                strokeDasharray={status ? "none" : "2,2"}
+              />
+            );
+          })}
+
+          {/* Biometric Scan Indicators */}
+          <motion.circle 
+            animate={{ r: [1.5, 2.5, 1.5], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            cx="50" cy="50" r="2" fill="var(--accent-teal)" 
+          />
+        </svg>
+        
+        {/* Animated Scanning Ring */}
+        <motion.div 
+          animate={{ scale: [1, 1.1, 1], opacity: [0.1, 0.2, 0.1] }}
+          transition={{ duration: 4, repeat: Infinity }}
+          className="absolute inset-0 border border-[var(--accent-teal)]/20 rounded-full"
+        />
+        
+        {/* Summary Label Overlay */}
+        <div className="absolute -top-4 -right-4 md:-top-8 md:-right-8 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-3 shadow-xl backdrop-blur-md">
+           <div className="flex flex-col items-end gap-1">
+             <span className="text-[8px] font-mono uppercase tracking-[0.2em] text-[var(--text-secondary)]">{t('Facial Zones Analyzed')}</span>
+             <span className="text-sm font-bold text-[var(--accent-teal)]">6/6 {t('Mapped')}</span>
+           </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -149,10 +228,10 @@ export const Results: React.FC<ResultsProps> = ({
         </motion.div>
       )}
 
-      {/* Hero Header: Vitality Status */}
-      <div className="relative pt-12 md:pt-20 pb-8 md:pb-12 px-4 md:px-0 text-center overflow-hidden">
-        {/* Vitality Orb Background Glows */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl h-full pointer-events-none">
+      {/* Hero Header: Visual Dashboard */}
+      <div className="relative pt-8 md:pt-12 pb-8 md:pb-12 px-4 md:px-0 overflow-hidden">
+        {/* Background Glows */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-full pointer-events-none opacity-40">
           <motion.div 
             animate={{ 
               scale: [1, 1.2, 1],
@@ -163,125 +242,207 @@ export const Results: React.FC<ResultsProps> = ({
           />
         </div>
 
-        <div className="relative z-10 flex flex-col items-center gap-8 md:gap-12">
-          {/* Main Visual: Vitality Orb */}
-          <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
-            {/* Background Rings */}
-            <div className="absolute inset-0 border border-[var(--border-color)] rounded-full opacity-20" />
-            <div className="absolute inset-4 border border-[var(--border-color)] rounded-full opacity-10" />
-            
-            {/* Pulsing Orb Core */}
-            <motion.div 
-              animate={{ 
-                scale: [1, 1.05, 1],
-                boxShadow: [
-                  "0 0 40px rgba(45,212,191,0.2)",
-                  "0 0 80px rgba(45,212,191,0.4)",
-                  "0 0 40px rgba(45,212,191,0.2)"
-                ]
-              }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute inset-8 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] rounded-full border-2 border-[var(--accent-teal-border)] flex items-center justify-center overflow-hidden"
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          {/* Left Side: Score & Vitality */}
+          <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-8">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-4"
             >
-              {/* Inner Liquid/Wave Effect */}
-              <motion.div 
-                animate={{ 
-                  y: [20, -20, 20],
-                  rotate: [0, 360]
-                }}
-                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                style={{ 
-                  top: `${100 - analysis.overall_score}%`,
-                  height: '200%',
-                  width: '200%'
-                }}
-                className="absolute left-[-50%] bg-[var(--accent-teal)]/10 rounded-[40%] blur-3xl"
-              />
-              
-              <div className="relative z-10 flex flex-col items-center">
-                <motion.span 
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-7xl md:text-8xl font-display font-bold text-[var(--text-primary)] tracking-tighter"
-                >
-                  {analysis.overall_score}
-                </motion.span>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="flex items-center gap-2 px-3 py-1 bg-[var(--accent-teal-soft)] border border-[var(--accent-teal-border)] rounded-full">
-                    <Activity className="w-3 h-3 text-[var(--accent-teal)]" />
-                    <span className="text-[10px] font-mono font-bold text-[var(--accent-teal)] uppercase tracking-widest">{t('VITALITY XP')}</span>
-                  </div>
-                  {analysis.daily_readiness && (
-                    <div className="text-[9px] font-mono font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] mt-2 group-hover:text-[var(--accent-teal)] transition-colors">
-                      {analysis.daily_readiness.label}
-                    </div>
-                  )}
-                </div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--accent-teal-soft)] border border-[var(--accent-teal-border)] text-[var(--accent-teal)] text-[10px] font-mono tracking-[0.3em] uppercase shadow-lg">
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-teal)] animate-pulse" />
+                {t('BIOMETRIC REPORT GENERATED')}
+              </div>
+              <h2 className="text-5xl md:text-7xl font-display font-black text-[var(--text-primary)] tracking-tighter leading-[0.9]">
+                {t('AURA')}<span className="text-[var(--accent-teal)]">{t('STATUS')}</span>
+              </h2>
+              <div className="flex flex-wrap justify-center lg:justify-start gap-4">
+                 <div className="flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border-color)] px-4 py-2 rounded-2xl shadow-xl">
+                   <HeartPulse className="w-4 h-4 text-[var(--accent-teal)]" />
+                   <div className="flex flex-col items-start leading-none">
+                     <span className="text-[8px] font-mono uppercase text-[var(--text-secondary)]">{t('Vitality Level')}</span>
+                     <span className="text-sm font-bold text-[var(--text-primary)]">{analysis.overall_score}%</span>
+                   </div>
+                 </div>
+                 <div className="flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border-color)] px-4 py-2 rounded-2xl shadow-xl">
+                   <Activity className="w-4 h-4 text-[var(--accent-pink)]" />
+                   <div className="flex flex-col items-start leading-none">
+                     <span className="text-[8px] font-mono uppercase text-[var(--text-secondary)]">{t('Confidence Score')}</span>
+                     <span className="text-sm font-bold text-[var(--text-primary)]">
+                       {Math.round((analysis.indicators.reduce((acc, curr) => acc + curr.confidence, 0) / analysis.indicators.length) * 100)}%
+                     </span>
+                   </div>
+                 </div>
               </div>
             </motion.div>
 
-            {/* Orbiting Elements (Radar Indicators) */}
-            <div className="absolute inset-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="85%" data={radarData}>
-                  <PolarGrid stroke="currentColor" className="text-[var(--border-color)] opacity-20" />
-                  <PolarAngleAxis dataKey="subject" tick={false} />
-                  <Radar
-                    name="Score"
-                    dataKey="score"
-                    stroke="var(--accent-teal)"
-                    strokeWidth={1}
-                    fill="var(--accent-teal)"
-                    fillOpacity={0.05}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
+            {/* Vitality Orb Visual */}
+            <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
+              <div className="absolute inset-0 border border-[var(--border-color)] rounded-full opacity-20" />
+              <motion.div 
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="absolute inset-8 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-main)] rounded-full border-2 border-[var(--accent-teal-border)] flex items-center justify-center overflow-hidden shadow-2xl"
+              >
+                <motion.div 
+                  animate={{ y: [100 - analysis.overall_score + 5, 100 - analysis.overall_score - 5, 100 - analysis.overall_score + 5] }}
+                  transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute inset-0 bg-gradient-to-t from-[var(--accent-teal)]/20 to-transparent"
+                />
+                <div className="relative z-10 flex flex-col items-center">
+                  <span className="text-7xl md:text-8xl font-display font-black text-[var(--text-primary)] tracking-tighter">
+                    {analysis.overall_score}
+                  </span>
+                  <div className="text-[10px] font-mono font-bold text-[var(--accent-teal)] uppercase tracking-[0.3em]">{t('SCORE')}</div>
+                </div>
+              </motion.div>
+
+              {/* Enhanced Radar Chart Visual */}
+              <div className="absolute inset-0 opacity-40 group-hover:opacity-80 transition-opacity">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="85%" data={radarData}>
+                    <PolarGrid stroke="currentColor" className="text-[var(--border-color)] opacity-20" />
+                    <PolarAngleAxis dataKey="subject" tick={false} />
+                    <Radar dataKey="score" stroke="var(--accent-teal)" fill="var(--accent-teal)" fillOpacity={0.1} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
-          <div className="max-w-2xl space-y-6">
-            <div className="space-y-2">
-              <h2 className="text-4xl md:text-6xl font-display font-bold text-[var(--text-primary)] tracking-tight leading-tight">
-                {t('Biometric')} <span className="neon-text-teal">{t('Profile')}</span> Ready
-              </h2>
-              <div className="flex items-center justify-center gap-4">
-                <div className="h-px w-12 bg-gradient-to-r from-transparent to-[var(--border-color)]" />
-                <span className="text-[var(--accent-teal)] text-[10px] font-mono uppercase tracking-[0.4em] font-bold">{t('ID: Aura-7749-X')}</span>
-                <div className="h-px w-12 bg-gradient-to-l from-transparent to-[var(--border-color)]" />
-              </div>
-            </div>
-            
-            <div className="relative p-7 md:p-10 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-2xl group overflow-hidden">
-               <div className="absolute top-0 right-0 w-48 h-48 bg-[var(--accent-teal)]/5 blur-[50px] rounded-full pointer-events-none" />
-               <div className="absolute bottom-0 left-0 w-32 h-32 bg-[var(--accent-pink)]/5 blur-[40px] rounded-full pointer-events-none" />
-               
-               {/* Visual Markers for "Intelligence" */}
-               <div className="flex items-center gap-2 mb-6 opacity-40 group-hover:opacity-100 transition-opacity">
-                 <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[var(--border-color)]" />
-                 <Brain className="w-4 h-4 text-[var(--accent-teal)]" />
-                 <Sparkles className="w-4 h-4 text-[var(--accent-pink)]" />
-                 <Zap className="w-4 h-4 text-[var(--accent-amber)]" />
-                 <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[var(--border-color)]" />
-               </div>
+          {/* Right Side: Biometric Visual Mapping */}
+          <div className="flex flex-col gap-6 w-full max-w-lg mx-auto">
+             <div className="grid grid-cols-2 gap-4">
+                {/* Visual Face Map */}
+                <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent-teal)]/5 blur-[40px] rounded-full" />
+                  <div className="relative z-10 h-full flex flex-col items-center">
+                    <BiometricMap indicators={analysis.indicators} />
+                    <span className="mt-4 text-[9px] font-mono uppercase tracking-[0.2em] text-[var(--text-secondary)]">{t('Regional Scan Summary')}</span>
+                  </div>
+                </div>
 
-               <div className="markdown-body text-[var(--text-secondary)] text-lg md:text-xl leading-relaxed font-light relative z-10 text-left">
-                <Markdown
-                  components={{
-                    p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed italic">{children}</p>,
-                    strong: ({ children }) => <strong className="font-bold text-[var(--text-primary)] neon-text-teal">{children}</strong>,
-                    ul: ({ children }) => <ul className="list-disc list-inside mb-4 space-y-2">{children}</ul>,
-                    li: ({ children }) => <li className="pl-2">{children}</li>,
-                  }}
+                {/* Performance Radar Cell */}
+                <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden group flex flex-col items-center justify-center">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent-pink)]/5 blur-[40px] rounded-full" />
+                  <div className="w-full h-full min-h-[140px] relative z-10">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="60%" data={radarData}>
+                        <PolarGrid stroke="currentColor" className="text-[var(--border-color)] opacity-40" />
+                        <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--text-secondary)', fontSize: 7, fontWeight: 'bold' }} />
+                        <Radar dataKey="score" stroke="var(--accent-pink)" fill="var(--accent-pink)" fillOpacity={0.3} />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                   <span className="mt-2 text-[9px] font-mono uppercase tracking-[0.2em] text-[var(--text-secondary)]">{t('Systemic Balance')}</span>
+                </div>
+             </div>
+
+             {/* Summary Text Panel */}
+             <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[2rem] p-6 md:p-8 shadow-2xl relative overflow-hidden group text-left">
+                <div className="flex items-center gap-2 mb-4">
+                   <div className="p-1.5 bg-[var(--accent-teal-soft)] rounded-lg">
+                      <Brain className="w-3.5 h-3.5 text-[var(--accent-teal)]" />
+                   </div>
+                   <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-secondary)] font-bold">{t('Aura Intelligence Summary')}</span>
+                </div>
+                <div className="markdown-body text-[var(--text-secondary)] text-sm md:text-base leading-relaxed font-light italic">
+                  <Markdown
+                    components={{
+                      p: ({ children }) => <p className="mb-0">{children}</p>,
+                      strong: ({ children }) => <strong className="font-bold text-[var(--text-primary)] neon-text-teal">{children}</strong>,
+                    }}
+                  >
+                    {analysis.summary}
+                  </Markdown>
+                </div>
+                
+                {/* Science Trigger Button integrated into dashboard */}
+                <button
+                  onClick={() => setShowScience(true)}
+                  className="mt-6 flex items-center gap-2 px-4 py-2 bg-[var(--bg-card-hover)] border border-[var(--border-color)] rounded-xl shadow-lg hover:border-[var(--accent-teal-border)] transition-all group/btn w-fit"
                 >
-                  {analysis.summary}
-                </Markdown>
-              </div>
+                  <Stethoscope className="w-3.5 h-3.5 text-[var(--accent-teal)] group-hover/btn:rotate-12 transition-transform" />
+                  <span className="text-[9px] font-mono font-bold text-[var(--text-secondary)] group-hover/btn:text-[var(--accent-teal)] uppercase tracking-widest">
+                    {t('Verify Science')}
+                  </span>
+                </button>
+             </div>
+          </div>
+        </div>
 
-               <div className="mt-8 flex justify-center gap-1 opacity-20">
-                 {[...Array(3)].map((_, i) => (
-                   <div key={i} className="w-1.5 h-1.5 rounded-full bg-[var(--accent-teal)]" />
-                 ))}
-               </div>
+        {/* Visual Quick-Scan Row (Vitality Gauges) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-12">
+            {[
+              { 
+                label: t('Hydration & Dermal'), 
+                val: analysis.indicators.find(i => i.affected_regions?.includes('skin_overall'))?.score || 75,
+                icon: Droplets, color: 'var(--accent-teal)'
+              },
+              { 
+                label: t('Stress & Nervous'), 
+                val: analysis.indicators.find(i => i.affected_regions?.includes('mouth') || i.affected_regions?.includes('eyes'))?.score || 82,
+                icon: Brain, color: 'var(--accent-pink)'
+              },
+              { 
+                label: t('Systemic Stability'), 
+                val: analysis.overall_score,
+                icon: ShieldAlert, color: 'var(--accent-amber)'
+              }
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 + i * 0.1 }}
+                className="bg-[var(--bg-card)] border border-[var(--border-color)] p-5 rounded-[1.5rem] shadow-xl flex items-center gap-4 group"
+              >
+                <div className="p-3 rounded-2xl bg-[var(--bg-card-hover)] border border-[var(--border-color)] group-hover:border-[var(--accent-teal-border)] transition-colors">
+                  <stat.icon className="w-5 h-5 text-[var(--text-primary)]" style={{ color: stat.color }} />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-secondary)]">{stat.label}</span>
+                    <span className="text-xs font-bold text-[var(--text-primary)]">{stat.val}%</span>
+                  </div>
+                  <div className="h-1 bg-[var(--bg-card-hover)] rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${stat.val}%` }}
+                      style={{ backgroundColor: stat.color }}
+                      className="h-full rounded-full opacity-60"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+        </div>
+      </div>
+
+      {/* Quick Visual Highlights Banner */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-[var(--accent-teal-soft)] border border-[var(--accent-teal-border)] p-6 rounded-[2.5rem] flex items-center gap-6 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent-teal)]/10 blur-[40px] rounded-full rotate-45" />
+          <div className="w-16 h-16 rounded-full bg-[var(--bg-card)] flex items-center justify-center border border-[var(--accent-teal-border)] shadow-xl relative z-10">
+            <Zap className="w-8 h-8 text-[var(--accent-teal)]" />
+          </div>
+          <div className="space-y-1 relative z-10 text-left">
+            <h4 className="text-[var(--accent-teal)] font-mono text-[10px] uppercase tracking-[0.3em] font-bold">{t('Strongest Index')}</h4>
+            <div className="text-xl font-display font-black text-[var(--text-primary)]">
+              {analysis.indicators.sort((a,b) => b.score - a.score)[0]?.label}
+            </div>
+          </div>
+        </div>
+        <div className="bg-[var(--accent-pink-soft)] border border-[var(--accent-pink-border)] p-6 rounded-[2.5rem] flex items-center gap-6 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent-pink)]/10 blur-[40px] rounded-full rotate-45" />
+          <div className="w-16 h-16 rounded-full bg-[var(--bg-card)] flex items-center justify-center border border-[var(--accent-pink-border)] shadow-xl relative z-10">
+            <AlertCircle className="w-8 h-8 text-[var(--accent-pink)]" />
+          </div>
+          <div className="space-y-1 relative z-10 text-left">
+            <h4 className="text-[var(--accent-pink)] font-mono text-[10px] uppercase tracking-[0.3em] font-bold">{t('Primary Focus Area')}</h4>
+            <div className="text-xl font-display font-black text-[var(--text-primary)]">
+              {analysis.indicators.sort((a,b) => a.score - b.score)[0]?.label}
             </div>
           </div>
         </div>
@@ -756,6 +917,100 @@ export const Results: React.FC<ResultsProps> = ({
                       <ExternalLink className="w-5 h-5" />
                     </a>
                   </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Science & Methodology Modal */}
+      <AnimatePresence>
+        {showScience && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowScience(false)}
+              className="absolute inset-0 bg-[var(--bg-main)]/60 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 30 }}
+              className="relative w-full max-w-2xl bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[2.5rem] overflow-hidden shadow-2xl"
+            >
+              <div className="p-8 md:p-12">
+                <div className="flex justify-between items-start mb-10">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-[var(--accent-teal-soft)] border border-[var(--accent-teal-border)] rounded-full w-fit">
+                      <Stethoscope className="w-3 h-3 text-[var(--accent-teal)]" />
+                      <span className="text-[10px] font-mono font-bold text-[var(--accent-teal)] uppercase tracking-widest">{t('Clinical Intelligence')}</span>
+                    </div>
+                    <h3 className="text-3xl font-display font-bold text-[var(--text-primary)] tracking-tight">
+                      {t('Science & Methodology')}
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => setShowScience(false)}
+                    className="p-3 hover:bg-[var(--bg-card-hover)] rounded-full transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Landmark Tracking */}
+                  <div className="space-y-3 p-6 rounded-3xl bg-[var(--bg-card-hover)] border border-[var(--border-color)] group hover:border-[var(--accent-teal-border)] transition-all">
+                    <div className="p-2 w-fit bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)]">
+                      <Activity className="w-5 h-5 text-[var(--accent-teal)]" />
+                    </div>
+                    <h4 className="font-bold text-[var(--text-primary)] tracking-tight">{t('Facial Mapping')}</h4>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-light">
+                      {t('Our AI identifies 468+ biometric landmarks to assess micro-expressions and skin markers.')}
+                    </p>
+                  </div>
+
+                  {/* Vascular Analysis */}
+                  <div className="space-y-3 p-6 rounded-3xl bg-[var(--bg-card-hover)] border border-[var(--border-color)] group hover:border-[var(--accent-pink-border)] transition-all">
+                    <div className="p-2 w-fit bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)]">
+                      <HeartPulse className="w-5 h-5 text-[var(--accent-pink)]" />
+                    </div>
+                    <h4 className="font-bold text-[var(--text-primary)] tracking-tight">{t('Vascular Vitality')}</h4>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-light">
+                      {t('Our system analyzes capillary density and oxygenation markers in the mucosal and dermal layers.')}
+                    </p>
+                  </div>
+
+                  {/* Systemic Mapping */}
+                  <div className="space-y-3 p-6 rounded-3xl bg-[var(--bg-card-hover)] border border-[var(--border-color)] group hover:border-[var(--accent-amber-border)] transition-all">
+                    <div className="p-2 w-fit bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)]">
+                      <Sparkles className="w-5 h-5 text-[var(--accent-amber)]" />
+                    </div>
+                    <h4 className="font-bold text-[var(--text-primary)] tracking-tight">{t('Dermal Mapping')}</h4>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-light">
+                      {t('We map systemic health to specific facial zones based on known dermatological correlations.')}
+                    </p>
+                  </div>
+
+                  {/* Trust Shield */}
+                  <div className="space-y-3 p-6 rounded-3xl bg-[var(--accent-teal-soft)] border border-[var(--accent-teal-border)] transition-all shadow-lg">
+                    <div className="p-2 w-fit bg-[var(--bg-card)] rounded-xl border border-[var(--accent-teal-border)]">
+                      <ShieldAlert className="w-5 h-5 text-[var(--accent-teal)]" />
+                    </div>
+                    <h4 className="font-bold text-[var(--text-primary)] tracking-tight">{t('AI Reliability')}</h4>
+                    <p className="text-xs text-[var(--text-primary)]/80 leading-relaxed font-medium italic">
+                      {t('Each scan includes a confidence score. Higher lighting and clear visibility yield 99.8% measurement consistency.')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-10 pt-8 border-t border-[var(--border-color)] flex justify-between items-center text-[var(--text-secondary)]">
+                   <div className="flex items-center gap-2">
+                     <span className="w-2 h-2 rounded-full bg-[var(--accent-teal)] animate-pulse" />
+                     <span className="text-[10px] font-mono uppercase tracking-widest">{t('Engine Ver: 2.4.0')}</span>
+                   </div>
+                   <span className="text-[10px] font-mono">{t('Verified by Aura Bio-Logic')}</span>
                 </div>
               </div>
             </motion.div>

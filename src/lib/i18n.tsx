@@ -100,6 +100,24 @@ export const translations: Translations = {
   "DECODING BIOMETRICS": {
     English: "DECODING BIOMETRICS", Spanish: "DECODIFICANDO BIOMETRÍA", French: "DÉCODAGE DE LA BIOMÉTRIE", German: "DEKODIERE BIOMETRIE", Chinese: "解码生物特征", Japanese: "バイオメトリクスをデコード中", Hindi: "बायोमेट्रिक्स डिकोड कर रहा है", Arabic: "فك تشفير القياسات الحيوية", Portuguese: "DECODIFICANDO BIOMETRIA", Russian: "ДЕКОДИРОВАНИЕ БИОМЕТРИИ"
   },
+  "Environment too dark": {
+    English: "Environment too dark", Spanish: "Entorno demasiado oscuro", French: "Environnement trop sombre", Portuguese: "Ambiente muito escuro"
+  },
+  "Position face in guide": {
+    English: "Position face in guide", Spanish: "Coloca la cara en la guía", French: "Positionnez le visage dans le guide", Portuguese: "Posicione o rosto no guia"
+  },
+  "Move closer": {
+    English: "Move closer", Spanish: "Acércate más", French: "Approchez-vous", Portuguese: "Aproxime-se"
+  },
+  "Move back": {
+    English: "Move back", Spanish: "Aléjate un poco", French: "Reculez un peu", Portuguese: "Afaste-se"
+  },
+  "Optimal position": {
+    English: "Optimal position", Spanish: "Posición óptima", French: "Position optimale", Portuguese: "Posição ideal"
+  },
+  "LUMINANCE": {
+    English: "LUMINANCE", Spanish: "LUMINANCIA", French: "LUMINANCE", Portuguese: "LUMINÂNCIA"
+  },
   "Camera access denied. Please allow camera access in your browser settings/address bar and try again.": {
     English: "Camera access denied. Please allow camera access in your browser settings/address bar and try again.",
     Spanish: "Acceso a la cámara denegado. Permita el acceso en la configuración de su navegador y vuelva a intentarlo.",
@@ -606,6 +624,123 @@ export const translations: Translations = {
   },
   "API Documentation": {
     English: "API Documentation", Spanish: "Documentación de la API", French: "Documentation API", German: "API-Dokumentation", Chinese: "API 文档", Japanese: "API ドキュメント", Hindi: "एपीआई दस्तावेज़", Arabic: "وثائق API", Portuguese: "Documentação da API", Russian: "Документация API"
+  },
+  "Verify Science & Logic": {
+    English: "Verify Science & Logic", Spanish: "Verificar ciencia y lógica", French: "Vérifier la science et la logique", German: "Wissenschaft & Logik prüfen", Chinese: "验证科学与逻辑", Japanese: "科学と論理の検証", Hindi: "विज्ञान और तर्क सत्यापित करें", Arabic: "التحقق من العلم والمنطق", Portuguese: "Verificar Ciência e Lógica", Russian: "Проверить науку и логику"
+  },
+  "Methodology": {
+    English: "Methodology", Spanish: "Metodología", French: "Méthodologie", German: "Methodik", Chinese: "方法论", Japanese: "方法論", Hindi: "कार्यप्रणाली", Arabic: "منهجية", Portuguese: "Metodologia", Russian: "Методология"
+  },
+  "Vascular Vitality": {
+    English: "Vascular Vitality", Spanish: "Vitalidad vascular", French: "Vitalité vasculaire", German: "Vaskuläre Vitalität", Chinese: "血管活力", Japanese: "血管の活力", Hindi: "संवहनी जीवन शक्ति", Arabic: "الحيوية الوعائية", Portuguese: "Vitalidade Vascular", Russian: "Сосудистая витальность"
+  },
+  "Our system analyzes capillary density and oxygenation markers in the mucosal and dermal layers.": {
+    English: "Our system analyzes capillary density and oxygenation markers in the mucosal and dermal layers.",
+    Spanish: "Nuestro sistema analiza la densidad capilar y los marcadores de oxigenación.",
+    French: "Notre système analyse la densité capillaire et les marqueurs d'oxygénation.",
+    Portuguese: "Nosso sistema analisa a densidade capilar e os marcadores de oxigenação."
+  },
+  "Dermal Mapping": {
+    English: "Dermal Mapping", Spanish: "Mapeo dérmico", French: "Cartographie dermique", German: "Dermales Mapping", Chinese: "皮肤映射", Japanese: "ダーマルマッピング", Hindi: "त्वचीय मानचित्रण", Arabic: "تخطيط الدرم", Portuguese: "Mapeamento Dérmico", Russian: "Дермальное картирование"
+  },
+  "We map systemic health to specific facial zones based on known dermatological correlations.": {
+    English: "We map systemic health to specific facial zones based on known dermatological correlations.",
+    Spanish: "Mapeamos la salud sistémica a zonas faciales específicas.",
+    French: "Nous cartographions la santé systémique sur des zones faciales spécifiques.",
+    Portuguese: "Mapeamos a saúde sistêmica para zonas faciais específicas."
+  },
+  "AI Reliability": {
+    English: "AI Reliability", Spanish: "Fiabilidad de la IA", French: "Fiabilité de l'IA", German: "KI-Zuverlässigkeit", Chinese: "AI 可靠性", Japanese: "AIの信頼性", Hindi: "एआई विश्वसनीयता", Arabic: "موثوقية الذكاء الاصطناعي", Portuguese: "Confiabilidade da IA", Russian: "Надежность ИИ"
+  },
+  "Calibration Step": {
+    English: "Calibration Step", Spanish: "Paso de calibración", French: "Étape de calibration", German: "Kalibrierungsschritt", Chinese: "校准步骤", Japanese: "キャリブレーションステップ", Hindi: "अंशांकन चरण", Arabic: "خطوة المعايرة", Portuguese: "Etapa de Calibração", Russian: "Этап калибровки"
+  },
+  "Ensure Scientific Accuracy": {
+    English: "Ensure Scientific Accuracy", Spanish: "Garantizar la precisión científica", French: "Assurer la précision scientifique", Portuguese: "Garanta a precisão científica"
+  },
+  "Natural Light": {
+    English: "Natural Light", Spanish: "Luz natural", French: "Lumière naturelle", Portuguese: "Luz Natural"
+  },
+  "Face a window or bright area. Avoid harsh shadows or backlighting.": {
+    English: "Face a window or bright area. Avoid harsh shadows or backlighting.",
+    Spanish: "Da la cara a una ventana. Evita las sombras fuertes.",
+    French: "Faites face à une fenêtre. Évitez les ombres fortes.",
+    Portuguese: "Fique de frente para uma janela. Evite sombras fortes."
+  },
+  "Neutral Expression": {
+    English: "Neutral Expression", Spanish: "Expresión neutra", French: "Expression neutre", Portuguese: "Expressão Neutra"
+  },
+  "Keep your face relaxed. Avoid smiling or squinting during the capture.": {
+    English: "Keep your face relaxed. Avoid smiling or squinting during the capture.",
+    Spanish: "Mantén la cara relajada. Evita sonreír.",
+    French: "Gardez votre visage détendu. Évitez de sourire.",
+    Portuguese: "Mantenha o rosto relaxado. Evite sorrir."
+  },
+  "Lens Distance": {
+    English: "Lens Distance", Spanish: "Distancia de la lente", French: "Distance de l'optique", Portuguese: "Distância da Lente"
+  },
+  "Hold your device at eye level, approximately 30-40cm from your face.": {
+    English: "Hold your device at eye level, approximately 30-40cm from your face.",
+    Spanish: "Sujeta el dispositivo a la altura de los ojos.",
+    French: "Tenez votre appareil à hauteur des yeux.",
+    Portuguese: "Segure o dispositivo ao nível dos olhos."
+  },
+  "Start Calibration": {
+    English: "Start Calibration", Spanish: "Iniciar calibración", French: "Démarrer la calibration", Portuguese: "Iniciar Calibração"
+  },
+  "Ready to Scan": {
+    English: "Ready to Scan", Spanish: "Listo para escanear", French: "Prêt à scanner", Portuguese: "Pronto para Escanear"
+  },
+  "BIOMETRIC_INTEGRITY": {
+    English: "BIOMETRIC_INTEGRITY", Spanish: "INTEGRIDAD_BIOMÉTRICA", French: "INTÉGRITÉ_BIOMÉTRIQUE", Portuguese: "INTEGRIDADE_BIOMÉTRICA"
+  },
+  "BIOMETRIC REPORT GENERATED": {
+    English: "BIOMETRIC REPORT GENERATED", Spanish: "INFORME BIOMÉTRICO GENERADO", French: "RAPPORT BIOMÉTRIQUE GÉNÉRÉ", Portuguese: "RELATÓRIO BIOMÉTRICO GERADO"
+  },
+  "AURA STATUS": {
+    English: "AURA STATUS", Spanish: "ESTADO DE AURA", French: "STATUT AURA", Portuguese: "STATUS DA AURA"
+  },
+  "Vitality Level": {
+    English: "Vitality Level", Spanish: "Nivel de vitalidad", French: "Niveau de vitalité", Portuguese: "Nível de Vitalidade"
+  },
+  "Confidence Score": {
+    English: "Confidence Score", Spanish: "Puntaje de confianza", French: "Score de confiance", Portuguese: "Pontuação de Confiança"
+  },
+  "SCORE": {
+    English: "SCORE", Spanish: "PUNTAJE", French: "SCORE", Portuguese: "PONTUAÇÃO"
+  },
+  "Facial Zones Analyzed": {
+    English: "Facial Zones Analyzed", Spanish: "Zonas faciales analizadas", French: "Zones faciales analysées", Portuguese: "Zonas Faciais Analisadas"
+  },
+  "Mapped": {
+    English: "Mapped", Spanish: "Mapeado", French: "Cartographié", Portuguese: "Mapeado"
+  },
+  "Regional Scan Summary": {
+    English: "Regional Scan Summary", Spanish: "Resumen de escaneo regional", French: "Résumé du scan régional", Portuguese: "Resumo do Scan Regional"
+  },
+  "Systemic Balance": {
+    English: "Systemic Balance", Spanish: "Equilibrio sistémico", French: "Équilibre systémique", Portuguese: "Equilíbrio Sistêmico"
+  },
+  "Aura Intelligence Summary": {
+    English: "Aura Intelligence Summary", Spanish: "Resumen de inteligencia Aura", French: "Résumé d'intelligence Aura", Portuguese: "Resumo de Inteligência Aura"
+  },
+  "Verify Science": {
+    English: "Verify Science", Spanish: "Verificar ciencia", French: "Vérifier la science", Portuguese: "Verificar Ciência"
+  },
+  "Hydration & Dermal": {
+    English: "Hydration & Dermal", Spanish: "Hidratación y dérmico", French: "Hydratation & Derme", Portuguese: "Hidratação e Dérmica"
+  },
+  "Stress & Nervous": {
+    English: "Stress & Nervous", Spanish: "Estrés y nervioso", French: "Stress & Nerveux", Portuguese: "Estresse e Nervoso"
+  },
+  "Systemic Stability": {
+    English: "Systemic Stability", Spanish: "Estabilidad sistémica", French: "Stabilité systémique", Portuguese: "Estabilidade Sistêmica"
+  },
+  "Strongest Index": {
+    English: "Strongest Index", Spanish: "Índice más fuerte", French: "Indice plus fort", Portuguese: "Índice Mais Forte"
+  },
+  "Primary Focus Area": {
+    English: "Primary Focus Area", Spanish: "Área de enfoque principal", French: "Zone d'attention principale", Portuguese: "Área de Foco Principal"
   }
 };
 

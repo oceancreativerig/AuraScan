@@ -18,102 +18,115 @@ const getEnvironment = () => {
   return 'other';
 };
 
+// Cache for translations to avoid redundant AI calls
+const translationCache: Record<string, HealthAnalysis> = {};
+const coachingCache: Record<string, string> = {};
+
 async function trackApiUsage(operation: 'analysis' | 'translation' | 'coaching') {
-  try {
-    const env = getEnvironment();
-    const statsRef = doc(db, 'admin', 'stats');
-    const today = new Date().toISOString().split('T')[0];
-    
-    console.log(`[Aura] Tracking API usage: ${operation} on ${env} for ${today}`);
+  // Fire and forget - don't block the main flow for analytics
+  (async () => {
+    try {
+      const env = getEnvironment();
+      const statsRef = doc(db, 'admin', 'stats');
+      const today = new Date().toISOString().split('T')[0];
+      
+      await setDoc(statsRef, {
+        totalCalls: increment(1),
+        [`calls_${operation}`]: increment(1),
+        [`env_${env}`]: increment(1),
+        [`daily_${today}`]: increment(1),
+        lastCallAt: serverTimestamp()
+      }, { merge: true });
 
-    // Update global stats using merge to handle non-existent document
-    await setDoc(statsRef, {
-      totalCalls: increment(1),
-      [`calls_${operation}`]: increment(1),
-      [`env_${env}`]: increment(1),
-      [`daily_${today}`]: increment(1),
-      lastCallAt: serverTimestamp()
-    }, { merge: true });
-
-    // Log individual call for detailed tracking
-    await addDoc(collection(db, 'api_logs'), {
-      operation,
-      environment: env,
-      userId: auth.currentUser?.uid || 'anonymous',
-      timestamp: serverTimestamp(),
-      hostname: typeof window !== 'undefined' ? window.location.hostname : 'server'
-    });
-  } catch (error) {
-    console.error("Failed to track API usage:", error);
-  }
+      await addDoc(collection(db, 'api_logs'), {
+        operation,
+        environment: env,
+        userId: auth.currentUser?.uid || 'anonymous',
+        timestamp: serverTimestamp(),
+        hostname: typeof window !== 'undefined' ? window.location.hostname : 'server'
+      });
+    } catch (error) {
+      console.warn("Silent failure tracking API usage:", error);
+    }
+  })();
 }
 
 export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage: string): Promise<HealthAnalysis> {
+  if (targetLanguage === 'English' && (!analysis.language || analysis.language === 'English')) {
+    return analysis;
+  }
+
+  const cacheKey = `${analysis.id || analysis.overall_score}_${targetLanguage}`;
+  if (translationCache[cacheKey]) {
+    return translationCache[cacheKey];
+  }
+
   if (!apiKey || apiKey === "undefined") {
     throw new Error("Gemini API Key is missing. Please set GEMINI_API_KEY in your environment.");
   }
 
-  await trackApiUsage('translation');
+  trackApiUsage('translation');
 
   const prompt = `
-    You are an expert medical translator. Translate the following JSON object representing a biometric health analysis into ${targetLanguage}.
+    Direct Translation Task:
+    Translate this biometric health analysis JSON into ${targetLanguage}.
     
-    CRITICAL INSTRUCTIONS:
-    1. Maintain the exact JSON structure and keys.
-    2. Only translate the string values for: summary, label, facial_signs (array items), systemic_implication, tip, disclaimer, and challenge title/description/task.
-    3. Do NOT translate the 'status' values ('optimal', 'fair', 'attention_needed').
-    4. Do NOT translate the 'affected_regions' values.
-    5. Do NOT change any numbers or scores.
-    6. Return ONLY valid JSON.
+    RULES:
+    1. Keep JSON structure exactly as provided.
+    2. Translate ONLY value strings for: summary, label, facial_signs, systemic_implication, tip, disclaimer, challenge title/description/task.
+    3. Keep technical/status values like 'optimal' or 'forehead' as they are.
+    4. Return ONLY valid JSON.
 
-    JSON to translate:
-    ${JSON.stringify(analysis, null, 2)}
+    JSON:
+    ${JSON.stringify(analysis)}
   `;
 
   try {
-    const result = await ai.models.generateContent({
-      model: "gemini-flash-latest",
+    const result = await ai.models.generateContent({ 
+      model: "gemini-3-flash-preview",
       contents: prompt,
       config: { responseMimeType: "application/json" }
     });
+    
     const parsed = JSON.parse(result.text || "{}");
-    return { ...parsed, language: targetLanguage } as HealthAnalysis;
+    const translated = { ...parsed, language: targetLanguage } as HealthAnalysis;
+    translationCache[cacheKey] = translated;
+    return translated;
   } catch (error: any) {
     console.error("Aura Translation Error:", error);
-    if (error.message?.includes("API key not valid")) {
-      throw new Error("The Gemini API key provided is invalid. Please check your GEMINI_API_KEY setting.");
-    }
-    throw error;
+    return analysis; // Fallback to original if translation fails
   }
 }
 
 export async function generateCoachingMessage(history: HealthAnalysis[], latest: HealthAnalysis, language: string): Promise<string> {
-  if (!apiKey || apiKey === "undefined") return "Keep up the great work on your wellness journey!";
+  const cacheKey = `${latest.id || latest.overall_score}_${language}`;
+  if (coachingCache[cacheKey]) return coachingCache[cacheKey];
 
-  await trackApiUsage('coaching');
+  if (!apiKey || apiKey === "undefined") return "Keep up the great work!";
+
+  trackApiUsage('coaching');
 
   const prompt = `
-    You are Aura, the user's ultimate Health Coach Bestie. Your tone is super conversational, supportive, and uses "regular talking language" (like a friend would text). Avoid overly clinical jargon.
-    Analyze the user's latest health scan and their scan history to provide personalized, encouraging feedback.
+    You are Aura, a supportive health coach bestie. 
     Language: ${language}.
     
-    Latest Scan: ${JSON.stringify(latest)}
-    History: ${JSON.stringify(history)}
+    Latest Stats: ${JSON.stringify(latest.overall_score)}
+    Recent Context: ${latest.summary.substring(0, 200)}
     
-    Provide a short, punchy, and humanized coaching message (max 2 sentences).
-    Example: "Omg, your stress markers are way down! Whatever you're doing, keep it up bestie! ✨"
-    Return ONLY the message text.
+    Write a 1-sentence supportive text-style message to the user about their health.
+    Return ONLY the message.
   `;
 
   try {
     const result = await ai.models.generateContent({
-      model: "gemini-flash-latest",
+      model: "gemini-3-flash-preview",
       contents: prompt,
     });
-    return result.text?.trim() || "Keep up the great work on your wellness journey!";
+    const message = result.text?.trim() || "Keep it up!";
+    coachingCache[cacheKey] = message;
+    return message;
   } catch (error: any) {
-    console.error("Aura Coaching Error:", error);
-    return "Keep up the great work on your wellness journey!";
+    return "Keep up the great work!";
   }
 }
 
@@ -144,16 +157,16 @@ export async function analyzeFaceHealth(
     - If ${scanType} is 'evening', focus on recovery, inflammation markers, and "Evening Wind-down".
     - Factor in the External Vitality Data (like steps or sleep) to validate what you see on the face. (e.g., if sleep was low and eyes look puffy, explain the connection).
 
-    ### RIGOROUS ACCURACY PROTOCOL (CRITICAL):
+    ### RIGOROUS ACCURACY PROTOCOL (STRICT):
     1. **Early Warning Detection:** Look for subtle signs of chronic fatigue, early-stage dehydration, micronutrient deficiencies (e.g., Vitamin B12/Iron markers), and hormonal fluctuations. 
     2. **Visual Evidence Only:** Base findings strictly on visible markers (capillary congestion, facial asymmetry, skin turgor, eye coloration, hyperpigmentation patterns).
-    3. **Confidence Scoring:** For every indicator, provide a confidence score (0.0 to 1.0). If lighting is poor or features are obscured, lower the confidence and specifically mention "Scan Environment Optimization" in the summary.
-    4. **Systemic Deep-Dive:** Map markers to specific systems: Cardiovascular (lip color/micro-vessels), Renal (periorbital region), Hepatic (sclera/cheek pigmentation), and Endocrine (jawline/forehead texture).
+    3. **Confidence Scoring:** For every indicator, provide a confidence score (0.0 to 1.0).
+    4. **Systemic Deep-Dive:** Map markers to specific systems using known clinical correlations: Cardiovascular (lip color/micro-vessels), Renal (periorbital region), Hepatic (sclera/cheek pigmentation), and Endocrine (jawline/forehead texture).
     
     ### FORMATTING & TONE:
-    1. **Markdown Summary:** Use **Bold**, *Italics*, and Bullet points in the 'summary' field.
-    2. **Tone:** Supportive, high-energy Bestie vibes, but with professional biomedical depth.
-    3. **Actionability:** Recommendations MUST be highly specific (e.g., instead of "Drink more water," say "Increase hydration by 500ml today with added electrolytes to improve skin turgor").
+    1. **Markdown Summary:** Use **Bold**, *Italics*, and Bullet points.
+    2. **Tone:** Supportive Bestie vibes, but with professional biomedical depth. Reference specific physiological concepts (e.g., "capillary dilation," "epidermal barrier integrity"). 
+    3. **Actionability:** Recommendations MUST be highly specific.
 
     ### BIOMETRIC MAPPING PARAMETERS:
     (Explain results in simple, catchy terms but with underlying medical rigor)
@@ -165,15 +178,12 @@ export async function analyzeFaceHealth(
     ### 7-DAY CHALLENGE:
     Generate a personalizeable 7-day wellness quest that targets the #1 vulnerability found in the scan.
 
-    ### RECOMMENDATIONS, PRODUCTS & NUTRITION (CRITICAL):
-    1. **Recommendations:** Provide 3-5 highly specific, actionable tips. Each tip must belong to a category: 'Nutrition', 'Hydration', 'Sleep', 'Exercise', 'Stress Management', 'Skincare', or 'Lifestyle'.
-    2. **Products:** Recommend 2-3 products (Skincare or Supplements) that directly address the 'fair' or 'attention_needed' indicators. Include a realistic 'brand' (or 'Aura Specialty'), a 'reason' why it helps the specific facial marker, and a generic 'link' (e.g., placeholder or affiliate-style).
-    3. **Personalized Nutrition:** Provide 2-3 specific meal ideas. Each meal MUST have:
-       - 'title': Catchy, healthy name.
-       - 'description': Why this specific meal helps the user based on their scan.
-       - 'image_keyword': 2-3 words for a high-quality food image (e.g., 'salmon-avocado-salad').
-       - 'ingredients': List of key functional ingredients.
-       - 'nutritional_info': Realistic calories, protein, carbs, and fats.
+    ### RECOMMENDATIONS, PRODUCTS & NUTRITION (STRICT):
+    1. **Recommendations (MANDATORY):** Provide exactly 5 highly specific tips. Categories: 'Nutrition', 'Hydration', 'Sleep', 'Exercise', 'Stress Management', 'Skincare', 'Lifestyle'.
+    2. **Products (MANDATORY):** Provide exactly 3 products. Use 'Aura Prime' or 'Aura Skin' as brand if unknown. MUST include: name, type, reason, price, and a placeholder link.
+    3. **Personalized Nutrition (MANDATORY):** Provide exactly 3 specific meals. High-quality image_keywords (e.g., 'colorful-quinoa-bowl').
+       - MUST include nutritional_info: calories (number), protein (string like '20g'), carbs (string like '30g'), fats (string like '10g').
+       - The 'description' MUST connect the meal to a specific biometric marker seen in the scan.
 
     ### JSON STRUCTURE (STRICT):
     {
@@ -253,10 +263,11 @@ export async function analyzeFaceHealth(
     }
 
     const result = await ai.models.generateContent({
-      model: "gemini-flash-latest",
+      model: "gemini-3-flash-preview",
       contents: content,
       config: { responseMimeType: "application/json" }
     });
+    
     const parsed = JSON.parse(result.text || "{}");
     return { ...parsed, language } as HealthAnalysis;
   } catch (error: any) {
