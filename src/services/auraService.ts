@@ -49,6 +49,26 @@ async function retryWithBackoff<T>(
   }
 }
 
+/**
+ * Validates the Gemini API setup and connection.
+ */
+export async function validateGeminiSetup(): Promise<boolean> {
+  if (!apiKey || apiKey === "undefined" || apiKey === "") {
+    return false;
+  }
+  try {
+    // Simple light call to check connectivity
+    await ai.models.generateContent({
+      model: "gemini-3.1-flash-lite-preview",
+      contents: "ping",
+    });
+    return true;
+  } catch (error) {
+    console.error("Gemini Setup Validation failed:", error);
+    return false;
+  }
+}
+
 async function trackApiUsage(operation: 'analysis' | 'translation' | 'coaching') {
   // Fire and forget - don't block the main flow for analytics
   (async () => {
@@ -110,7 +130,7 @@ export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage
 
   try {
     const result = await retryWithBackoff(() => ai.models.generateContent({ 
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.1-flash-lite-preview",
       contents: prompt,
       config: { responseMimeType: "application/json" }
     }));
@@ -121,6 +141,9 @@ export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage
     return translated;
   } catch (error: any) {
     console.error("Aura Translation Error:", error);
+    if (error.message?.includes("API key not valid") || error.message?.includes("401")) {
+      throw new Error("Gemini Translation Failed: API Authentication Error.");
+    }
     return analysis; // Fallback to original if translation fails
   }
 }
@@ -146,13 +169,14 @@ export async function generateCoachingMessage(history: HealthAnalysis[], latest:
 
   try {
     const result = await retryWithBackoff(() => ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.1-flash-lite-preview",
       contents: prompt,
     }));
     const message = result.text?.trim() || "Keep it up!";
     coachingCache[cacheKey] = message;
     return message;
   } catch (error: any) {
+    console.error("Aura Coaching Error:", error);
     return "Keep up the great work!";
   }
 }
@@ -181,75 +205,74 @@ export async function analyzeFaceHealth(
     ### CORE DIRECTIVE:
     Integrate the facial analysis with the current context. 
     - If ${scanType} is 'morning', focus on readiness, energy levels, and a morning "Action Plan".
-    - If ${scanType} is 'evening', focus on recovery, inflammation markers, and "Evening Wind-down".
-    - Factor in the External Vitality Data (like steps or sleep) to validate what you see on the face. (e.g., if sleep was low and eyes look puffy, explain the connection).
+    - If ${scanType} is 'evening', focus on recovery and relaxation.
+    - Factor in the External Vitality Data (like steps or sleep) to validate what you see on the face.
+    - IMPORTANT: Generate ALL text in this language: ${language}.
 
-    ### RIGOROUS ACCURACY PROTOCOL (STRICT):
-    1. **Early Warning Detection:** Look for subtle signs of chronic fatigue, early-stage dehydration, micronutrient deficiencies (e.g., Vitamin B12/Iron markers), and hormonal fluctuations. 
-    2. **Visual Evidence Only:** Base findings strictly on visible markers (capillary congestion, facial asymmetry, skin turgor, eye coloration, hyperpigmentation patterns).
-    3. **Confidence Scoring:** For every indicator, provide a confidence score (0.0 to 1.0).
-    4. **Systemic Deep-Dive:** Map markers to specific systems using known clinical correlations: Cardiovascular (lip color/micro-vessels), Renal (periorbital region), Hepatic (sclera/cheek pigmentation), and Endocrine (jawline/forehead texture).
+    ### SIMPLE TONE PROTOCOL (STRICT):
+    1. **No Jargon:** Use simple words that anyone can understand. 
+    2. **Avoid:** "Vascular," "Implication," "Dermatological," "Integrity," "Sclera," "Epidermal."
+    3. **Instead Use:** "Blood flow," "Skin health," "Eyes," "Energy," "Sleep quality."
+    4. **Tone:** Supportive Bestie vibes. Conversational and direct.
     
-    ### FORMATTING & TONE:
-    1. **Markdown Summary:** Use **Bold**, *Italics*, and Bullet points.
-    2. **Tone:** Supportive Bestie vibes, but with professional biomedical depth. Reference specific physiological concepts (e.g., "capillary dilation," "epidermal barrier integrity"). 
-    3. **Actionability:** Recommendations MUST be highly specific.
+    ### RIGOROUS ACCURACY:
+    1. **Visual Evidence Only:** Base findings strictly on visible markers.
+    2. **Confidence Scoring:** For every indicator, provide a confidence score (0.0 to 1.0).
+    3. **Systemic Connection:** Briefly connect face signs to how the body feels (e.g., "Puffy eyes often mean you need more water or rest").
+    
+    ### BIOMETRIC MAPPING (SIMPLE NAMES):
+    1. "Glow & Flow" (Blood flow & Skin color)
+    2. "Energy & Rest" (How tired or awake you look)
+    3. "Inner Balance" (General wellness signs)
+    4. "Skin Shield" (How healthy your skin looks)
 
-    ### BIOMETRIC MAPPING PARAMETERS:
-    (Explain results in simple, catchy terms but with underlying medical rigor)
-    1. Vascular & Oxygenation (Lip/Sclera/Cheek) -> "Glow & Flow" (Bloodflow & Cell Health)
-    2. Metabolic & Endocrine (Jawline/Neck/Eyes) -> "Energy & Balance" (Hormones & Stress)
-    3. Digestive & Gut-Skin Axis (Forehead/Mouth/Cheeks) -> "Inner Harmony" (Gut Health & Inflammation)
-    4. Dermatological Integrity -> "Dermal Shield" (Skin Barrier & Resilience)
+    ### 7-DAY QUEST:
+    Generate a simple 7-day challenge that is easy to follow.
 
-    ### 7-DAY CHALLENGE:
-    Generate a personalizeable 7-day wellness quest that targets the #1 vulnerability found in the scan.
-
-    ### RECOMMENDATIONS, PRODUCTS & NUTRITION (STRICT):
-    1. **Recommendations (MANDATORY):** Provide exactly 5 highly specific tips. Categories: 'Nutrition', 'Hydration', 'Sleep', 'Exercise', 'Stress Management', 'Skincare', 'Lifestyle'.
-    2. **Products (MANDATORY):** Provide exactly 3 products. Use 'Aura Prime' or 'Aura Skin' as brand if unknown. MUST include: name, type, reason, price, and a placeholder link.
-    3. **Personalized Nutrition (MANDATORY):** Provide exactly 3 specific meals. High-quality image_keywords (e.g., 'colorful-quinoa-bowl').
-       - MUST include nutritional_info: calories (number), protein (string like '20g'), carbs (string like '30g'), fats (string like '10g').
-       - The 'description' MUST connect the meal to a specific biometric marker seen in the scan.
+    ### RECOMMENDATIONS, PRODUCTS & NUTRITION:
+    1. **Recommendations (MANDATORY):** 5 simple, easy-to-do tips.
+    2. **Products (MANDATORY):** 3 helpful products. 
+    3. **Nutrition (MANDATORY):** 3 simple, healthy meals with clear ingredients.
 
     ### JSON STRUCTURE (STRICT):
     {
-      "summary": "Immersive, markdown-formatted overview of current vitality state.",
+      "summary": "Simple, short, and friendly overview of how you look today. Use bold and bullet points.",
       "overall_score": 0,
+      "language": "${language}",
       "daily_readiness": {
         "score": 0-100,
-        "label": "e.g., Peak Performance | Recovery Mode | High Vitality",
-        "description": "Short reasoning for today's readiness score."
+        "label": "e.g., Ready for anything! | Time to rest | Looking good",
+        "description": "One simple sentence on why."
       },
       "indicators": [
         {
-          "label": "Catchy name",
+          "label": "Simple name (e.g., Eye Brightness, Skin Hydration)",
           "status": "optimal|fair|attention_needed",
           "score": 0-100,
           "confidence": 0.0-1.0,
-          "facial_signs": ["Specific markers seen, e.g., 'Minor vascular congestion under lower eyelids'"],
+          "facial_signs": ["Simple signs, e.g., 'Slight dark circles under eyes'"],
           "affected_regions": ["forehead", "eyes", "cheeks", "nose", "mouth", "jawline", "skin_overall"],
-          "systemic_implication": "Deep explanation of internal connection",
-          "technical_insight": "A brief medical/dermatological term for the finding"
+          "systemic_implication": "Simple explanation (e.g., 'You might need more sleep')",
+          "technical_insight": "Conversational note on what this means"
         }
       ],
       "recommendations": [
-        { "category": "category", "tip": "specific actionable tip" }
+        { "category": "category", "tip": "simple tip" }
       ],
       "products": [
-        { "name": "name", "type": "SKINCARE|SUPPLEMENT", "reason": "why this helps the facial signs", "link": "link", "brand": "brand", "price": "$0.00" }
+        { "name": "name", "type": "SKINCARE|SUPPLEMENT", "reason": "why this helps", "link": "link", "brand": "brand", "price": "$0.00" }
       ],
       "meals": [
         {
           "title": "meal name",
-          "description": "why this helps your biometric state",
+          "description": "why this is good for you today",
           "ingredients": ["item1", "item2"],
           "image_keyword": "keywords-for-image",
           "nutritional_info": { "calories": 0, "protein": "0g", "carbs": "0g", "fats": "0g" }
         }
       ],
       "challenge": { ... },
-      "disclaimer": "Standard biometric disclaimer."
+      "disclaimer": "This is for wellness guidance, not medical advice."
     }
   `;
 
@@ -290,7 +313,7 @@ export async function analyzeFaceHealth(
     }
 
     const result = await retryWithBackoff(() => ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.1-flash-lite-preview",
       contents: content,
       config: { responseMimeType: "application/json" }
     }));
@@ -299,9 +322,20 @@ export async function analyzeFaceHealth(
     return { ...parsed, language } as HealthAnalysis;
   } catch (error: any) {
     console.error("Aura Analysis Error:", error);
-    if (error.message?.includes("API key not valid")) {
-      throw new Error("The Gemini API key provided is invalid. Please check your GEMINI_API_KEY setting.");
+    const errorDetails = error.message || JSON.stringify(error);
+    
+    if (errorDetails.includes("API key not valid") || errorDetails.includes("Invalid API Key") || errorDetails.includes("401")) {
+      throw new Error(`Gemini API Authentication Failed: The key in AI Studio Settings is being rejected. (Details: ${errorDetails})`);
     }
-    throw error;
+    
+    if (errorDetails.includes("model not found") || errorDetails.includes("404")) {
+      throw new Error(`Gemini Model Error: The model 'gemini-3.1-flash-lite-preview' is not available for this key. (Details: ${errorDetails})`);
+    }
+
+    if (errorDetails.includes("503") || errorDetails.includes("high demand")) {
+      throw new Error(`Gemini is currently overloaded. Please wait a moment and try again. (503 Service Unavailable)`);
+    }
+
+    throw new Error(`Gemini API Error: ${errorDetails}`);
   }
 }

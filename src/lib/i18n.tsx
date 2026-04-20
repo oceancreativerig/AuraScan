@@ -7,8 +7,50 @@ export const languages = [
 type Translations = Record<string, Record<string, string>>;
 
 export const translations: Translations = {
+  "Welcome to AuraScan": {
+    English: "Welcome to AuraScan", Spanish: "Bienvenido a AuraScan", French: "Bienvenue sur AuraScan", Portuguese: "Bem-vindo ao AuraScan"
+  },
+  "Your professional AI biometric health companion. Let's get you started with a quick overview of how we help you track your wellness.": {
+    English: "Your smart friend for a healthy life. Let's see how we can help you stay well.",
+    Spanish: "Tu amigo inteligente para una vida saludable.",
+    French: "Votre ami intelligent pour une vie saine.",
+    Portuguese: "Seu amigo inteligente para uma vida saudável."
+  },
+  "The Scanning Process": {
+    English: "How to Scan", Spanish: "Cómo escanear", French: "Comment scanner", Portuguese: "Como Escanear"
+  },
+  "Position your face in good lighting. AuraScan uses advanced computer vision to map 468+ landmarks for precise biometric analysis.": {
+    English: "Position your face in a bright spot. We scan your face to see how you are doing.",
+    Spanish: "Ponte en un lugar iluminado. Escaneamos tu cara para ver cómo estás.",
+    French: "Placez votre visage dans un endroit lumineux. Nous scannons votre visage.",
+    Portuguese: "Posicione seu rosto sob boa iluminação. Escaneamos seu rosto."
+  },
+  "Result Interpretation": {
+    English: "See Your Results", Spanish: "Ver tus resultados", French: "Voir vos résultats", Portuguese: "Ver Seus Resultados"
+  },
+  "Receive instant insights on hydration, stress, and vitality markers, correlated with evidence-based wellness recommendations.": {
+    English: "Get quick tips on your water levels, stress, and energy to help you feel your best.",
+    Spanish: "Obtén consejos rápidos para sentirte mejor.",
+    French: "Obtenez des conseils rapides pour vous sentir mieux.",
+    Portuguese: "Receba dicas rápidas para se sentir melhor."
+  },
   "Language": {
     English: "Language", Spanish: "Idioma", French: "Langue", German: "Sprache", Chinese: "语言", Japanese: "言語", Hindi: "भाषा", Arabic: "اللغة", Portuguese: "Idioma", Russian: "Язык"
+  },
+  "Hydration": {
+    English: "Water", Spanish: "Agua", French: "Eau", Portuguese: "Água"
+  },
+  "Stress": {
+    English: "Relaxation", Spanish: "Relajación", French: "Relaxation", Portuguese: "Relaxamento"
+  },
+  "Vitality": {
+    English: "Energy", Spanish: "Energía", French: "Énergie", Portuguese: "Energia"
+  },
+  "Capillary": {
+    English: "Blood Flow", Spanish: "Flujo sanguíneo", French: "Flux sanguin", Portuguese: "Fluxo Sanguíneo"
+  },
+  "Dermal": {
+    English: "Skin", Spanish: "Piel", French: "Peau", Portuguese: "Pele"
   },
   "History": {
     English: "History", Spanish: "Historial", French: "Historique", German: "Verlauf", Chinese: "历史", Japanese: "履歴", Hindi: "इतिहास", Arabic: "السجل", Portuguese: "Histórico", Russian: "История"
@@ -20,19 +62,19 @@ export const translations: Translations = {
     English: "Sign in to Save Scans", Spanish: "Inicia sesión para guardar", French: "Connectez-vous pour enregistrer", German: "Anmelden zum Speichern", Chinese: "登录以保存扫描", Japanese: "ログインして保存", Hindi: "स्कैन सहेजने के लिए साइन इन करें", Arabic: "تسجيل الدخول لحفظ الفحوصات", Portuguese: "Faça login para salvar", Russian: "Войдите, чтобы сохранить"
   },
   "AI-Powered Biometrics": {
-    English: "AI-Powered Biometrics", Spanish: "Biometría con IA", French: "Biométrie par IA", German: "KI-gestützte Biometrie", Chinese: "AI驱动的生物识别", Japanese: "AI搭載バイオメトリクス", Hindi: "एआई-संचालित बायोमेट्रिक्स", Arabic: "القياسات الحيوية المدعومة بالذكاء الاصطناعي", Portuguese: "Biometria com IA", Russian: "Биометрия на базе ИИ"
+    English: "Smart Health Scan", Spanish: "Escaneo de salud inteligente", French: "Scan santé intelligent", German: "Intelligenter Gesundheitsscan", Chinese: "智能健康扫描", Japanese: "スマートヘルススキャン", Hindi: "स्मार्ट हेल्थ स्कैन", Arabic: "الفحص الصحي الذكي", Portuguese: "Scan de Saúde Inteligente", Russian: "Умное сканирование здоровья"
   },
   "Advanced facial analysis for full-body wellness insights and personalized health recommendations.": {
-    English: "Advanced facial analysis for full-body wellness insights and personalized health recommendations.",
-    Spanish: "Análisis facial avanzado para información de bienestar corporal y recomendaciones de salud.",
-    French: "Analyse faciale avancée pour des informations sur le bien-être et des recommandations personnalisées.",
-    German: "Erweiterte Gesichtsanalyse für ganzheitliche Wellness-Einblicke und personalisierte Empfehlungen.",
-    Chinese: "先进的面部分析，提供全身健康洞察和个性化健康建议。",
-    Japanese: "全身の健康状態の把握とパーソナライズされた健康推奨のための高度な顔分析。",
-    Hindi: "पूर्ण-शरीर कल्याण अंतर्दृष्टि और व्यक्तिगत स्वास्थ्य सिफारिशों के लिए उन्नत चेहरे का विश्लेषण।",
-    Arabic: "تحليل متقدم للوجه للحصول على رؤى صحية شاملة وتوصيات صحية مخصصة.",
-    Portuguese: "Análise facial avançada para insights de bem-estar e recomendações de saúde personalizadas.",
-    Russian: "Расширенный анализ лица для получения информации о здоровье и персональных рекомендаций."
+    English: "Scan your face to see how your body is feeling and get easy tips to feel better.",
+    Spanish: "Escanea tu rostro para ver cómo te sientes y obtén consejos para mejorar.",
+    French: "Scannez votre visage pour voir comment vous vous sentez et obtenez des conseils.",
+    German: "Scannen Sie Ihr Gesicht, um zu sehen, wie es Ihnen geht, und erhalten Sie Tipps.",
+    Chinese: "扫描面部，了解身体状况并获取改善建议。",
+    Japanese: "顔をスキャンして体の調子を確認し、改善のためのヒントを得ましょう。",
+    Hindi: "अपने चेहरे को स्कैन करें और बेहतर महसूस करने के लिए आसान टिप्स प्राप्त करें।",
+    Arabic: "افحص وجهك لترى كيف يشعر جسمك واحصل على نصائح سهلة لتشعر بتحسن.",
+    Portuguese: "Escaneie seu rosto para ver como seu corpo está se sentindo e receba dicas.",
+    Russian: "Отсканируйте свое лицо, чтобы узнать самочувствие и получить советы."
   },
   "Daily Wellness Insight": {
     English: "Daily Wellness Insight", Spanish: "Consejo de bienestar diario", French: "Aperçu bien-être quotidien", German: "Täglicher Wellness-Einblick", Chinese: "每日健康洞察", Japanese: "毎日のウェルネスインサイト", Hindi: "दैनिक कल्याण अंतर्दृष्टि", Arabic: "رؤية العافية اليومية", Portuguese: "Insight Diário de Bem-Estar", Russian: "Ежедневный обзор здоровья"
@@ -83,7 +125,7 @@ export const translations: Translations = {
     English: "Personalized recommendations powered by advanced machine learning.", Spanish: "Recomendaciones personalizadas impulsadas por aprendizaje automático.", French: "Recommandations personnalisées alimentées par l'apprentissage automatique.", German: "Personalisierte Empfehlungen durch fortschrittliches maschinelles Lernen.", Chinese: "由高级机器学习驱动的个性化建议。", Japanese: "高度な機械学習によるパーソナライズされた推奨事項。", Hindi: "उन्नत मशीन लर्निंग द्वारा संचालित व्यक्तिगत सिफारिशें।", Arabic: "توصيات مخصصة مدعومة بالتعلم الآلي المتقدم.", Portuguese: "Recomendações personalizadas por aprendizado de máquina avançado.", Russian: "Персональные рекомендации на основе передового машинного обучения."
   },
   "Cancel Scan": {
-    English: "Cancel Scan", Spanish: "Cancelar escaneo", French: "Annuler le scan", German: "Scan abbrechen", Chinese: "取消扫描", Japanese: "スキャンをキャンセル", Hindi: "स्कैन रद्द करें", Arabic: "إلغاء الفحص", Portuguese: "Cancelar Scan", Russian: "Отменить сканирование"
+    English: "Cancel Scan", Spanish: "Cancelar escaneo", French: "Annuler le scan", German: "Scan abbrechen", Chinese: "取消扫描", Japanese: "スキャンをキャンセル", Hindi: "स्कैन रद्द करें", Arabic: "إلغاء الفحص", Portuguese: "Cancelar Scan", Russian: "Отменить"
   },
   "Analysis Failed": {
     English: "Analysis Failed", Spanish: "Análisis fallido", French: "Échec de l'analyse", German: "Analyse fehlgeschlagen", Chinese: "分析失败", Japanese: "分析に失敗しました", Hindi: "विश्लेषण विफल", Arabic: "فشل التحليل", Portuguese: "Falha na Análise", Russian: "Ошибка анализа"
@@ -92,7 +134,6 @@ export const translations: Translations = {
     English: "Try Again", Spanish: "Intentar de nuevo", French: "Réessayer", German: "Erneut versuchen", Chinese: "重试", Japanese: "もう一度お試しください", Hindi: "पुनः प्रयास करें", Arabic: "حاول مرة أخرى", Portuguese: "Tentar Novamente", Russian: "Попробовать снова"
   },
   "The AI engine is currently experiencing high demand. Please wait a few moments and try again.": {
-    English: "The AI engine is currently experiencing high demand. Please wait a few moments and try again.",
     Spanish: "El motor de IA está experimentando una alta demanda. Por favor, espere unos momentos e inténtelo de nuevo.",
     French: "Le moteur d'IA connaît actuellement une forte demande. Veuillez patienter quelques instants et réessayer.",
     Portuguese: "O motor de IA está passando por uma alta demanda. Aguarde alguns momentos e tente novamente."
@@ -104,13 +145,22 @@ export const translations: Translations = {
     Portuguese: "A análise de IA está temporariamente indisponível. Nossos engenheiros estão trabalhando nisso."
   },
   "LOADING AI MODELS...": {
-    English: "LOADING AI MODELS...", Spanish: "CARGANDO MODELOS DE IA...", French: "CHARGEMENT DES MODÈLES IA...", German: "LADE KI-MODELLE...", Chinese: "正在加载AI模型...", Japanese: "AIモデルを読み込み中...", Hindi: "एआई मॉडल लोड हो रहे हैं...", Arabic: "جاري تحميل نماذج الذكاء الاصطناعي...", Portuguese: "CARREGANDO MODELOS DE IA...", Russian: "ЗАГРУЗКА ИИ-МОДЕЛЕЙ..."
+    English: "Starting Aura...", Spanish: "Iniciando Aura...", French: "Démarrage d'Aura...", German: "Aura wird gestartet...", Chinese: "正在启动Aura...", Japanese: "Auraを起動中...", Hindi: "स्कैन शुरू हो रहा है...", Arabic: "بدء Aura...", Portuguese: "Iniciando Aura...", Russian: "Запуск Aura..."
   },
   "INITIALIZING BIOMETRIC ENGINE...": {
-    English: "INITIALIZING BIOMETRIC ENGINE...", Spanish: "INICIALIZANDO MOTOR BIOMÉTRICO...", French: "INITIALISATION DU MOTEUR BIOMÉTRIQUE...", German: "INITIALISIERE BIOMETRIE-ENGINE...", Chinese: "正在初始化生物识别引擎...", Japanese: "バイオメトリックエンジンを初期化中...", Hindi: "बायोमेट्रिक इंजन प्रारंभ हो रहा है...", Arabic: "جاري تهيئة محرك القياسات الحيوية...", Portuguese: "INICIALIZANDO MOTOR BIOMÉTRICO...", Russian: "ИНИЦИАЛИЗАЦИЯ БИОМЕТРИЧЕСКОГО ДВИЖКА..."
+    English: "Getting ready...", Spanish: "Preparando...", French: "Préparation...", German: "Vorbereitung...", Chinese: "正在准备...", Japanese: "準備中...", Hindi: "तैयारी हो रही है...", Arabic: "جاري التحضير...", Portuguese: "Preparando...", Russian: "Подготовка..."
+  },
+  "MAPPING FACIAL MARKERS...": {
+    English: "Mapping face...", Spanish: "Mapeando rostro...", French: "Cartographie du visage...", German: "Gesichtskartierung...", Chinese: "绘制面部图...", Japanese: "顔のマッピング中...", Hindi: "चेहरे का मानचित्रण...", Arabic: "رسم خرائط الوجه...", Portuguese: "Mapeando rosto...", Russian: "Картирование лица..."
+  },
+  "ANALYZING VITALITY STREAM...": {
+    English: "Analyzing vitality...", Spanish: "Analizando vitalidad...", French: "Analyse de la vitalité...", German: "Vitalitätsanalyse...", Chinese: "分析生命力...", Japanese: "バイタリティを分析中...", Hindi: "जीवन शक्ति का विश्लेषण...", Arabic: "تحليل الحيوية...", Portuguese: "Analisando vitalidade...", Russian: "Анализ жизненных сил..."
+  },
+  "FINALIZING REPORT...": {
+    English: "Finalizing...", Spanish: "Finalizando...", French: "Finalisation...", German: "Abschluss...", Chinese: "正在完成...", Japanese: "最終調整中...", Hindi: "अंतिम रूप दिया जा रहा है...", Arabic: "جاري اللمسات الأخيرة...", Portuguese: "Finalizando...", Russian: "Завершение..."
   },
   "DECODING BIOMETRICS": {
-    English: "DECODING BIOMETRICS", Spanish: "DECODIFICANDO BIOMETRÍA", French: "DÉCODAGE DE LA BIOMÉTRIE", German: "DEKODIERE BIOMETRIE", Chinese: "解码生物特征", Japanese: "バイオメトリクスをデコード中", Hindi: "बायोमेट्रिक्स डिकोड कर रहा है", Arabic: "فك تشفير القياسات الحيوية", Portuguese: "DECODIFICANDO BIOMETRIA", Russian: "ДЕКОДИРОВАНИЕ БИОМЕТРИИ"
+    English: "CHECKING YOUR GLOW", Spanish: "REVISANDO TU BRILLO", French: "VÉRIFICATION DE VOTRE ÉCLAT", German: "ÜBERPRÜFE DEIN STRAHLEN", Chinese: "检查您的气色", Japanese: "輝きをチェック中", Hindi: "आपकी चमक की जाँच कर रहा है", Arabic: "التحقق من توهجك", Portuguese: "VERIFICANDO SEU BRILHO", Russian: "ПРОВЕРКА ВАШЕГО СИЯНИЯ"
   },
   "Environment too dark": {
     English: "Environment too dark", Spanish: "Entorno demasiado oscuro", French: "Environnement trop sombre", Portuguese: "Ambiente muito escuro"
@@ -130,80 +180,83 @@ export const translations: Translations = {
   "LUMINANCE": {
     English: "LUMINANCE", Spanish: "LUMINANCIA", French: "LUMINANCE", Portuguese: "LUMINÂNCIA"
   },
-  "Camera access denied. Please allow camera access in your browser settings/address bar and try again.": {
-    English: "Camera access denied. Please allow camera access in your browser settings/address bar and try again.",
-    Spanish: "Acceso a la cámara denegado. Permita el acceso en la configuración de su navegador y vuelva a intentarlo.",
-    French: "Accès à la caméra refusé. Veuillez autoriser l'accès dans les paramètres de votre navigateur et réessayer.",
-    German: "Kamerazugriff verweigert. Bitte erlauben Sie den Zugriff in Ihren Browsereinstellungen und versuchen Sie es erneut.",
-    Chinese: "无法访问相机。请在浏览器设置中允许访问相机，然后重试。",
-    Japanese: "カメラへのアクセスが拒否されました。ブラウザの設定でカメラへのアクセスを許可し、もう一度お試しください。",
-    Hindi: "कैमरा एक्सेस अस्वीकृत। कृपया अपनी ब्राउज़र सेटिंग में कैमरा एक्सेस की अनुमति दें और पुनः प्रयास करें।",
-    Arabic: "تم رفض الوصول إلى الكاميرا. يرجى السماح بالوصول إلى الكاميرا في إعدادات المتصفح والمحاولة مرة أخرى.",
-    Portuguese: "Acesso à câmera negado. Permita o acesso na configuração do seu navegador e tente novamente.",
-    Russian: "Доступ к камере запрещен. Пожалуйста, разрешите доступ к камере в настройках вашего браузера и повторите попытку."
+  "BIOMETRIC_INTEGRITY": {
+    English: "BIOMETRIC INTEGRITY", Spanish: "INTEGRIDAD BIOMÉTRICA", French: "INTÉGRITÉ BIOMÉTRIQUE", Portuguese: "INTEGRIDADE BIOMÉTRICA", German: "BIOMETRISCHE INTEGRITÄT", Chinese: "生物特征完整性", Japanese: "生体認証の完全性", Hindi: "बायोमेट्रिक अखंडता", Arabic: "النزاهة البيومترية", Russian: "БИОМЕТРИЧЕСКАЯ ЦЕЛОСТНОСТЬ"
   },
-  "Camera permission was denied. Please click the camera icon in your browser address bar to allow access, then click Retry.": {
-    English: "Camera permission was denied. Please click the camera icon in your browser address bar to allow access, then click Retry.",
-    Spanish: "Permiso de cámara denegado. Haz clic en el icono de la cámara en la barra de direcciones para permitir el acceso.",
-    French: "Autorisation caméra refusée. Cliquez sur l'icône caméra dans la barre d'adresse pour autoriser l'accès.",
-    German: "Kameraberechtigung verweigert. Klicken Sie auf das Kamerasymbol in der Adressleiste, um den Zugriff zu erlauben.",
-    Chinese: "相机权限被拒绝。请点击浏览器地址栏中的相机图标以允许访问。",
-    Japanese: "カメラの権限が拒否されました。アドレスバーのカメラアイコンをクリックしてアクセスを許可してください。",
-    Hindi: "कैमरा अनुमति अस्वीकृत। कृपया पहुंच की अनुमति देने के लिए ब्राउज़र एड्रेस बार में कैमरा आइकन पर क्लिक करें।",
-    Arabic: "تم رفض إذن الكاميرا. يرجى النقر فوق أيقونة الكاميرا في شريط عنوان المتصفح للسماح بالوصول.",
-    Portuguese: "Permissão de câmera negada. Clique no ícone da câmera na barra de endereços para permitir o acesso.",
-    Russian: "В разрешении на использование камеры отказано. Нажмите на значок камеры в адресной строке браузера."
+  "Camera access denied. Please check your settings.": {
+    English: "Camera access denied. Please check your browser settings.",
+    Spanish: "Acceso a la cámara denegado. Por favor revisa tu configuración.",
+    French: "Accès à la caméra refusé. Veuillez vérifier vos paramètres.",
+    German: "Kamerazugriff verweigert. Bitte überprüfen Sie Ihre Einstellungen.",
+    Chinese: "无法访问相机。请检查您的浏览器设置。",
+    Japanese: "カメラへのアクセスが拒否されました。ブラウザの設定を確認してください。",
+    Hindi: "कैमरा एक्सेस अस्वीकृत। कृपया अपनी ब्राउज़र सेटिंग जांचें।",
+    Arabic: "تم رفض الوصول إلى الكاميرا. يرجى التحقق من إعدادات المتصفح.",
+    Portuguese: "Acesso à câmera negado. Verifique suas configurações.",
+    Russian: "Доступ к камере запрещен. Проверьте настройки браузера."
   },
-  "No camera found on this device.": {
-    English: "No camera found on this device.", Spanish: "No se encontró ninguna cámara.", French: "Aucune caméra trouvée.", German: "Keine Kamera gefunden.", Chinese: "未找到相机。", Japanese: "カメラが見つかりません。", Hindi: "कोई कैमरा नहीं मिला।", Arabic: "لم يتم العثور على كاميرا.", Portuguese: "Nenhuma câmera encontrada.", Russian: "Камера не найдена."
+  "Camera not allowed. Please tap the camera icon in your address bar to turn it on.": {
+    English: "Camera not allowed. Please tap the camera icon in your address bar to turn it on.",
+    Spanish: "Cámara no permitida. Toca el icono de la cámara para activarla.",
+    French: "Caméra non autorisée. Appuyez sur l'icône de la cámara pour l'activer.",
+    German: "Kamera nicht erlaubt. Bitte tippen Sie auf das Kamerasymbol in Ihrer Adressleiste.",
+    Chinese: "不允许使用相机。请点击地址栏中的相机图标将其开启。",
+    Japanese: "カメラが許可されていません。アドレスバーのカメラアイコンをタップしてオンにしてください。",
+    Hindi: "कैमरा की अनुमति नहीं है। कृपया इसे चालू करने के लिए अपने एड्रेस बार में कैमरा आइकन पर टैप करें।",
+    Arabic: "الكاميرا غير مسموح بها. يرجى الضغط على أيقونة الكاميرا في شريط العنوان لتشغيلها.",
+    Portuguese: "Câmera não permitida. Toque no ícone da câmera para ativá-la.",
+    Russian: "Камера не разрешена. Нажмите на значок камеры в адресной строке, чтобы включить ее."
   },
-  "Camera is already in use by another application.": {
-    English: "Camera is already in use by another application.", Spanish: "La cámara ya está en uso.", French: "La caméra est déjà utilisée.", German: "Kamera wird bereits verwendet.", Chinese: "相机已被占用。", Japanese: "カメラは既に使用中です。", Hindi: "कैमरा पहले से ही उपयोग में है।", Arabic: "الكاميرا قيد الاستخدام بالفعل.", Portuguese: "A câmera já está em uso.", Russian: "Камера уже используется."
+  "No camera found. Please use a device with a camera.": {
+    English: "No camera found. Please use a device with a camera.",
+    Spanish: "No se encontró ninguna cámara. Por favor usa un dispositivo con cámara.",
+    French: "Aucune caméra trouvée. Veuillez utiliser un appareil avec une caméra.",
+    German: "Keine Kamera gefunden. Bitte verwenden Sie ein Gerät mit einer Kamera.",
+    Chinese: "未找到相机。请使用带有相机的设备。",
+    Japanese: "カメラが見つかりません。カメラ付きのデバイスを使用してください。",
+    Hindi: "कोई कैमरा नहीं मिला। कृपया कैमरे वाले उपकरण का उपयोग करें।",
+    Arabic: "لم يتم العثور على كاميرا. يرجى استخدام جهاز مزود بكاميرا.",
+    Portuguese: "Nenhuma câmera encontrada. Use um dispositivo com câmera.",
+    Russian: "Камера не найдена. Пожалуйста, используйте устройство с камерой."
   },
-  "Camera access is restricted in this preview. Please try opening the app in a new tab using the button below.": {
-    English: "Camera access is restricted in this preview. Please try opening the app in a new tab using the button below.",
-    Spanish: "El acceso a la cámara está restringido. Ábrelo en una nueva pestaña.",
-    French: "L'accès à la caméra est restreint. Ouvrez dans un nouvel onglet.",
-    German: "Kamerazugriff eingeschränkt. In neuem Tab öffnen.",
-    Chinese: "此预览中相机访问受限。请使用下方按钮在新标签页中打开。",
-    Japanese: "プレビューではカメラへのアクセスが制限されています。下のボタンから新しいタブで開いてください。",
-    Hindi: "इस पूर्वावलोकन में कैमरा एक्सेस प्रतिबंधित है। कृपया नीचे दिए गए बटन का उपयोग करके नए टैब में खोलें।",
-    Arabic: "الوصول إلى الكاميرا مقيد. يرجى المحاولة في علامة تبويب جديدة.",
-    Portuguese: "O acesso à câmera está restrito. Abra em uma nova guia.",
-    Russian: "Доступ к камере ограничен. Откройте в новой вкладке."
+  "Camera is busy. Please close other apps using the camera.": {
+    English: "Camera is busy. Please close other apps using the camera.",
+    Spanish: "La cámara está ocupada. Cierra otras aplicaciones que la usen.",
+    French: "La caméra est occupée. Veuillez fermer les autres applications utilisant la caméra.",
+    German: "Kamera ist belegt. Bitte schließen Sie andere Apps, die die Kamera verwenden.",
+    Chinese: "相机正忙。请关闭其他使用相机的应用。",
+    Japanese: "カメラが使用中です。カメラを使用している他のアプリを閉じてください。",
+    Hindi: "कैमरा व्यस्त है। कृपया कैमरे का उपयोग करने वाले अन्य ऐप्स बंद करें।",
+    Arabic: "الكاميرا مشغولة. يرجى إغلاق التطبيقات الأخرى التي تستخدم الكاميرا.",
+    Portuguese: "A câmera está ocupada. Feche outros aplicativos que usam a câmera.",
+    Russian: "Камера занята. Пожалуйста, закройте другие приложения, использующие камеру."
   },
-  "Failed to load AI models. Please refresh.": {
-    English: "Failed to load AI models. Please refresh.", Spanish: "Error al cargar modelos de IA. Por favor, actualiza.", French: "Échec du chargement des modèles IA. Veuillez rafraîchir.", German: "Fehler beim Laden der KI-Modelle. Bitte aktualisieren.", Chinese: "加载AI模型失败。请刷新。", Japanese: "AIモデルの読み込みに失敗しました。更新してください。", Hindi: "एआई मॉडल लोड करने में विफल। कृपया रीफ्रेश करें।", Arabic: "فشل تحميل نماذج الذكاء الاصطناعي. يرجى التحديث.", Portuguese: "Falha ao carregar modelos de IA. Atualize a página.", Russian: "Не удалось загрузить ИИ-модели. Пожалуйста, обновите страницу."
+  "Your browser does not support camera access or you are not using a secure connection.": {
+    English: "Your browser does not support camera access or you are not using a secure connection.",
+    Spanish: "Tu navegador no admite el acceso a la cámara o no estás usando una conexión segura.",
+    French: "Votre navigateur ne prend pas en charge l'accès à la caméra ou vous n'utilisez pas de connexion sécurisée.",
+    German: "Ihr Browser unterstützt den Kamerazugriff nicht oder Sie verwenden keine sichere Verbindung.",
+    Chinese: "您的浏览器不支持相机访问或您未使用安全连接。",
+    Japanese: "お使いのブラウザはカメラへのアクセスをサポートしていないか、安全な接続を使用していません。",
+    Hindi: "आपका ब्राउज़र कैमरा एक्सेस का समर्थन नहीं करता है या आप सुरक्षित कनेक्शन का उपयोग नहीं कर रहे हैं।",
+    Arabic: "متصفحك لا يدعم الوصول إلى الكاميرا أو أنك لا تستخدم اتصالاً آمناً.",
+    Portuguese: "Seu navegador não oferece suporte ao acesso à câmera ou você não está usando uma conexão segura.",
+    Russian: "Ваш ब्राउзер не поддерживает доступ к камере или вы используете небезопасное соединение."
+  },
+  "Camera restricted in preview. Please open in a new tab or upload a photo.": {
+    English: "Camera restricted in preview. Please open in a new tab or upload a photo.",
+    Spanish: "Cámara restringida. Ábrela en una nueva pestaña o sube una foto.",
+    French: "Caméra restreinte. Ouvrez dans un nouvel onglet ou téléchargez une photo.",
+    German: "Kamera in der Vorschau eingeschränkt. In neuem Tab öffnen oder Foto hochladen.",
+    Chinese: "预览中相机受限。请在新标签页中打开或上传照片。",
+    Japanese: "プレビューではカメラが制限されています。新しいタブで開くか、写真をアップロードしてください。",
+    Hindi: "पूर्वावलोकन में कैमरा प्रतिबंधित है। कृपया नए टैब में खोलें या फोटो अपलोड करें।",
+    Arabic: "الكاميرا مقيدة في المعاينة. يرجى فتحها في علامة تبويب جديدة أو تحميل صورة.",
+    Portuguese: "Câmera restrita. Abra em uma nova guia ou envie uma foto.",
+    Russian: "Камера ограничена в режиме предпросмотра. Откройте в новой вкладке или загрузите фото."
   },
   "Simulate Demo Scan": {
     English: "Simulate Demo Scan", Spanish: "Simular escaneo de demostración", French: "Simuler un scan de démonstration", German: "Demo-Scan simulieren", Chinese: "模拟演示扫描", Japanese: "デモスキャンをシミュレート", Hindi: "डेमो स्कैन का अनुकरण करें", Arabic: "محاكاة مسح تجريبي", Portuguese: "Simular Scan de Demonstração", Russian: "Симулировать демонстрационное сканирование"
-  },
-  "Scan Restricted: Camera permission was denied. To continue, please enable camera access in your browser settings (look for the camera icon in the address bar) and click Retry.": {
-    English: "Scan Restricted: Camera permission was denied. To continue, please enable camera access in your browser settings (look for the camera icon in the address bar) and click Retry.",
-    Spanish: "Escaneo restringido: se denegó el permiso de la cámara. Habilite el acceso en la configuración y haga clic en Reintentar.",
-    French: "Scan restreint : l'autorisation de la caméra a été refusée. Veuillez activer l'accès dans les paramètres et cliquer sur Réessayer.",
-    German: "Scan eingeschränkt: Kameraberechtigung wurde verweigert. Bitte aktivieren Sie den Zugriff in den Einstellungen und klicken Sie auf Wiederholen.",
-    Chinese: "扫描受限：相机权限被拒绝。请在浏览器设置中启用相机访问，然后点击重试。",
-    Japanese: "スキャンが制限されています：カメラの権限が拒否されました。ブラウザの設定でカメラへのアクセスを有効にし、再試行をクリックしてください。",
-    Hindi: "स्कैन प्रतिबंधित: कैमरा अनुमति अस्वीकृत कर दी गई थी। जारी रखने के लिए, कृपया ब्राउज़र सेटिंग्स में कैमरा एक्सेस सक्षम करें और पुनः प्रयास करें।",
-    Arabic: "المسح مقيد: تم رفض إذن الكاميرا. للمتابعة ، يرجى تمكين الوصول إلى الكاميرا في إعدادات المتصفح والنقر فوق إعادة المحاولة.",
-    Portuguese: "Scan Restrito: A permissão da câmera foi negada. Para continuar, habilite o acesso à câmera nas configurações do navegador e clique em Tentar Novamente.",
-    Russian: "Сканирование ограничено: в разрешении на использование камеры отказано. Чтобы продолжить, включите доступ к камере в настройках браузера и нажмите «Повторить»."
-  },
-  "AuraScan requires deep biometric sensor access which is restricted in this preview. Please use the button below to 'Open in New Tab' for full access, or upload a high-quality photo manually.": {
-    English: "AuraScan requires deep biometric sensor access which is restricted in this preview. Please use the button below to 'Open in New Tab' for full access, or upload a high-quality photo manually.",
-    Spanish: "AuraScan requiere acceso al sensor biométrico. Usa 'Abrir en nueva pestaña' o sube una foto.",
-    French: "AuraScan nécessite un accès au capteur biométrique. Utilisez 'Ouvrir dans un nouvel onglet' ou téléchargez une photo.",
-    German: "AuraScan erfordert Zugriff auf biometrische Sensoren. 'In neuem Tab öffnen' oder Foto hochladen.",
-    Chinese: "AuraScan 需要深层生物识别传感器访问权限，该权限在预览中受限。请使用下方的“在新标签页中打开”按钮以获得完整访问权限，或手动上传高质量照片。",
-    Japanese: "AuraScanにはバイオメトリックセンサーへのフルアクセスが必要ですが、プレビューでは制限されています。下のボタンから「新しいタブで開く」か、手動で写真をアップロードしてください。",
-    Hindi: "AuraScan के लिए गहरे बायोमेट्रिक सेंसर एक्सेस की आवश्यकता होती है जो इस पूर्वावलोकन में प्रतिबंधित है। कृपया पूर्ण पहुंच के लिए नीचे दिए गए बटन का उपयोग करें, या मैन्युअल रूप से एक फोटो अपलोड करें।",
-    Arabic: "يتطلب AuraScan وصولاً عميقًا إلى المستشعر البيومتري وهو مقيد في هذه المعاينة. يرجى استخدام الزر أدناه لـ 'فتح في علامة تبويب جديدة' للوصول الكامل ، أو تحميل صورة عالية الجودة يدويًا.",
-    Portuguese: "O AuraScan requer acesso profundo ao sensor biométrico, o que é restrito nesta visualização. Use o botão abaixo para 'Abrir em nova guia' ou envie uma foto manualmente.",
-    Russian: "AuraScan требует глубокого доступа к биометрическим датчикам, который ограничен в этом режиме. Используйте кнопку «Открыть в новой вкладке» для полного доступа или загрузите фото вручную."
-  },
-  "Too dark for accurate scan": {
-    English: "Too dark for accurate scan", Spanish: "Demasiado oscuro para un escaneo preciso", French: "Trop sombre pour un scan précis", German: "Zu dunkel für einen genauen Scan", Chinese: "太暗，无法进行准确扫描", Japanese: "暗すぎて正確なスキャンができません", Hindi: "सटीक स्कैन के लिए बहुत अंधेरा", Arabic: "مظلم جدًا لإجراء فحص دقيق", Portuguese: "Muito escuro para um scan preciso", Russian: "Слишком темно для точного сканирования"
   },
   "Warning: Environment too dark": {
     English: "Warning: Environment too dark", Spanish: "Advertencia: Entorno demasiado oscuro", French: "Avertissement : Environnement trop sombre", German: "Warnung: Umgebung zu dunkel", Chinese: "警告：环境太暗", Japanese: "警告：環境が暗すぎます", Hindi: "चेतावनी: पर्यावरण बहुत अंधेरा है", Arabic: "تحذير: البيئة مظلمة جدًا", Portuguese: "Aviso: Ambiente muito escuro", Russian: "Предупреждение: Слишком темно"
@@ -215,7 +268,7 @@ export const translations: Translations = {
     English: "Analysis Complete", Spanish: "Análisis completo", French: "Analyse terminée", German: "Analyse abgeschlossen", Chinese: "分析完成", Japanese: "分析完了", Hindi: "विश्लेषण पूर्ण", Arabic: "اكتمل التحليل", Portuguese: "Análise Concluída", Russian: "Анализ завершен"
   },
   "AuraScan Biometric Report": {
-    English: "AuraScan Biometric Report", Spanish: "Informe biométrico de AuraScan", French: "Rapport biométrique AuraScan", German: "AuraScan Biometrischer Bericht", Chinese: "AuraScan生物识别报告", Japanese: "AuraScanバイオメトリクスレポート", Hindi: "AuraScan बायोमेट्रिक रिपोर्ट", Arabic: "تقرير القياسات الحيوية AuraScan", Portuguese: "Relatório Biométrico AuraScan", Russian: "Биометрический отчет AuraScan"
+    English: "AuraScan Health Report", Spanish: "Informe de salud de AuraScan", French: "Rapport de santé AuraScan", German: "AuraScan Gesundheitsbericht", Chinese: "AuraScan健康报告", Japanese: "AuraScan健康レポート", Hindi: "AuraScan हेल्थ रिपोर्ट", Arabic: "تقرير AuraScan الصحي", Portuguese: "Relatório de Saúde AuraScan", Russian: "Отчет о здоровье AuraScan"
   },
   "Confidence": {
     English: "Confidence", Spanish: "Confianza", French: "Confiance", German: "Konfidenz", Chinese: "置信度", Japanese: "信頼度", Hindi: "आत्मविश्वास", Arabic: "الثقة", Portuguese: "Confiança", Russian: "Уверенность"
@@ -233,7 +286,7 @@ export const translations: Translations = {
     English: "Medical Disclaimer", Spanish: "Aviso médico", French: "Avis médical", German: "Medizinischer Haftungsausschluss", Chinese: "医疗免责声明", Japanese: "医療免責事項", Hindi: "चिकित्सा अस्वीकरण", Arabic: "إخلاء المسؤولية الطبية", Portuguese: "Aviso Médico", Russian: "Медицинский отказ от ответственности"
   },
   "AuraScan is an AI-powered wellness tool and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.": {
-    English: "AuraScan is an AI-powered wellness tool and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.",
+    English: "AuraScan is a smart tool to help you track your wellness. It is not a doctor and cannot diagnose or treat diseases. Always talk to a real doctor for any medical concerns.",
     Spanish: "AuraScan es una herramienta de bienestar impulsada por IA y no sustituye el consejo, diagnóstico o tratamiento médico profesional. Siempre busca el consejo de tu médico u otro proveedor de salud calificado con cualquier pregunta que puedas tener sobre una condición médica.",
     French: "AuraScan est un outil de bien-être alimenté par l'IA et ne remplace pas les conseils, diagnostics ou traitements médicaux professionnels. Demandez toujours l'avis de votre médecin ou d'un autre professionnel de la santé qualifié pour toute question concernant un problème de santé.",
     German: "AuraScan ist ein KI-gestütztes Wellness-Tool und kein Ersatz für professionelle medizinische Beratung, Diagnose oder Behandlung. Suchen Sie bei Fragen zu einer Krankheit immer den Rat Ihres Arztes oder eines anderen qualifizierten Gesundheitsdienstleisters.",
@@ -293,13 +346,13 @@ export const translations: Translations = {
     English: "Jawline", Spanish: "Mandíbula", French: "Mâchoire", German: "Kieferpartie", Chinese: "下颌线", Japanese: "顎のライン", Hindi: "जबड़े की रेखा", Arabic: "خط الفك", Portuguese: "Mandíbula", Russian: "Линия подбородка"
   },
   "optimal": {
-    English: "optimal", Spanish: "óptimo", French: "optimal", German: "optimal", Chinese: "最佳", Japanese: "最適", Hindi: "इष्टतम", Arabic: "أمثل", Portuguese: "ideal", Russian: "оптимально"
+    English: "Excellent", Spanish: "Excelente", French: "Excellent", German: "Ausgezeichnet", Chinese: "极好", Japanese: "優秀", Hindi: "उत्कृष्ट", Arabic: "ممتاز", Portuguese: "Excelente", Russian: "Отлично"
   },
   "fair": {
-    English: "fair", Spanish: "regular", French: "passable", German: "befriedigend", Chinese: "一般", Japanese: "普通", Hindi: "निष्पक्ष", Arabic: "مقبول", Portuguese: "razoável", Russian: "удовлетворительно"
+    English: "Good", Spanish: "Bueno", French: "Bon", German: "Gut", Chinese: "好", Japanese: "良い", Hindi: "अच्छा", Arabic: "جيد", Portuguese: "Bom", Russian: "Хорошо"
   },
   "attention needed": {
-    English: "attention needed", Spanish: "necesita atención", French: "attention requise", German: "Aufmerksamkeit erforderlich", Chinese: "需要注意", Japanese: "注意が必要", Hindi: "ध्यान देने की आवश्यकता है", Arabic: "بحاجة للاهتمام", Portuguese: "requer atenção", Russian: "требует внимания"
+    English: "Needs Care", Spanish: "Necesita cuidado", French: "Besoin de soins", German: "Pflege erforderlich", Chinese: "需要关注", Japanese: "ケアが必要", Hindi: "देखभाल की ज़रूरत है", Arabic: "بحاجة للرعاية", Portuguese: "Precisa de Cuidado", Russian: "Требуется внимание"
   },
   "Login failed. Please ensure your domain is added to Firebase Authorized Domains.": {
     English: "Login failed. Please ensure your domain is added to Firebase Authorized Domains.",
@@ -560,34 +613,34 @@ export const translations: Translations = {
     English: "How AuraScan Works", Spanish: "Cómo funciona AuraScan", French: "Comment fonctionne AuraScan", German: "Wie AuraScan funktioniert", Chinese: "AuraScan 如何工作", Japanese: "AuraScanの仕組み", Hindi: "AuraScan कैसे काम करता है", Arabic: "كيف يعمل AuraScan", Portuguese: "Como o AuraScan Funciona", Russian: "Как работает AuraScan"
   },
   "Facial Mapping": {
-    English: "Facial Mapping", Spanish: "Mapeo facial", French: "Cartographie faciale", German: "Gesichtskartierung", Chinese: "面部映射", Japanese: "フェイシャルマッピング", Hindi: "चेहरे का मानचित्रण", Arabic: "تخطيط الوجه", Portuguese: "Mapeamento Facial", Russian: "Картирование лица"
+    English: "Face Scanning", Spanish: "Escaneo facial", French: "Scan facial", German: "Gesichtsscan", Chinese: "面部扫描", Japanese: "フェイススキャン", Hindi: "फेस स्कैनिंग", Arabic: "فحص الوجه", Portuguese: "Mapeamento Facial", Russian: "Сканирование лица"
   },
   "Our AI identifies 468+ biometric landmarks to assess micro-expressions and skin markers.": {
-    English: "Our AI identifies 468+ biometric landmarks to assess micro-expressions and skin markers.",
-    Spanish: "Nuestra IA identifica más de 468 puntos biométricos para evaluar microexpresiones.",
-    French: "Notre IA identifie plus de 468 points biométriques pour évaluer les micro-expressions.",
-    German: "Unsere KI identifiziert über 468 biometrische Merkmale zur Bewertung von Mikroexpressionen.",
-    Chinese: "我们的 AI 识别 468+ 个生物识别特征点，以评估微表情和皮肤标记。",
-    Japanese: "当社のAIは468以上のバイオメトリックランドマークを特定し、微表情や肌のマーカーを評価します。",
-    Hindi: "हमारा एआई सूक्ष्म भावों और त्वचा के निशानों का आकलन करने के लिए 468+ बायोमेट्रिक स्थलों की पहचान करता है।",
-    Arabic: "يحدد الذكاء الاصطناعي لدينا أكثر من 468 علامة حيوية لتقييم التعبيرات الدقيقة وعلامات الجلد.",
-    Portuguese: "Nossa IA identifica mais de 468 pontos biométricos para avaliar microexpressões e marcadores de pele.",
-    Russian: "Наш ИИ идентифицирует более 468 биометрических точек для оценки микровыражений и состояния кожи."
+    English: "Our smart system looks at hundreds of points on your face to understand how you feel.",
+    Spanish: "Nuestro sistema analiza cientos de puntos en tu rostro.",
+    French: "Notre système analyse des centaines de points sur votre visage.",
+    German: "Unser System analysiert Hunderte von Punkten in Ihrem Gesicht.",
+    Chinese: "我们的系统通过分析面部的数百个点来了解您的感受。",
+    Japanese: "当社のシステムは顔の数百のポイントを分析して、あなたの状態を理解します。",
+    Hindi: "हमारा स्मार्ट सिस्टम आपके चेहरे के सैकड़ों बिंदुओं को देखता है यह समझने के लिए कि आप कैसा महसूस करते हैं।",
+    Arabic: "ينظر نظامنا الذكي إلى مئات النقاط على وجهك لفهم شعورك.",
+    Portuguese: "Nossa IA identifica centenas de pontos no seu rosto.",
+    Russian: "Наша система анализирует сотни точек на вашем лице."
   },
   "Systemic Analysis": {
-    English: "Systemic Analysis", Spanish: "Análisis sistémico", French: "Analyse systémique", German: "Systemische Analyse", Chinese: "系统分析", Japanese: "全身分析", Hindi: "प्रणालीगत विश्लेषण", Arabic: "التحليل النظامي", Portuguese: "Análise Sistêmica", Russian: "Системный анализ"
+    English: "Whole Body Check", Spanish: "Chequeo corporal total", French: "Bilan corporel", German: "Ganzkörper-Check", Chinese: "全身检查", Japanese: "全身チェック", Hindi: "पूरे शरीर की जांच", Arabic: "فحص الجسم بالكامل", Portuguese: "Análise Sistêmica", Russian: "Проверка всего тела"
   },
   "Markers are correlated with systemic health indicators like hydration, stress, and metabolism.": {
-    English: "Markers are correlated with systemic health indicators like hydration, stress, and metabolism.",
-    Spanish: "Los marcadores se correlacionan con indicadores de salud como hidratación y estrés.",
-    French: "Les marqueurs sont corrélés à des indicateurs de santé comme l'hydratation et le stress.",
-    German: "Merkmale werden mit Gesundheitsindikatoren wie Hydratation, Stress und Stoffwechsel korreliert.",
-    Chinese: "标记与水分、压力和新陈代谢等系统健康指标相关联。",
-    Japanese: "マーカーは水分補給、ストレス、代謝などの全身の健康指標と相関しています。",
-    Hindi: "मार्कर हाइड्रेशन, तनाव और चयापचय जैसे प्रणालीगत स्वास्थ्य संकेतकों के साथ सहसंबद्ध हैं।",
-    Arabic: "ترتبط العلامات بمؤشرات صحية شاملة مثل الترطيب والتوتر والتمثيل الغذائي.",
-    Portuguese: "Os marcadores são correlacionados com indicadores de saúde sistêmica, como hidratação, estresse e metabolismo.",
-    Russian: "Показатели коррелируют с системными индикаторами здоровья, такими как гидратация, стресс и метаболизм."
+    English: "We look at things like how hydrated you are and your stress levels.",
+    Spanish: "Analizamos niveles de hidratación y estrés.",
+    French: "Nous analysons les niveaux d'hydratation et de stress.",
+    German: "Wir schauen uns Faktoren wie Hydratation und Stresslevel an.",
+    Chinese: "我们关注水分和压力水平等指标。",
+    Japanese: "水分補給やストレスレベルなどの指標を確認します。",
+    Hindi: "हम देखते हैं कि आप कितने हाइड्रेटेड हैं और आपका तनाव स्तर क्या है।",
+    Arabic: "نحن ننظر إلى أشياء مثل مدى ترطيبك ومستويات التوتر لديك.",
+    Portuguese: "Analisamos níveis de hidratação e estresse.",
+    Russian: "Мы анализируем такие показатели, как уровень гидратации и стресса."
   },
   "Wellness Plan": {
     English: "Wellness Plan", Spanish: "Plan de bienestar", French: "Plan de bien-être", German: "Wellness-Plan", Chinese: "健康计划", Japanese: "ウェルネスプラン", Hindi: "कल्याण योजना", Arabic: "خطة العافية", Portuguese: "Plano de Bem-estar", Russian: "План оздоровления"
@@ -703,11 +756,8 @@ export const translations: Translations = {
   "Ready to Scan": {
     English: "Ready to Scan", Spanish: "Listo para escanear", French: "Prêt à scanner", Portuguese: "Pronto para Escanear"
   },
-  "BIOMETRIC_INTEGRITY": {
-    English: "BIOMETRIC_INTEGRITY", Spanish: "INTEGRIDAD_BIOMÉTRICA", French: "INTÉGRITÉ_BIOMÉTRIQUE", Portuguese: "INTEGRIDADE_BIOMÉTRICA"
-  },
   "BIOMETRIC REPORT GENERATED": {
-    English: "BIOMETRIC REPORT GENERATED", Spanish: "INFORME BIOMÉTRICO GENERADO", French: "RAPPORT BIOMÉTRIQUE GÉNÉRÉ", Portuguese: "RELATÓRIO BIOMÉTRICO GERADO"
+    English: "HEALTH REPORT READY", Spanish: "INFORME DE SALUD LISTO", French: "RAPPORT DE SANTÉ PRÊT", Portuguese: "RELATÓRIO DE SAÚDE PRONTO"
   },
   "AURA STATUS": {
     English: "AURA STATUS", Spanish: "ESTADO DE AURA", French: "STATUT AURA", Portuguese: "STATUS DA AURA"

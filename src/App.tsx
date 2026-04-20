@@ -146,6 +146,7 @@ function AppContent() {
   const [scanType, setScanType] = useState<ScanType>('general');
   const [wearableSync, setWearableSync] = useState(false);
   const [mockExternalData, setMockExternalData] = useState<ExternalHealthData | undefined>(undefined);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
   const { language, setLanguage, t } = useLanguage();
 
   const XP_PER_LEVEL = 100;
@@ -390,7 +391,19 @@ function AppContent() {
 
   const handleCapture = async (base64Image: string) => {
     setState('ANALYZING');
+    setAnalysisProgress(0);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Progress simulation
+    const progressInterval = setInterval(() => {
+      setAnalysisProgress(prev => {
+        if (prev < 30) return prev + Math.random() * 10;
+        if (prev < 70) return prev + Math.random() * 5;
+        if (prev < 90) return prev + Math.random() * 2;
+        return prev + 0.1; // Slow crawl near the end
+      });
+    }, 400);
+
     try {
       const result = await analyzeFaceHealth(
         base64Image, 
@@ -403,6 +416,12 @@ function AppContent() {
           heartRate: 68 
         } : undefined
       );
+      clearInterval(progressInterval);
+      setAnalysisProgress(100);
+      
+      // Artificial delay to let user see 100%
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
       setAnalysis(result);
       setState('RESULTS');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -516,6 +535,7 @@ function AppContent() {
     setAnalysis(null);
     setCurrentScanId(null);
     setError(null);
+    setAnalysisProgress(0);
     setState('CALIBRATING');
   };
 
@@ -919,10 +939,17 @@ function AppContent() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="w-full"
             >
-              <Scanner onCapture={handleCapture} isAnalyzing={state === 'ANALYZING'} />
+              <Scanner 
+                onCapture={handleCapture} 
+                isAnalyzing={state === 'ANALYZING'} 
+                analysisProgress={analysisProgress}
+              />
               <div className="mt-8 text-center">
                 <button
-                  onClick={() => setState('IDLE')}
+                  onClick={() => {
+                    setState('IDLE');
+                    setAnalysisProgress(0);
+                  }}
                   className="text-zinc-500 hover:text-zinc-300 text-sm font-medium transition-colors"
                 >
                   {t('Cancel Scan')}

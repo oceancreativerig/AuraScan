@@ -9,9 +9,10 @@ import { useLanguage } from '../lib/i18n';
 interface ScannerProps {
   onCapture: (image: string) => void;
   isAnalyzing: boolean;
+  analysisProgress?: number;
 }
 
-export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
+export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing, analysisProgress = 0 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -68,6 +69,10 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
     }
 
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("MEDIA_DEVICES_UNSUPPORTED");
+      }
+
       // Use more flexible constraints to avoid issues on some devices
       const constraints = {
         video: { 
@@ -87,21 +92,23 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
     } catch (err: any) {
       console.error("Camera access error:", err);
       
-      let errorMessage = t("Camera access denied. Please ensure you have granted permission in your browser settings.");
+      let errorMessage = t("Camera access denied. Please check your settings.");
       
       const isDenied = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError' || err.message?.toLowerCase().includes('denied');
       
       if (isDenied) {
-        errorMessage = t("Scan Restricted: Camera permission was denied. To continue, please enable camera access in your browser settings (look for the camera icon in the address bar) and click Retry.");
+        errorMessage = t("Camera not allowed. Please tap the camera icon in your address bar to turn it on.");
       } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        errorMessage = t("No camera found on this device.");
+        errorMessage = t("No camera found. Please use a device with a camera.");
       } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-        errorMessage = t("Camera is already in use by another application.");
+        errorMessage = t("Camera is busy. Please close other apps using the camera.");
+      } else if (err.message === "MEDIA_DEVICES_UNSUPPORTED") {
+        errorMessage = t("Your browser does not support camera access or you are not using a secure connection.");
       }
 
       const isIframe = window.self !== window.top;
       if (isIframe && (isDenied || err.name === 'SecurityError')) {
-        errorMessage = t("AuraScan requires deep biometric sensor access which is restricted in this preview. Please use the button below to 'Open in New Tab' for full access, or upload a high-quality photo manually.");
+        errorMessage = t("Camera restricted in preview. Please open in a new tab or upload a photo.");
       }
 
       setError(errorMessage);
@@ -298,8 +305,8 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
               ctx.fillStyle = '#2dd4bf';
               const nose = landmarks[1];
               if (nose) {
-                ctx.fillText(`BIOMETRIC_ID: ${Math.floor(nose.x * 10000)}`, nose.x * width + 15, nose.y * height - 15);
-                ctx.fillText(`CONFIDENCE: ${(results.faceLandmarks[0][0].visibility || 0.99).toFixed(2)}`, nose.x * width + 15, nose.y * height - 5);
+                ctx.fillText(`SCAN_ID: ${Math.floor(nose.x * 10000)}`, nose.x * width + 15, nose.y * height - 15);
+                ctx.fillText(`QUALITY: ${(results.faceLandmarks[0][0].visibility || 0.99).toFixed(2)}`, nose.x * width + 15, nose.y * height - 5);
               }
 
               // Draw subtle mesh points (background)
@@ -527,18 +534,48 @@ export const Scanner: React.FC<ScannerProps> = ({ onCapture, isAnalyzing }) => {
                 <RefreshCw className="w-8 h-8 text-[var(--text-primary)] animate-pulse" />
               </div>
             </div>
-            <div className="flex flex-col items-center gap-2">
-              <p className="text-[var(--accent-teal)] font-mono text-lg tracking-widest animate-pulse">{t('DECODING BIOMETRICS')}</p>
-              <div className="flex gap-1">
-                {[...Array(3)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    animate={{ height: ["8px", "24px", "8px"] }}
-                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-                    className="w-1 bg-[var(--accent-teal)] rounded-full"
-                  />
-                ))}
+            <div className="flex flex-col items-center gap-6 w-full px-12">
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-[var(--accent-teal)] font-mono text-lg tracking-[0.2em] animate-pulse uppercase">{t('DECODING BIOMETRICS')}</p>
+                <div className="flex items-center gap-2">
+                   <p className="text-3xl font-display font-bold text-white tracking-widest leading-none">
+                     {Math.floor(analysisProgress)}%
+                   </p>
+                </div>
               </div>
+
+              {/* Progress Bar Container */}
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden border border-white/5 relative">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${analysisProgress}%` }}
+                  transition={{ type: "spring", bounce: 0, duration: 0.5 }}
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-[var(--accent-teal)] to-sky-500 shadow-[0_0_15px_rgba(45,212,191,0.5)]"
+                />
+                
+                {/* Glossy Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex gap-1">
+                  {[...Array(3)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      animate={{ height: ["8px", "24px", "8px"] }}
+                      transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                      className="w-1 bg-[var(--accent-teal)] rounded-full"
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              <p className="text-[10px] font-mono text-[var(--text-secondary)] uppercase tracking-[0.3em] opacity-60 text-center animate-pulse">
+                {analysisProgress < 30 ? t('INITIALIZING BIOMETRIC ENGINE...') : 
+                 analysisProgress < 60 ? t('MAPPING FACIAL MARKERS...') : 
+                 analysisProgress < 90 ? t('ANALYZING VITALITY STREAM...') : 
+                 t('FINALIZING REPORT...')}
+              </p>
             </div>
           </motion.div>
         )}
