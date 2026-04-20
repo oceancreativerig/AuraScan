@@ -91,6 +91,18 @@ export const translations: Translations = {
   "Try Again": {
     English: "Try Again", Spanish: "Intentar de nuevo", French: "Réessayer", German: "Erneut versuchen", Chinese: "重试", Japanese: "もう一度お試しください", Hindi: "पुनः प्रयास करें", Arabic: "حاول مرة أخرى", Portuguese: "Tentar Novamente", Russian: "Попробовать снова"
   },
+  "The AI engine is currently experiencing high demand. Please wait a few moments and try again.": {
+    English: "The AI engine is currently experiencing high demand. Please wait a few moments and try again.",
+    Spanish: "El motor de IA está experimentando una alta demanda. Por favor, espere unos momentos e inténtelo de nuevo.",
+    French: "Le moteur d'IA connaît actuellement une forte demande. Veuillez patienter quelques instants et réessayer.",
+    Portuguese: "O motor de IA está passando por uma alta demanda. Aguarde alguns momentos e tente novamente."
+  },
+  "AI Analysis is temporarily unavailable. Our engineers are on it.": {
+    English: "AI Analysis is temporarily unavailable. Our engineers are on it.",
+    Spanish: "El análisis de IA no está disponible temporalmente. Nuestros ingenieros están en ello.",
+    French: "L'analyse par IA est temporairement indisponible. Nos ingénieurs y travaillent.",
+    Portuguese: "A análise de IA está temporariamente indisponível. Nossos engenheiros estão trabalhando nisso."
+  },
   "LOADING AI MODELS...": {
     English: "LOADING AI MODELS...", Spanish: "CARGANDO MODELOS DE IA...", French: "CHARGEMENT DES MODÈLES IA...", German: "LADE KI-MODELLE...", Chinese: "正在加载AI模型...", Japanese: "AIモデルを読み込み中...", Hindi: "एआई मॉडल लोड हो रहे हैं...", Arabic: "جاري تحميل نماذج الذكاء الاصطناعي...", Portuguese: "CARREGANDO MODELOS DE IA...", Russian: "ЗАГРУЗКА ИИ-МОДЕЛЕЙ..."
   },

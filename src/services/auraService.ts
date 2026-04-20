@@ -22,6 +22,33 @@ const getEnvironment = () => {
 const translationCache: Record<string, HealthAnalysis> = {};
 const coachingCache: Record<string, string> = {};
 
+/**
+ * Utility for retrying AI calls on transient errors (503, 429)
+ */
+async function retryWithBackoff<T>(
+  action: () => Promise<T>,
+  retries: number = 3,
+  delay: number = 1000
+): Promise<T> {
+  try {
+    return await action();
+  } catch (error: any) {
+    const isTransient = 
+      error.message?.includes("high demand") || 
+      error.message?.includes("503") || 
+      error.message?.includes("429") ||
+      error.status === 429 ||
+      error.status === 503;
+
+    if (isTransient && retries > 0) {
+      console.warn(`Gemini busy/throtled, retrying in ${delay}ms... (${retries} retries left)`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return retryWithBackoff(action, retries - 1, delay * 2);
+    }
+    throw error;
+  }
+}
+
 async function trackApiUsage(operation: 'analysis' | 'translation' | 'coaching') {
   // Fire and forget - don't block the main flow for analytics
   (async () => {
@@ -82,11 +109,11 @@ export async function translateAnalysis(analysis: HealthAnalysis, targetLanguage
   `;
 
   try {
-    const result = await ai.models.generateContent({ 
+    const result = await retryWithBackoff(() => ai.models.generateContent({ 
       model: "gemini-3-flash-preview",
       contents: prompt,
       config: { responseMimeType: "application/json" }
-    });
+    }));
     
     const parsed = JSON.parse(result.text || "{}");
     const translated = { ...parsed, language: targetLanguage } as HealthAnalysis;
@@ -118,10 +145,10 @@ export async function generateCoachingMessage(history: HealthAnalysis[], latest:
   `;
 
   try {
-    const result = await ai.models.generateContent({
+    const result = await retryWithBackoff(() => ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: prompt,
-    });
+    }));
     const message = result.text?.trim() || "Keep it up!";
     coachingCache[cacheKey] = message;
     return message;
@@ -262,11 +289,11 @@ export async function analyzeFaceHealth(
       content = { parts: [imagePart, { text: prompt }] };
     }
 
-    const result = await ai.models.generateContent({
+    const result = await retryWithBackoff(() => ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: content,
       config: { responseMimeType: "application/json" }
-    });
+    }));
     
     const parsed = JSON.parse(result.text || "{}");
     return { ...parsed, language } as HealthAnalysis;

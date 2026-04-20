@@ -457,9 +457,19 @@ function AppContent() {
       } else {
         setCurrentScanId(null);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError(err instanceof Error ? err.message : t("Analysis failed. Please try again."));
+      let msg = t("Analysis failed. Please try again.");
+      
+      if (err.message?.includes("high demand") || err.message?.includes("503") || err.status === 503) {
+        msg = t("The AI engine is currently experiencing high demand. Please wait a few moments and try again.");
+      } else if (err.message?.includes("unavailable") || err.status === 503) {
+        msg = t("AI Analysis is temporarily unavailable. Our engineers are on it.");
+      } else if (err.message) {
+        msg = err.message;
+      }
+      
+      setError(msg);
       setState('ERROR');
     }
   };
