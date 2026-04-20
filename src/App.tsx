@@ -618,6 +618,10 @@ function AppContent() {
       </div>
 
       <main className="relative z-10 container mx-auto px-4 py-8 md:py-16 flex flex-col items-center min-h-screen">
+        <div className="w-full flex justify-center mb-4">
+          <span className="text-[10px] font-mono uppercase tracking-[0.4em] text-[var(--accent-teal)] opacity-60">Created by OCEAN CREATIVE</span>
+        </div>
+        
         {/* Top Navigation */}
         <nav className="w-full flex flex-col sm:flex-row justify-between items-center gap-6 mb-12 md:mb-20">
           <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
